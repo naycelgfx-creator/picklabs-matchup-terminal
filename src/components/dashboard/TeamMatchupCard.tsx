@@ -1,0 +1,74 @@
+import React from 'react';
+import { Game } from '../../data/mockGames';
+
+interface TeamMatchupCardProps {
+    game: Game;
+}
+
+export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
+    return (
+        <div className="grid grid-cols-12 gap-6 items-stretch">
+            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-6 neon-glow-green relative">
+                <div className="absolute -top-3 left-6">
+                    <span className="text-[10px] px-3 py-1 bg-primary text-black font-black uppercase italic rounded-full shadow-[0_0_10px_rgba(13,242,13,0.5)]">
+                        Sharp Action
+                    </span>
+                </div>
+                <div className="flex items-center gap-6">
+                    <div className="h-20 w-20 flex items-center justify-center">
+                        {game.awayTeam.logo ? (
+                            <img alt={game.awayTeam.name} className="w-full object-contain" src={game.awayTeam.logo} />
+                        ) : (
+                            <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
+                                <span className="material-symbols-outlined text-slate-500 text-3xl">sports_esports</span>
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-black text-text-main italic uppercase">
+                            {game.awayTeam.name.includes(' ') ? game.awayTeam.name.split(' ').slice(0, -1).join(' ') : game.awayTeam.name}
+                        </h2>
+                        <p className="text-primary font-bold text-lg">
+                            {game.awayTeam.record} <span className="text-slate-500 text-sm font-normal ml-2">1st Division</span>
+                        </p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Handle Gap</p>
+                    <p className="text-3xl font-black text-primary italic">+14%</p>
+                </div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-2 flex flex-col items-center justify-center">
+                <div className="text-slate-600 font-black text-2xl italic tracking-tighter uppercase mb-1">VS</div>
+                <div className="text-[10px] text-slate-500 font-bold uppercase">Game ID: {game.matchupId}</div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-6 neon-glow-purple">
+                <div className="text-left">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Vegas Prob</p>
+                    <p className="text-3xl font-black text-text-main">{game.homeTeam.winProb}%</p>
+                </div>
+                <div className="flex items-center gap-6 text-right">
+                    <div>
+                        <h2 className="text-3xl font-black text-text-main italic text-right uppercase">
+                            {game.homeTeam.name.includes(' ') ? game.homeTeam.name.split(' ').slice(0, -1).join(' ') : game.homeTeam.name}
+                        </h2>
+                        <p className="text-accent-purple font-bold text-lg">
+                            {game.homeTeam.record} <span className="text-slate-500 text-sm font-normal mr-2 italic">1st Division</span>
+                        </p>
+                    </div>
+                    <div className="h-20 w-20 flex items-center justify-center">
+                        {game.homeTeam.logo ? (
+                            <img alt={game.homeTeam.name} className="w-full object-contain" src={game.homeTeam.logo} />
+                        ) : (
+                            <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
+                                <span className="material-symbols-outlined text-slate-500 text-3xl">sports_esports</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
