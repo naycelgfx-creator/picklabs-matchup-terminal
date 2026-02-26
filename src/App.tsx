@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Header } from './components/layout/Header';
 import { GlobalNewsTicker } from './components/layout/GlobalNewsTicker';
 import { Footer } from './components/layout/Footer';
@@ -250,6 +251,7 @@ function App() {
           onCancel={handleSimulationCancel}
           onComplete={handleSimulationComplete}
         />
+        <SpeedInsights />
       </div>
     </RookieModeProvider>
   );
