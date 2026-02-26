@@ -54,8 +54,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
             </div>
 
 
-            <div className="grid grid-cols-7 gap-4 items-center flex-grow">
-                <div className="col-span-2 text-center">
+            <div className="flex items-center justify-between gap-2 sm:gap-4 flex-grow w-full">
+                <div className="flex flex-col items-center text-center flex-1 min-w-0">
                     {game.awayTeam.logo ? (
                         <img
                             alt={game.awayTeam.name}
@@ -75,7 +75,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             </span>
                         </div>
                     )}
-                    <h3 className="text-sm font-black text-text-main uppercase italic truncate">
+                    <h3 className="text-xs sm:text-sm font-black text-text-main uppercase italic truncate w-full">
                         {game.awayTeam.name}
                         {isLive && game.awayTeam.score !== undefined && <span className="ml-2 text-primary">{game.awayTeam.score}</span>}
                     </h3>
@@ -87,7 +87,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                 </div>
 
-                <div className="col-span-3 flex justify-around">
+                <div className="flex items-center justify-center gap-2 sm:gap-4 shrink-0 px-1">
                     <div className="text-center">
                         <div className="relative w-16 h-16 flex items-center justify-center mb-1">
                             <svg className="w-full h-full -rotate-90">
@@ -128,7 +128,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                 </div>
 
-                <div className="col-span-2 text-center">
+                <div className="flex flex-col items-center text-center flex-1 min-w-0">
                     {game.homeTeam.logo ? (
                         <img
                             alt={game.homeTeam.name}
@@ -148,7 +148,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             </span>
                         </div>
                     )}
-                    <h3 className="text-sm font-black text-text-main uppercase italic truncate">
+                    <h3 className="text-xs sm:text-sm font-black text-text-main uppercase italic truncate w-full">
                         {game.homeTeam.name}
                         {isLive && game.homeTeam.score !== undefined && <span className="ml-2 text-primary">{game.homeTeam.score}</span>}
                     </h3>
@@ -161,7 +161,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 border-t border-border-muted pt-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 border-t border-border-muted pt-4">
                 <div
                     className="odd-box cursor-pointer hover:border-primary/40 transition-colors"
                     onClick={() => onAddBet({
@@ -173,8 +173,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         stake: 50
                     })}
                 >
-                    <span className="text-[8px] text-slate-500 uppercase font-black">Moneyline</span>
-                    <span className="text-xs font-black text-primary">{game.odds.moneyline}</span>
+                    <span className="text-[7px] sm:text-[8px] text-slate-500 uppercase font-black truncate w-full text-center">Moneyline</span>
+                    <span className="text-[10px] sm:text-xs font-black text-primary truncate w-full text-center">{game.odds.moneyline}</span>
                 </div>
                 <div
                     className="odd-box cursor-pointer hover:border-accent-purple/40 transition-colors"
@@ -187,8 +187,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         stake: 50
                     })}
                 >
-                    <span className="text-[8px] text-slate-500 uppercase font-black">Spread</span>
-                    <span className="text-xs font-black text-accent-purple">{game.odds.spread}</span>
+                    <span className="text-[7px] sm:text-[8px] text-slate-500 uppercase font-black truncate w-full text-center">Spread</span>
+                    <span className="text-[10px] sm:text-xs font-black text-accent-purple truncate w-full text-center">{game.odds.spread}</span>
                 </div>
                 <div
                     className="odd-box cursor-pointer hover:border-text-main/40 transition-colors"
@@ -201,8 +201,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         stake: 50
                     })}
                 >
-                    <span className="text-[8px] text-slate-500 uppercase font-black">O/U {game.odds.overUnder.value}</span>
-                    <span className="text-xs font-black text-text-main">{game.odds.overUnder.pick}</span>
+                    <span className="text-[7px] sm:text-[8px] text-slate-500 uppercase font-black truncate w-full text-center">O/U {game.odds.overUnder.value}</span>
+                    <span className="text-[10px] sm:text-xs font-black text-text-main truncate w-full text-center">{game.odds.overUnder.pick}</span>
                 </div>
             </div>
 

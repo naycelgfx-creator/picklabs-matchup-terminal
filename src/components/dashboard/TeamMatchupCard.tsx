@@ -14,7 +14,7 @@ export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
                         Sharp Action
                     </span>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
                     <div className="h-20 w-20 flex items-center justify-center">
                         {game.awayTeam.logo ? (
                             <img alt={game.awayTeam.name} className="w-full object-contain" src={game.awayTeam.logo} />
@@ -24,18 +24,18 @@ export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
                             </div>
                         )}
                     </div>
-                    <div>
-                        <h2 className="text-3xl font-black text-text-main italic uppercase">
+                    <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-text-main italic uppercase truncate">
                             {game.awayTeam.name.includes(' ') ? game.awayTeam.name.split(' ').slice(0, -1).join(' ') : game.awayTeam.name}
                         </h2>
-                        <p className="text-primary font-bold text-lg">
-                            {game.awayTeam.record} <span className="text-slate-500 text-sm font-normal ml-2">1st Division</span>
+                        <p className="text-primary font-bold text-sm md:text-lg truncate">
+                            {game.awayTeam.record} <span className="text-slate-500 text-xs md:text-sm font-normal ml-1 md:ml-2">1st Division</span>
                         </p>
                     </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0 ml-4">
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Handle Gap</p>
-                    <p className="text-3xl font-black text-primary italic">+14%</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-primary italic">+14%</p>
                 </div>
             </div>
 
@@ -45,17 +45,17 @@ export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
             </div>
 
             <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-6 neon-glow-purple">
-                <div className="text-left">
+                <div className="text-left shrink-0 mr-4">
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Vegas Prob</p>
-                    <p className="text-3xl font-black text-text-main">{game.homeTeam.winProb}%</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-text-main">{game.homeTeam.winProb}%</p>
                 </div>
-                <div className="flex items-center gap-6 text-right">
-                    <div>
-                        <h2 className="text-3xl font-black text-text-main italic text-right uppercase">
+                <div className="flex items-center gap-4 sm:gap-6 text-right min-w-0 flex-1 justify-end">
+                    <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-text-main italic text-right uppercase truncate">
                             {game.homeTeam.name.includes(' ') ? game.homeTeam.name.split(' ').slice(0, -1).join(' ') : game.homeTeam.name}
                         </h2>
-                        <p className="text-accent-purple font-bold text-lg">
-                            {game.homeTeam.record} <span className="text-slate-500 text-sm font-normal mr-2 italic">1st Division</span>
+                        <p className="text-accent-purple font-bold text-sm md:text-lg truncate">
+                            {game.homeTeam.record} <span className="text-slate-500 text-xs md:text-sm font-normal mr-1 md:mr-2 italic">1st Division</span>
                         </p>
                     </div>
                     <div className="h-20 w-20 flex items-center justify-center">
