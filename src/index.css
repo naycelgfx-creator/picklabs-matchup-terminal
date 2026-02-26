@@ -229,11 +229,11 @@
 
   /* Marquee Animations for Landing Page */
   .animate-marquee {
-    animation: marquee 200s linear infinite;
+    animation: marquee 600s linear infinite;
   }
 
   .animate-marquee2 {
-    animation: marquee2 200s linear infinite;
+    animation: marquee 600s linear infinite;
   }
 
   @keyframes marquee {

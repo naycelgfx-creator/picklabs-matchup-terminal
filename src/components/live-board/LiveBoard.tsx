@@ -118,6 +118,7 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
     const [expandAllPublicBetting, setExpandAllPublicBetting] = useState<boolean>(false);
     const today = new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState<string>(today);
+    const [isBetSlipVisible, setIsBetSlipVisible] = useState<boolean>(false); // Hidden by default on mobile for better UX
 
     // Soccer league sub-selection (defaults to EPL)
     const [activeSoccerLeague, setActiveSoccerLeague] = useState<SportKey>('Soccer.EPL');
@@ -217,8 +218,8 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
             )}
 
             <DateFilter selectedDate={selectedDate} onSelectDate={setSelectedDate} activeSport={activeSport} />
-            <main className="max-w-[1536px] mx-auto p-6 grid grid-cols-12 gap-6 relative pt-2">
-                <div className="col-span-12 lg:col-span-9 space-y-6">
+            <main className="max-w-[1536px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 relative pt-2">
+                <div className={`col-span-1 ${isBetSlipVisible ? 'lg:col-span-9' : 'lg:col-span-12'} space-y-6 transition-all duration-300`}>
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -265,6 +266,27 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                                     </span>
                                 </button>
                             )}
+
+                            {/* Bet Slip Toggle */}
+                            <button
+                                onClick={() => setIsBetSlipVisible(!isBetSlipVisible)}
+                                title={isBetSlipVisible ? "Hide Bet Slip" : "Show Bet Slip"}
+                                className={`flex items-center gap-2 px-3 mr-2 rounded border transition-all ${isBetSlipVisible
+                                    ? 'bg-accent-purple/10 border-accent-purple/40 text-accent-purple'
+                                    : 'border-border-muted text-text-muted hover:text-text-main hover:bg-neutral-800'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined text-sm">receipt_long</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">
+                                    Bet Slip
+                                </span>
+                                {betSlip.length > 0 && (
+                                    <span className="bg-primary text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">
+                                        {betSlip.length}
+                                    </span>
+                                )}
+                            </button>
+
                             <button
                                 onClick={() => setLayoutMode('list')}
                                 title="List View"
@@ -399,7 +421,12 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                         </div>
                     )}
                 </div>
-                <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} />
+                {/* Bet Slip Panel */}
+                {isBetSlipVisible && (
+                    <div className="col-span-1 lg:col-span-3 transition-opacity duration-300">
+                        <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} />
+                    </div>
+                )}
             </main>
         </>
     );

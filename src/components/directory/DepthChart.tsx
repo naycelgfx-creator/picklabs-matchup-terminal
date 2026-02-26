@@ -5,6 +5,7 @@ import { ESPNRosterAthlete } from '../../data/espnService';
 interface DepthChartProps {
     teamName: string;
     sport: string;
+    team?: { id: string; leagueSlug?: string; coreSport?: string; seasonYear?: number; };
 }
 
 // Sport-specific position display order
@@ -31,8 +32,8 @@ const SkeletonRow = () => (
     </tr>
 );
 
-export const DepthChart: React.FC<DepthChartProps> = ({ teamName, sport }) => {
-    const { players, loading } = useESPNRoster(teamName, sport);
+export const DepthChart: React.FC<DepthChartProps> = ({ teamName, sport, team }) => {
+    const { players, loading } = useESPNRoster(teamName, sport, team);
 
     // Group ESPN players by position
     const groupedRoster = React.useMemo(() => {

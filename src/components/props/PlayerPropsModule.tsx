@@ -5,7 +5,7 @@ import { ESPNRosterAthlete } from '../../data/espnService';
 
 interface PlayerPropsModuleProps {
     sport: string;
-    team: { name: string; abbr: string; url?: string };
+    team: { id: string; name: string; abbr: string; url?: string; leagueSlug?: string; coreSport?: string; seasonYear?: number; };
 }
 
 interface PropLine {
@@ -175,7 +175,7 @@ const OrdinalSuffix = (n: number) => {
 };
 
 export const PlayerPropsModule: React.FC<PlayerPropsModuleProps> = ({ sport, team }) => {
-    const { players, loading: rosterLoading } = useESPNRoster(team.name, sport);
+    const { players, loading: rosterLoading } = useESPNRoster(team.name, sport, team);
     const [propsData, setPropsData] = useState<PropLine[]>([]);
 
     useEffect(() => {

@@ -44,9 +44,11 @@ interface ESPNTeam {
     color: string;
     alternateColor: string;
     location: string;
+    coreSport?: string;
+    leagueSlug?: string;
 }
 
-function parseESPNTeams(data: Record<string, any>, sport: string = ''): ESPNTeam[] {
+function parseESPNTeams(data: Record<string, any>, sport: string = '', coreSport?: string, leagueSlug?: string): ESPNTeam[] {
     const isTennis = sport === 'Tennis';
     // ── Tennis Athletes ──
     if (isTennis && data?.rankings) {
@@ -87,6 +89,8 @@ function parseESPNTeams(data: Record<string, any>, sport: string = ''): ESPNTeam
                     color: team.color ?? '',
                     alternateColor: team.alternateColor ?? '',
                     location: team.location ?? '',
+                    coreSport,
+                    leagueSlug,
                 };
             });
         }
@@ -108,6 +112,8 @@ function parseESPNTeams(data: Record<string, any>, sport: string = ''): ESPNTeam
             color: team.color ?? '',
             alternateColor: team.alternateColor ?? '',
             location: team.location ?? '',
+            coreSport,
+            leagueSlug,
         };
     });
 }
@@ -141,24 +147,33 @@ export const TeamsDirectory: React.FC = () => {
 
     const fetchTeams = useCallback(async (sport: string, soccerLeague: SportKey, baseballLeague: SportKey, tennisTour: SportKey) => {
         let url = ESPN_TEAM_ENDPOINTS[sport];
+        let coreSport = '';
+        let leagueSlug = '';
+
+        if (sport === 'NBA') { coreSport = 'basketball'; leagueSlug = 'nba'; }
+        else if (sport === 'WNBA') { coreSport = 'basketball'; leagueSlug = 'wnba'; }
+        else if (sport === 'NCAAB') { coreSport = 'basketball'; leagueSlug = 'mens-college-basketball'; }
+        else if (sport === 'NCAAW') { coreSport = 'basketball'; leagueSlug = 'womens-college-basketball'; }
+        else if (sport === 'NFL') { coreSport = 'football'; leagueSlug = 'nfl'; }
+        else if (sport === 'NHL') { coreSport = 'hockey'; leagueSlug = 'nhl'; }
 
         // Dynamically build the baseball URL
         if (sport === 'MLB' || sport === 'Baseball') {
-            (window as any)._currentCoreSport = 'baseball';
-            let espnSlug = 'mlb';
+            coreSport = 'baseball';
+            leagueSlug = 'mlb';
             if (baseballLeague === 'MLB') {
                 url = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams?limit=100';
             } else if (baseballLeague === 'Baseball.WBC') {
                 url = 'https://site.api.espn.com/apis/site/v2/sports/baseball/world-baseball-classic/teams?limit=100';
-                espnSlug = 'world-baseball-classic';
+                leagueSlug = 'world-baseball-classic';
             } else if (baseballLeague === 'Baseball.CWS') {
                 url = 'https://site.api.espn.com/apis/site/v2/sports/baseball/caribbean-series/teams?limit=50';
-                espnSlug = 'caribbean-series';
+                leagueSlug = 'caribbean-series';
             }
-            (window as any)._currentSoccerLeagueSlug = espnSlug;
         }
         // Dynamically build the soccer URL based on the selected sub-league
         else if (sport === 'Soccer') {
+            coreSport = 'soccer';
             const leagueParts = soccerLeague.split('.');
             let espnSlug = 'eng.1'; // fallback
             if (leagueParts[1] === 'EPL') espnSlug = 'eng.1';
@@ -179,11 +194,12 @@ export const TeamsDirectory: React.FC = () => {
             else if (leagueParts[1] === 'ECUADOR') espnSlug = 'ecu.1';
 
             url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${espnSlug}/teams?limit=100`;
-            (window as any)._currentSoccerLeagueSlug = espnSlug;
-            (window as any)._currentCoreSport = 'soccer';
+            leagueSlug = espnSlug;
         } else if (sport === 'Tennis') {
             const tourSlug = tennisTour === 'Tennis.WTA' ? 'wta' : 'atp';
             url = `https://site.api.espn.com/apis/site/v2/sports/tennis/${tourSlug}/rankings`;
+            coreSport = 'tennis';
+            leagueSlug = tourSlug;
         }
 
         if (!url) return;
@@ -193,7 +209,7 @@ export const TeamsDirectory: React.FC = () => {
             const res = await fetch(url);
             if (!res.ok) throw new Error(`ESPN returned ${res.status}`);
             const data = await res.json();
-            const parsed = parseESPNTeams(data, sport);
+            const parsed = parseESPNTeams(data, sport, coreSport, leagueSlug);
             // Sort alphabetically by display name (or leave as ranked for Tennis)
             if (sport !== 'Tennis') {
                 parsed.sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -377,10 +393,8 @@ export const TeamsDirectory: React.FC = () => {
                             <div
                                 key={team.id}
                                 onClick={() => {
-                                    const cSport = (window as any)._currentCoreSport || (selectedSport === 'NBA' ? 'basketball' : selectedSport === 'NFL' ? 'football' : selectedSport === 'NHL' ? 'hockey' : '');
-                                    const lSlug = (window as any)._currentSoccerLeagueSlug || (selectedSport === 'NBA' ? 'nba' : selectedSport === 'NFL' ? 'nfl' : selectedSport === 'NHL' ? 'nhl' : '');
-                                    const season = lSlug === 'fifa.world' ? 2022 : (selectedSport === 'NFL' ? 2024 : new Date().getFullYear());
-                                    setSelectedTeam({ id: team.id, name: team.displayName, abbr: team.abbreviation, url: team.logo, leagueSlug: lSlug, coreSport: cSport, seasonYear: season });
+                                    const season = team.leagueSlug === 'fifa.world' ? 2022 : (selectedSport === 'NFL' ? 2024 : new Date().getFullYear());
+                                    setSelectedTeam({ id: team.id, name: team.displayName, abbr: team.abbreviation, url: team.logo, leagueSlug: team.leagueSlug, coreSport: team.coreSport, seasonYear: season });
                                 }}
                                 className="group bg-neutral-900 border border-neutral-800 rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:border-primary/30 transition-all cursor-pointer hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
                                 style={team.color ? { '--team-color': `#${team.color}` } as React.CSSProperties : undefined}

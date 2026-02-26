@@ -36,10 +36,11 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
     setBetSlip
 }) => {
     const [showHandleGaps, setShowHandleGaps] = useState(false);
+    const [isBetSlipVisible, setIsBetSlipVisible] = useState(false);
 
     return (
-        <main className="max-w-[1536px] mx-auto p-6 grid grid-cols-12 gap-6 relative">
-            <div className="col-span-12 lg:col-span-9 space-y-6">
+        <main className="max-w-[1536px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 relative">
+            <div className={`col-span-1 ${isBetSlipVisible ? 'lg:col-span-9' : 'lg:col-span-12'} space-y-6 transition-all duration-300`}>
                 <div className="flex flex-col items-center justify-center py-4 gap-4">
                     <div className="flex items-center gap-4">
                         <a
@@ -56,6 +57,18 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                         >
                             <span className="material-symbols-outlined">query_stats</span>
                             {showHandleGaps ? 'Hide Handle Gaps' : 'Show Handle Gaps'}
+                        </button>
+                        <button
+                            className={`flex px-6 py-5 border-2 rounded-full font-black uppercase tracking-[0.2em] italic transition-all items-center gap-3 ${isBetSlipVisible ? 'border-accent-purple bg-accent-purple/20 text-accent-purple' : 'border-border-muted bg-transparent text-text-muted hover:text-white hover:bg-white/5'}`}
+                            onClick={() => setIsBetSlipVisible(!isBetSlipVisible)}
+                        >
+                            <span className="material-symbols-outlined">receipt_long</span>
+                            <span className="hidden sm:inline">Bet Slip</span>
+                            {betSlip.length > 0 && (
+                                <span className="bg-primary text-black text-xs font-black w-5 h-5 flex items-center justify-center rounded-full ml-1">
+                                    {betSlip.length}
+                                </span>
+                            )}
                         </button>
                     </div>
                     <p className="mt-2 text-[10px] text-accent-purple/60 font-bold uppercase tracking-widest">Quantum Predictive Engine v4.2.1-10k</p>
@@ -128,7 +141,11 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                 )}
 
             </div>
-            <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} />
+            {isBetSlipVisible && (
+                <div className="col-span-1 lg:col-span-3 transition-opacity duration-300">
+                    <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} />
+                </div>
+            )}
         </main>
     );
 };

@@ -135,7 +135,7 @@ export const TeamDetails: React.FC<TeamDetailsProps> = ({ team, sport, onBack })
                     )}
 
                     {activeTab === 'depth' && (
-                        <DepthChart teamName={team.name} sport={sport} />
+                        <DepthChart teamName={team.name} sport={sport} team={team} />
                     )}
 
                     {activeTab === 'props' && (
