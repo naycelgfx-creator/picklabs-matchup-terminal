@@ -78,12 +78,15 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
             </div>
 
 
-            <div className="grid grid-cols-7 gap-4 items-center flex-grow">
-                <div className="col-span-2 text-center">
+            {/* ─── Team Matchup Row ─── */}
+            <div className="grid grid-cols-7 gap-1 sm:gap-4 items-center flex-grow">
+
+                {/* Away Team */}
+                <div className="col-span-2 flex flex-col items-center text-center">
                     {game.awayTeam.logo ? (
                         <img
                             alt={game.awayTeam.name}
-                            className="w-12 h-12 mx-auto object-contain mb-2"
+                            className="w-10 h-10 sm:w-12 sm:h-12 mx-auto object-contain mb-1.5"
                             src={game.awayTeam.logo}
                             onError={(e) => {
                                 e.currentTarget.onerror = null;
@@ -91,72 +94,86 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             }}
                         />
                     ) : (
-                        <div className="w-12 h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-2">
-                            <span className="material-symbols-outlined text-slate-500">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-1.5">
+                            <span className="material-symbols-outlined text-slate-500 text-base">
                                 {game.sport === 'Soccer' ? 'sports_soccer' :
                                     game.sport === 'NFL' ? 'sports_football' :
                                         game.sport === 'MLB' ? 'sports_baseball' : 'sports_basketball'}
                             </span>
                         </div>
                     )}
-                    <h3 className="text-sm font-black text-text-main uppercase italic truncate">
-                        {game.awayTeam.name}
-                        {isLive && game.awayTeam.score !== undefined && <span className="ml-2 text-primary">{game.awayTeam.score}</span>}
+                    {/* Show abbreviated last word on xs, full name on sm+ */}
+                    <h3 className="text-[11px] sm:text-sm font-black text-text-main uppercase italic leading-tight w-full text-center">
+                        <span className="sm:hidden">
+                            {game.awayTeam.name.includes(' ')
+                                ? game.awayTeam.name.split(' ').pop()
+                                : game.awayTeam.name}
+                        </span>
+                        <span className="hidden sm:block truncate">{game.awayTeam.name}</span>
+                        {isLive && game.awayTeam.score !== undefined &&
+                            <span className="ml-1 text-primary">{game.awayTeam.score}</span>}
                     </h3>
-                    <p className="text-[10px] text-slate-500">{game.awayTeam.record}</p>
-                    <div className="mt-3 flex gap-1 justify-center">
+                    <p className="text-[9px] text-slate-500 mt-0.5">{game.awayTeam.record}</p>
+                    <div className="mt-2 flex gap-0.5 sm:gap-1 justify-center flex-wrap">
                         {game.awayTeam.recentForm.map((f, i) => (
                             <span key={i} className={f === 'W' ? 'form-badge-w' : 'form-badge-l'}>{f}</span>
                         ))}
                     </div>
                 </div>
 
-                <div className="col-span-3 flex justify-around">
+                {/* Center: Win Prob circles + VS */}
+                <div className="col-span-3 flex items-center justify-center gap-1 sm:gap-3">
+                    {/* Away prob */}
                     <div className="text-center">
-                        <div className="relative w-16 h-16 flex items-center justify-center mb-1">
+                        <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-0.5 mx-auto">
                             <svg className="w-full h-full -rotate-90">
-                                <circle className="text-neutral-800" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" strokeWidth="4"></circle>
+                                <circle className="text-neutral-800" cx="50%" cy="50%" fill="transparent" r="44%" stroke="currentColor" strokeWidth="4"></circle>
                                 <circle
                                     className="transition-all duration-1000 ease-out"
-                                    cx="32" cy="32" fill="transparent" r="28"
+                                    cx="50%" cy="50%" fill="transparent" r="44%"
                                     stroke={getStrokeColor(game.awayTeam.color)}
                                     strokeDasharray="176"
                                     strokeDashoffset={176 - (176 * (game.awayTeam.winProb / 100))}
                                     strokeLinecap="round" strokeWidth="4"
                                 ></circle>
                             </svg>
-                            <span className="absolute text-[10px] font-black text-text-main italic">{game.awayTeam.winProb}%</span>
+                            <span className="absolute text-[9px] sm:text-[10px] font-black text-text-main italic">{game.awayTeam.winProb}%</span>
                         </div>
-                        <p className={`text-[8px] font-bold ${game.awayTeam.color} uppercase`}>Win Prob</p>
+                        <p className={`text-[7px] sm:text-[8px] font-bold ${game.awayTeam.color} uppercase`}>Win Prob</p>
                     </div>
-                    <div className="flex flex-col items-center justify-center">
-                        <span className="text-xs font-black text-slate-600 mb-1">VS</span>
-                        <div className="h-8 w-[1px] bg-border-muted"></div>
+
+                    {/* VS divider */}
+                    <div className="flex flex-col items-center justify-center px-0.5">
+                        <span className="text-[10px] sm:text-xs font-black text-slate-600">VS</span>
+                        <div className="h-6 w-[1px] bg-border-muted mt-1"></div>
                     </div>
+
+                    {/* Home prob */}
                     <div className="text-center">
-                        <div className="relative w-16 h-16 flex items-center justify-center mb-1">
+                        <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-0.5 mx-auto">
                             <svg className="w-full h-full -rotate-90">
-                                <circle className="text-neutral-800" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" strokeWidth="4"></circle>
+                                <circle className="text-neutral-800" cx="50%" cy="50%" fill="transparent" r="44%" stroke="currentColor" strokeWidth="4"></circle>
                                 <circle
                                     className="transition-all duration-1000 ease-out"
-                                    cx="32" cy="32" fill="transparent" r="28"
+                                    cx="50%" cy="50%" fill="transparent" r="44%"
                                     stroke={getStrokeColor(game.homeTeam.color)}
                                     strokeDasharray="176"
                                     strokeDashoffset={176 - (176 * (game.homeTeam.winProb / 100))}
                                     strokeLinecap="round" strokeWidth="4"
                                 ></circle>
                             </svg>
-                            <span className="absolute text-[10px] font-black text-text-main italic">{game.homeTeam.winProb}%</span>
+                            <span className="absolute text-[9px] sm:text-[10px] font-black text-text-main italic">{game.homeTeam.winProb}%</span>
                         </div>
-                        <p className={`text-[8px] font-bold ${game.homeTeam.color} uppercase`}>Win Prob</p>
+                        <p className={`text-[7px] sm:text-[8px] font-bold ${game.homeTeam.color} uppercase`}>Win Prob</p>
                     </div>
                 </div>
 
-                <div className="col-span-2 text-center">
+                {/* Home Team */}
+                <div className="col-span-2 flex flex-col items-center text-center">
                     {game.homeTeam.logo ? (
                         <img
                             alt={game.homeTeam.name}
-                            className="w-12 h-12 mx-auto object-contain mb-2"
+                            className="w-10 h-10 sm:w-12 sm:h-12 mx-auto object-contain mb-1.5"
                             src={game.homeTeam.logo}
                             onError={(e) => {
                                 e.currentTarget.onerror = null;
@@ -164,26 +181,33 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             }}
                         />
                     ) : (
-                        <div className="w-12 h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-2">
-                            <span className="material-symbols-outlined text-slate-500">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-1.5">
+                            <span className="material-symbols-outlined text-slate-500 text-base">
                                 {game.sport === 'Soccer' ? 'sports_soccer' :
                                     game.sport === 'NFL' ? 'sports_football' :
                                         game.sport === 'MLB' ? 'sports_baseball' : 'sports_basketball'}
                             </span>
                         </div>
                     )}
-                    <h3 className="text-sm font-black text-text-main uppercase italic truncate">
-                        {game.homeTeam.name}
-                        {isLive && game.homeTeam.score !== undefined && <span className="ml-2 text-primary">{game.homeTeam.score}</span>}
+                    <h3 className="text-[11px] sm:text-sm font-black text-text-main uppercase italic leading-tight w-full text-center">
+                        <span className="sm:hidden">
+                            {game.homeTeam.name.includes(' ')
+                                ? game.homeTeam.name.split(' ').pop()
+                                : game.homeTeam.name}
+                        </span>
+                        <span className="hidden sm:block truncate">{game.homeTeam.name}</span>
+                        {isLive && game.homeTeam.score !== undefined &&
+                            <span className="ml-1 text-primary">{game.homeTeam.score}</span>}
                     </h3>
-                    <p className="text-[10px] text-slate-500">{game.homeTeam.record}</p>
-                    <div className="mt-3 flex gap-1 justify-center">
+                    <p className="text-[9px] text-slate-500 mt-0.5">{game.homeTeam.record}</p>
+                    <div className="mt-2 flex gap-0.5 sm:gap-1 justify-center flex-wrap">
                         {game.homeTeam.recentForm.map((f, i) => (
                             <span key={i} className={f === 'W' ? 'form-badge-w' : 'form-badge-l'}>{f}</span>
                         ))}
                     </div>
                 </div>
             </div>
+
 
             {isRookieModeActive ? (
                 /* ── ROOKIE ODDS ROW ── */
