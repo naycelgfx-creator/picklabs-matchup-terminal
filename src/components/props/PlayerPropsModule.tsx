@@ -50,12 +50,30 @@ interface AltLineEntry {
 }
 
 const SPORTSBOOKS = [
-    { name: 'DraftKings', abbr: 'DK', letter: 'K', bg: '#0a2e1a', text: '#4ade80' },
-    { name: 'FanDuel', abbr: 'FD', letter: 'F', bg: '#0a1e3a', text: '#60a5fa' },
-    { name: 'BetMGM', abbr: 'MGM', letter: 'M', bg: '#2d1500', text: '#fbbf24' },
-    { name: 'Caesars', abbr: 'CZR', letter: 'C', bg: '#1e0a2e', text: '#c084fc' },
-    { name: 'PrizePicks', abbr: 'PP', letter: 'P', bg: '#0a2020', text: '#2dd4bf' },
-    { name: 'Underdog', abbr: 'UD', letter: 'U', bg: '#2e1000', text: '#fb923c' },
+    {
+        name: 'DraftKings', abbr: 'DK', letter: 'K', bg: '#0a2e1a', text: '#4ade80',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/DraftKings_logo.jpg/320px-DraftKings_logo.jpg'
+    },
+    {
+        name: 'FanDuel', abbr: 'FD', letter: 'F', bg: '#0a1e3a', text: '#60a5fa',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/FanDuel_logo_%282019%29.png/320px-FanDuel_logo_%282019%29.png'
+    },
+    {
+        name: 'BetMGM', abbr: 'MGM', letter: 'M', bg: '#2d1500', text: '#fbbf24',
+        logo: 'https://sportsbook.betmgm.com/favicon.ico'
+    },
+    {
+        name: 'Caesars', abbr: 'CZR', letter: 'C', bg: '#1e0a2e', text: '#c084fc',
+        logo: 'https://www.caesars.com/content/dam/shared/sportsbook/logos/caesars-sportsbook-logo.png'
+    },
+    {
+        name: 'PrizePicks', abbr: 'PP', letter: 'P', bg: '#0a2020', text: '#2dd4bf',
+        logo: 'https://img.prizepicks.com/images/pp-logo.png'
+    },
+    {
+        name: 'Underdog', abbr: 'UD', letter: 'U', bg: '#2e1000', text: '#fb923c',
+        logo: 'https://underdogfantasy.com/favicon.ico'
+    },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -538,15 +556,33 @@ const AltLinesPanel: React.FC<{
                     <button className="flex-1 py-2.5 text-xs font-black text-white border-b-2 border-primary tracking-widest">Available odds</button>
                     <button className="flex-1 py-2.5 text-xs font-black text-slate-500 tracking-widest">Custom</button>
                 </div>
-                {/* Over/Under toggle */}
+                {/* Over/Under toggle — each button shows all sportsbook logos + name */}
                 <div className="flex gap-2 px-4 py-3">
-                    {(['over', 'under'] as const).map(d => (
-                        <button key={d} onClick={() => setDir(d)}
-                            className={`flex-1 py-2 rounded-full text-xs font-black uppercase tracking-widest border transition-all cursor-pointer
-                            ${dir === d ? 'bg-white text-black border-white' : 'bg-transparent text-slate-400 border-[#1e293b] hover:text-white'}`}>
-                            {d === 'over' ? 'Over' : 'Under'}
-                        </button>
-                    ))}
+                    {(['over', 'under'] as const).map(d => {
+                        const isActive = dir === d;
+                        return (
+                            <button key={d} onClick={() => setDir(d)}
+                                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all cursor-pointer flex flex-col items-center gap-2
+                                ${isActive ? 'bg-white text-black border-white' : 'bg-transparent text-slate-400 border-[#1e293b] hover:text-white'}`}>
+                                <span className={isActive ? 'text-black' : 'text-slate-400'}>{d === 'over' ? '▲ Over' : '▼ Under'}</span>
+                                {/* Sportsbook logos row */}
+                                <span className="flex items-center gap-1.5 flex-wrap justify-center">
+                                    {SPORTSBOOKS.map(bk => (
+                                        <span key={bk.abbr} className="flex flex-col items-center gap-0.5">
+                                            <span
+                                                className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-black shrink-0 overflow-hidden"
+                                                style={{ background: bk.bg, color: bk.text }}
+                                                title={bk.name}
+                                            >
+                                                {bk.abbr}
+                                            </span>
+                                            <span className={`text-[7px] font-bold leading-none ${isActive ? 'text-black/70' : 'text-slate-600'}`}>{bk.abbr}</span>
+                                        </span>
+                                    ))}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
                 {/* Lines */}
                 <div className="overflow-y-auto max-h-[42vh] px-4 pb-2 space-y-2 custom-scrollbar">
