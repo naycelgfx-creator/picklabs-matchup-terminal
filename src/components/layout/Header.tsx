@@ -239,9 +239,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
 
                         {/* ── Dropdown Panel ── */}
                         {isBookieOpen && (
-                            <div className="theme-dark absolute right-0 top-[calc(100%+8px)] w-72 bg-neutral-900 border border-border-muted rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden z-50 animate-in">
+                            <div className="absolute right-0 top-[calc(100%+8px)] w-72 bg-white dark:bg-neutral-900 border border-border-muted rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] overflow-hidden z-50 animate-in">
                                 {/* Header */}
-                                <div className="px-4 py-3 border-b border-border-muted bg-neutral-900/80 flex items-center justify-between">
+                                <div className="px-4 py-3 border-b border-border-muted bg-neutral-50 dark:bg-neutral-900/80 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-primary text-base">store</span>
                                         <span className="text-[11px] font-black uppercase tracking-[0.2em] text-text-main">Bookie Manager</span>
@@ -267,7 +267,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                             onClick={() => setBookieTab(tab)}
                                             className={`flex-1 py-2 transition-colors ${bookieTab === tab
                                                 ? 'text-primary border-b-2 border-primary'
-                                                : 'text-slate-500 hover:text-white'
+                                                : 'text-slate-500 hover:text-text-main'
                                                 }`}
                                         >
                                             {tab === 'all' ? 'Any' : tab === 'sportsbook' ? 'Books' : tab === 'dfs' ? 'DFS' : 'Other'}
@@ -276,7 +276,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                 </div>
 
                                 {/* Status line */}
-                                <div className="px-4 py-2 bg-neutral-950/50 border-b border-border-muted">
+                                <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-950/50 border-b border-border-muted">
                                     <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest">
                                         <span className="text-primary">{enabledCount}</span> of {SPORTSBOOKS.length} books active · odds &amp; slip reflect selection
                                     </p>
@@ -306,7 +306,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
 
                                                 {/* Name */}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={`text-[11px] font-black uppercase tracking-wide transition-colors ${on ? 'text-text-main' : 'text-slate-600'}`}>
+                                                    <p className={`text-[11px] font-black uppercase tracking-wide transition-colors ${on ? 'text-neutral-900 dark:text-text-main' : 'text-slate-400 dark:text-slate-600'}`}>
                                                         {book.name}
                                                     </p>
                                                     <p className="text-[9px] text-text-muted font-bold">{book.domain}</p>
@@ -334,7 +334,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                 </ul>
 
                                 {/* Footer note */}
-                                <div className="px-4 py-3 border-t border-border-muted bg-neutral-950/40">
+                                <div className="px-4 py-3 border-t border-border-muted bg-neutral-50 dark:bg-neutral-950/40">
                                     <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest text-center italic">
                                         Toggling a book hides it from bet slip &amp; odds tables
                                     </p>

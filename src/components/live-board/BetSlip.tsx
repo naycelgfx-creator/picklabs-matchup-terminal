@@ -154,7 +154,7 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                             <button
                                 key={book.id}
                                 className="relative overflow-hidden w-full py-2 text-white font-black uppercase tracking-widest text-[8px] sm:text-[9px] rounded hover:scale-[1.02] transition-transform flex items-center justify-center gap-1.5 group"
-                                style={{ backgroundColor: book.color, color: book.textColor, boxShadow: `0 0 10px ${book.color}55` }}
+                                style={{ backgroundColor: book.color, color: '#ffffff', boxShadow: `0 0 10px ${book.color}55` }}
                             >
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                 <img
