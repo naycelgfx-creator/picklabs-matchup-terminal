@@ -11,12 +11,11 @@ interface GameCardProps {
     game: Game;
     onSelectGame: () => void;
     onAddBet: (bet: Omit<BetPick, 'id'>) => void;
-    showPublicBets?: boolean;
     publicBettingOpen?: boolean;
     onPublicBettingToggle?: () => void;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, showPublicBets = true, publicBettingOpen = false, onPublicBettingToggle }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, publicBettingOpen = false, onPublicBettingToggle }) => {
     const isLive = game.status === 'LIVE';
     const { isRookieModeActive } = useRookieMode();
 
@@ -296,7 +295,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         )}
                     </div>
                 </div>
-                {showPublicBets && <PublicBetting game={game} onMatchDetailsClick={onSelectGame} isOpen={publicBettingOpen} onToggle={onPublicBettingToggle ?? (() => { })} />}
+                <PublicBetting game={game} onMatchDetailsClick={onSelectGame} isOpen={publicBettingOpen ?? false} onToggle={onPublicBettingToggle ?? (() => { })} />
+
             </div>
         </div>
     );

@@ -384,9 +384,9 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                                                 <GameCard
                                                     key={game.id}
                                                     game={game}
-                                                    showPublicBets={showPublicBets}
                                                     publicBettingOpen={showPublicBets}
                                                     onPublicBettingToggle={() => setShowPublicBets(p => !p)}
+
                                                     onSelectGame={() => {
                                                         onSelectGame(game);
                                                         setCurrentView('matchup-terminal');
