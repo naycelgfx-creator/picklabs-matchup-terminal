@@ -57,7 +57,7 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
 
     return (
         <aside id="bet-slip-sidebar" className="col-span-12 lg:col-span-3">
-            <div className="sticky top-[140px] terminal-panel border-accent-purple/30 bg-accent-purple/5">
+            <div className="lg:sticky lg:top-[140px] terminal-panel border-accent-purple/30 bg-accent-purple/5">
                 <div className="p-4 border-b border-border-muted bg-white dark:bg-neutral-900/80 flex items-center justify-between">
                     <h3 className="text-xs font-black text-text-main uppercase tracking-[0.2em] flex items-center gap-2">
                         <span className="material-symbols-outlined text-accent-purple text-sm">shopping_cart</span>
