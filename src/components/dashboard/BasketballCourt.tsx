@@ -205,7 +205,7 @@ export const BasketballCourt: React.FC<BasketballCourtProps> = ({ game }) => {
                     <circle cx={CX} cy={CY} r={6} fill="rgba(255,255,255,0.4)" />
                     {/* Home team logo center */}
                     {game.homeTeam.logo && (
-                        <image href={game.homeTeam.logo} x={CX - 30} y={CY - 30} width={60} height={60} opacity={0.18} preserveAspectRatio="xMidYMid meet" />
+                        <image href={game.homeTeam.logo} x={CX - 50} y={CY - 50} width={100} height={100} opacity={0.30} preserveAspectRatio="xMidYMid meet" />
                     )}
 
                     {/* Team labels */}

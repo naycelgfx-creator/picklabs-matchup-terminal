@@ -1,28 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { Game } from '../../data/mockGames';
+import { MatchupEfficiencySection } from './MatchupEfficiencySection';
 
 interface SoccerFieldProps {
     game: Game;
 }
 
-// Viewbox: standard pitch 1050 x 680 (scaled from 105m x 68m)
 const W = 1050;
 const H = 680;
 const CX = W / 2;
 const CY = H / 2;
 
-// Goal dimensions
-const GOAL_W = 73; // 7.32m
+const GOAL_W = 73;
 const GOAL_DEPTH = 20;
-// 16-yard box: 40.32m wide, 16.5m long → 403 x 165
 const P_BOX_W = 403;
 const P_BOX_H = 165;
-// 6-yard box: 18.32m wide, 5.5m long → 183 x 55
 const S_BOX_W = 183;
 const S_BOX_H = 55;
-// Center circle radius: 9.15m → 91.5
 const CC_R = 91.5;
-// Penalty spot: 11m → 110 from goal line
 const PEN_SPOT = 110;
 
 type PlayType = 'shot' | 'pass' | 'tackle' | 'chance';
@@ -44,6 +39,9 @@ const playColor: Record<PlayType, string> = {
     chance: '#facc15',
 };
 
+// Seeded random for stable mock stats
+const seed = (n: number) => 30 + (n * 17) % 50;
+
 export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
     const [filter, setFilter] = useState<'both' | 'home' | 'away'>('both');
 
@@ -53,6 +51,25 @@ export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
     const visible = [
         ...(filter !== 'home' ? awayPlays.map(p => ({ ...p, team: 'away' as const })) : []),
         ...(filter !== 'away' ? homePlays.map(p => ({ ...p, team: 'home' as const })) : []),
+    ];
+
+    // Mock efficiency stats
+    const awayShotsTotal = awayPlays.filter(p => p.type === 'shot').length;
+    const homeShotsTotal = homePlays.filter(p => p.type === 'shot').length;
+    const awaySOG = awayPlays.filter(p => p.type === 'shot' && p.successful).length;
+    const homeSOG = homePlays.filter(p => p.type === 'shot' && p.successful).length;
+    const awayPoss = 35 + seed(1) % 30;
+    const homePoss = 100 - awayPoss;
+    const awayPassComp = 72 + seed(2) % 20;
+    const homePassComp = 72 + seed(3) % 20;
+    const awayTackles = awayPlays.filter(p => p.type === 'tackle' && p.successful).length;
+    const homeTackles = homePlays.filter(p => p.type === 'tackle' && p.successful).length;
+
+    const effRows = [
+        { label: 'Possession %', awayVal: `${awayPoss}%`, homeVal: `${homePoss}%`, awayPct: awayPoss, homePct: homePoss },
+        { label: 'Shot Accuracy', awayVal: `${awayShotsTotal > 0 ? Math.round(awaySOG / awayShotsTotal * 100) : 0}%`, homeVal: `${homeShotsTotal > 0 ? Math.round(homeSOG / homeShotsTotal * 100) : 0}%`, awayPct: awayShotsTotal > 0 ? awaySOG / awayShotsTotal * 100 : 0, homePct: homeShotsTotal > 0 ? homeSOG / homeShotsTotal * 100 : 0 },
+        { label: 'Pass Completion', awayVal: `${awayPassComp}%`, homeVal: `${homePassComp}%`, awayPct: awayPassComp, homePct: homePassComp },
+        { label: 'Tackles Won', awayVal: `${awayTackles}`, homeVal: `${homeTackles}`, awayPct: Math.min(awayTackles * 10, 100), homePct: Math.min(homeTackles * 10, 100) },
     ];
 
     return (
@@ -75,51 +92,40 @@ export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
 
             <div className="p-4 bg-background-dark">
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Soccer pitch">
-                    {/* Pitch surface gradient (green with shade) */}
                     <defs>
-                        <linearGradient id="pitch" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="pitchGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#166534" />
                             <stop offset="100%" stopColor="#14532d" />
                         </linearGradient>
-                        {/* Alternating stripe pattern */}
-                        <pattern id="stripes" x="0" y="0" width="70" height="680" patternUnits="userSpaceOnUse">
+                        <pattern id="stripes2" x="0" y="0" width="70" height="680" patternUnits="userSpaceOnUse">
                             <rect x="0" y="0" width="35" height="680" fill="rgba(255,255,255,0.03)" />
                         </pattern>
                     </defs>
-
-                    {/* Field base */}
-                    <rect x={0} y={0} width={W} height={H} fill="url(#pitch)" rx={6} />
-                    <rect x={0} y={0} width={W} height={H} fill="url(#stripes)" rx={6} />
-                    {/* Outer boundary */}
+                    <rect x={0} y={0} width={W} height={H} fill="url(#pitchGrad)" rx={6} />
+                    <rect x={0} y={0} width={W} height={H} fill="url(#stripes2)" rx={6} />
                     <rect x={10} y={10} width={W - 20} height={H - 20} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={2} />
 
-                    {/* === LEFT GOAL (Away defends) === */}
+                    {/* Left Goal& box */}
                     <rect x={10} y={CY - GOAL_W / 2} width={GOAL_DEPTH} height={GOAL_W} fill="rgba(59,130,246,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={2} />
-                    {/* Left Penalty box */}
                     <rect x={10} y={CY - P_BOX_W / 2} width={P_BOX_H} height={P_BOX_W} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.55)" strokeWidth={1.5} />
-                    {/* Left 6-yard box */}
                     <rect x={10} y={CY - S_BOX_W / 2} width={S_BOX_H} height={S_BOX_W} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.2} />
-                    {/* Left penalty spot */}
                     <circle cx={10 + PEN_SPOT} cy={CY} r={4} fill="rgba(255,255,255,0.7)" />
-                    {/* Left penalty arc */}
-                    <path d={`M ${10 + P_BOX_H} ${CY - 73} A 91.5 91.5 0 0 1 ${10 + P_BOX_H} ${CY + 73}`}
-                        fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
+                    <path d={`M ${10 + P_BOX_H} ${CY - 73} A 91.5 91.5 0 0 1 ${10 + P_BOX_H} ${CY + 73}`} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
 
-                    {/* === RIGHT GOAL (Home defends) === */}
+                    {/* Right Goal & box */}
                     <rect x={W - 10 - GOAL_DEPTH} y={CY - GOAL_W / 2} width={GOAL_DEPTH} height={GOAL_W} fill="rgba(16,185,129,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={2} />
                     <rect x={W - 10 - P_BOX_H} y={CY - P_BOX_W / 2} width={P_BOX_H} height={P_BOX_W} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.55)" strokeWidth={1.5} />
                     <rect x={W - 10 - S_BOX_H} y={CY - S_BOX_W / 2} width={S_BOX_H} height={S_BOX_W} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.2} />
                     <circle cx={W - 10 - PEN_SPOT} cy={CY} r={4} fill="rgba(255,255,255,0.7)" />
-                    <path d={`M ${W - 10 - P_BOX_H} ${CY - 73} A 91.5 91.5 0 0 0 ${W - 10 - P_BOX_H} ${CY + 73}`}
-                        fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
+                    <path d={`M ${W - 10 - P_BOX_H} ${CY - 73} A 91.5 91.5 0 0 0 ${W - 10 - P_BOX_H} ${CY + 73}`} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
 
-                    {/* === CENTER === */}
+                    {/* Center */}
                     <line x1={CX} y1={10} x2={CX} y2={H - 10} stroke="rgba(255,255,255,0.55)" strokeWidth={1.5} />
                     <circle cx={CX} cy={CY} r={CC_R} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={1.5} />
                     <circle cx={CX} cy={CY} r={5} fill="rgba(255,255,255,0.7)" />
-                    {/* Home team logo center */}
+                    {/* BIGGER HOME LOGO */}
                     {game.homeTeam.logo && (
-                        <image href={game.homeTeam.logo} x={CX - 38} y={CY - 38} width={76} height={76} opacity={0.13} preserveAspectRatio="xMidYMid meet" />
+                        <image href={game.homeTeam.logo} x={CX - 60} y={CY - 60} width={120} height={120} opacity={0.22} preserveAspectRatio="xMidYMid meet" />
                     )}
 
                     {/* Corner arcs */}
@@ -127,22 +133,17 @@ export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
                         <circle key={i} cx={cx2} cy={cy2} r={25} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1.2} />
                     ))}
 
-                    {/* Team name labels */}
                     <text x={220} y={28} textAnchor="middle" fontSize={12} fontWeight={900} fill="#93c5fd" opacity={0.9} fontFamily="monospace">{game.awayTeam.name.toUpperCase()} →</text>
                     <text x={W - 220} y={28} textAnchor="middle" fontSize={12} fontWeight={900} fill="#6ee7b7" opacity={0.9} fontFamily="monospace">← {game.homeTeam.name.toUpperCase()}</text>
 
-                    {/* Play dots */}
                     {visible.map(p => {
                         const col = playColor[p.type];
                         const r = p.type === 'shot' ? 7 : p.type === 'chance' ? 6 : 5;
                         return (
                             <circle key={p.id} cx={p.x} cy={p.y} r={r}
-                                fill={p.successful ? col : 'none'}
-                                stroke={col}
-                                strokeWidth={p.successful ? 0 : 1.5}
-                                opacity={0.8}
-                                style={{ filter: p.successful && p.type === 'shot' ? `drop-shadow(0 0 5px ${col})` : undefined }}
-                            >
+                                fill={p.successful ? col : 'none'} stroke={col}
+                                strokeWidth={p.successful ? 0 : 1.5} opacity={0.8}
+                                style={{ filter: p.successful && p.type === 'shot' ? `drop-shadow(0 0 5px ${col})` : undefined }}>
                                 <title>{`${p.team === 'home' ? game.homeTeam.name : game.awayTeam.name} • ${p.type} • ${p.successful ? 'Successful' : 'Unsuccessful'}`}</title>
                             </circle>
                         );
@@ -150,7 +151,6 @@ export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
                 </svg>
             </div>
 
-            {/* Legend */}
             <div className="p-3 border-t border-border-muted flex flex-wrap justify-center gap-4 bg-background-dark">
                 {Object.entries(playColor).map(([type, color]) => (
                     <div key={type} className="flex items-center gap-1.5">
@@ -158,11 +158,15 @@ export const SoccerField: React.FC<SoccerFieldProps> = ({ game }) => {
                         <span className="text-[9px] font-black uppercase text-slate-400">{type}</span>
                     </div>
                 ))}
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full border border-slate-500" />
-                    <span className="text-[9px] font-black uppercase text-slate-400">unsuccessful</span>
-                </div>
             </div>
+
+            {/* ── Matchup Efficiency ── */}
+            <MatchupEfficiencySection
+                game={game}
+                icon="analytics"
+                rows={effRows}
+                footNote="Soccer efficiency stats based on simulated play data for this matchup"
+            />
         </div>
     );
 };

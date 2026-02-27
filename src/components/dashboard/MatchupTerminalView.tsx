@@ -16,6 +16,7 @@ import { MarketFlow } from './MarketFlow';
 import { TeamRankings } from './TeamRankings';
 import { MatchupRecords } from './MatchupRecords';
 import { NBAMatchupDashboard } from './nba/NBAMatchupDashboard';
+import { SportBoxScoreLineup } from './nba/SportBoxScoreLineup';
 import { AITopBets } from './AITopBets';
 import { HotInsightsPanel } from './HotInsightsPanel';
 import { BetSlip } from '../live-board/BetSlip';
@@ -114,6 +115,18 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                         <NBAMatchupDashboard game={game} onAddBet={onAddBet} />
                     </div>
                 )}
+
+                {/* Non-NBA sports box score lineup */}
+                {(() => {
+                    const s = game.sport as string;
+                    const showLineup = s !== 'NBA' && s !== 'NCAAB' && s !== 'CBB' && s !== 'WNBA';
+                    if (!showLineup) return null;
+                    return (
+                        <div className="mt-8 border-t-2 border-border-muted/30 pt-8">
+                            <SportBoxScoreLineup game={game} />
+                        </div>
+                    );
+                })()}
 
                 <div className="grid grid-cols-12 gap-6">
                     <div className="col-span-12">

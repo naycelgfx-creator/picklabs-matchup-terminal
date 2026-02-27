@@ -1,16 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Game } from '../../data/mockGames';
+import { MatchupEfficiencySection } from './MatchupEfficiencySection';
 
 interface NFLFieldProps {
     game: Game;
 }
 
-// NFL field: 1200 x 533 (100 yards x 53.3 yards)
-// Each yard = W/120 (plus 2 end zones of 10 yards each)
 const W = 1200;
 const H = 533;
-const YARD = W / 120; // px per yard
-const EZ = YARD * 10; // end zone width in px
+const YARD = W / 120;
+const EZ = YARD * 10;
 const CX = W / 2;
 const CY = H / 2;
 
@@ -31,6 +30,8 @@ const generatePlays = (count: number, forRight: boolean) =>
         return { id: `p${i}`, x, y, type, gain: Math.floor(Math.random() * 20) - 5 };
     });
 
+const yardLines = Array.from({ length: 9 }, (_, i) => i + 1);
+
 export const NFLField: React.FC<NFLFieldProps> = ({ game }) => {
     const [filter, setFilter] = useState<'both' | 'home' | 'away'>('both');
     const awayPlays = useMemo(() => generatePlays(18, false), []);
@@ -41,7 +42,22 @@ export const NFLField: React.FC<NFLFieldProps> = ({ game }) => {
         ...(filter !== 'away' ? homePlays.map(p => ({ ...p, team: 'home' as const })) : []),
     ];
 
-    const yardLines = Array.from({ length: 9 }, (_, i) => i + 1); // 10, 20, ... 90
+    // Mock efficiency stats
+    const awayCompPct = 60 + Math.floor((awayPlays.filter(p => p.type === 'pass').length * 7) % 22);
+    const homeCompPct = 60 + Math.floor((homePlays.filter(p => p.type === 'pass').length * 7) % 22);
+    const awayYPP = (4.5 + (awayPlays.reduce((s, p) => s + Math.abs(p.gain), 0) / awayPlays.length * 0.15)).toFixed(1);
+    const homeYPP = (4.5 + (homePlays.reduce((s, p) => s + Math.abs(p.gain), 0) / homePlays.length * 0.15)).toFixed(1);
+    const awayRuns = awayPlays.filter(p => p.type === 'run').length;
+    const homeRuns = homePlays.filter(p => p.type === 'run').length;
+    const aTotal = awayRuns + awayPlays.filter(p => p.type === 'pass').length;
+    const hTotal = homeRuns + homePlays.filter(p => p.type === 'pass').length;
+
+    const effRows = [
+        { label: 'Completion %', awayVal: `${awayCompPct}%`, homeVal: `${homeCompPct}%`, awayPct: awayCompPct, homePct: homeCompPct },
+        { label: 'Yds Per Play', awayVal: awayYPP, homeVal: homeYPP, awayPct: (parseFloat(awayYPP) / 12) * 100, homePct: (parseFloat(homeYPP) / 12) * 100 },
+        { label: 'Run Rate', awayVal: `${aTotal > 0 ? Math.round(awayRuns / aTotal * 100) : 0}%`, homeVal: `${hTotal > 0 ? Math.round(homeRuns / hTotal * 100) : 0}%`, awayPct: aTotal > 0 ? awayRuns / aTotal * 100 : 0, homePct: hTotal > 0 ? homeRuns / hTotal * 100 : 0 },
+        { label: 'Sacks Allowed', awayVal: `${awayPlays.filter(p => p.type === 'sack').length}`, homeVal: `${homePlays.filter(p => p.type === 'sack').length}`, awayPct: Math.min(awayPlays.filter(p => p.type === 'sack').length * 20, 100), homePct: Math.min(homePlays.filter(p => p.type === 'sack').length * 20, 100) },
+    ];
 
     return (
         <div className="terminal-panel mt-6 overflow-hidden col-span-12">
@@ -64,48 +80,28 @@ export const NFLField: React.FC<NFLFieldProps> = ({ game }) => {
             <div className="p-4 bg-background-dark">
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="NFL field">
                     <defs>
-                        <linearGradient id="nflGrass" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="nflGrass2" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#14532d" />
                             <stop offset="100%" stopColor="#166534" />
                         </linearGradient>
-                        {/* Alternating green strips */}
-                        <pattern id="nflStripes" x="0" y="0" width={YARD * 10} height={H} patternUnits="userSpaceOnUse">
+                        <pattern id="nflStripes2" x="0" y="0" width={YARD * 10} height={H} patternUnits="userSpaceOnUse">
                             <rect x="0" y="0" width={YARD * 10} height={H} fill="rgba(255,255,255,0.03)" />
                             <rect x={YARD * 5} y="0" width={YARD * 5} height={H} fill="rgba(0,0,0,0.035)" />
                         </pattern>
                     </defs>
-
-                    {/* Field */}
-                    <rect x={0} y={0} width={W} height={H} fill="url(#nflGrass)" rx={4} />
-                    <rect x={0} y={0} width={W} height={H} fill="url(#nflStripes)" rx={4} />
-
-                    {/* Left end zone (away) */}
+                    <rect x={0} y={0} width={W} height={H} fill="url(#nflGrass2)" rx={4} />
+                    <rect x={0} y={0} width={W} height={H} fill="url(#nflStripes2)" rx={4} />
                     <rect x={0} y={0} width={EZ} height={H} fill="rgba(59,130,246,0.25)" />
-                    {/* Right end zone (home) */}
                     <rect x={W - EZ} y={0} width={EZ} height={H} fill="rgba(16,185,129,0.25)" />
-
-                    {/* End zone text */}
-                    <text x={EZ / 2} y={CY + 5} textAnchor="middle" fontSize={13} fontWeight={900} fill="rgba(147,197,253,0.9)"
-                        fontFamily="monospace" transform={`rotate(-90, ${EZ / 2}, ${CY})`}>{game.awayTeam.name.toUpperCase()}</text>
-                    <text x={W - EZ / 2} y={CY + 5} textAnchor="middle" fontSize={13} fontWeight={900} fill="rgba(110,231,183,0.9)"
-                        fontFamily="monospace" transform={`rotate(90, ${W - EZ / 2}, ${CY})`}>{game.homeTeam.name.toUpperCase()}</text>
-
-                    {/* Field boundary */}
+                    <text x={EZ / 2} y={CY + 5} textAnchor="middle" fontSize={13} fontWeight={900} fill="rgba(147,197,253,0.9)" fontFamily="monospace" transform={`rotate(-90, ${EZ / 2}, ${CY})`}>{game.awayTeam.name.toUpperCase()}</text>
+                    <text x={W - EZ / 2} y={CY + 5} textAnchor="middle" fontSize={13} fontWeight={900} fill="rgba(110,231,183,0.9)" fontFamily="monospace" transform={`rotate(90, ${W - EZ / 2}, ${CY})`}>{game.homeTeam.name.toUpperCase()}</text>
                     <rect x={EZ} y={5} width={W - EZ * 2} height={H - 10} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={2} />
-
-                    {/* Yard lines every 5 yards */}
                     {Array.from({ length: 19 }, (_, i) => {
                         const x = EZ + YARD * 5 * (i + 1);
                         if (x >= W - EZ) return null;
                         const isMajor = i % 2 === 1;
-                        return (
-                            <line key={i} x1={x} y1={5} x2={x} y2={H - 5}
-                                stroke={`rgba(255,255,255,${isMajor ? 0.5 : 0.2})`}
-                                strokeWidth={isMajor ? 1.5 : 0.8} />
-                        );
+                        return <line key={i} x1={x} y1={5} x2={x} y2={H - 5} stroke={`rgba(255,255,255,${isMajor ? 0.5 : 0.2})`} strokeWidth={isMajor ? 1.5 : 0.8} />;
                     })}
-
-                    {/* Hash marks (upper and lower) */}
                     {Array.from({ length: 100 }, (_, i) => {
                         const x = EZ + YARD * i;
                         if (x >= W - EZ) return null;
@@ -116,46 +112,31 @@ export const NFLField: React.FC<NFLFieldProps> = ({ game }) => {
                             </g>
                         );
                     })}
-
-                    {/* Yard numbers */}
                     {yardLines.map(i => {
                         const xPos = EZ + YARD * 10 * i;
                         const num = i <= 5 ? i * 10 : (10 - i) * 10;
-                        return (
-                            <text key={i} x={xPos} y={38} textAnchor="middle" fontSize={18} fontWeight={900}
-                                fill="rgba(255,255,255,0.55)" fontFamily="monospace">{num}</text>
-                        );
+                        return <text key={i} x={xPos} y={38} textAnchor="middle" fontSize={18} fontWeight={900} fill="rgba(255,255,255,0.55)" fontFamily="monospace">{num}</text>;
                     })}
-
-                    {/* Center */}
                     <line x1={CX} y1={0} x2={CX} y2={H} stroke="rgba(255,255,255,0.6)" strokeWidth={2} />
 
-                    {/* Goal posts — upright design */}
-                    {/* Left goalposts */}
-                    <line x1={EZ} y1={CY} x2={EZ - 12} y2={CY} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
-                    <line x1={EZ - 12} y1={CY - 40} x2={EZ - 12} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
-                    <line x1={EZ - 12} y1={CY - 40} x2={EZ - 12 - 15} y2={CY - 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
-                    <line x1={EZ - 12} y1={CY + 40} x2={EZ - 12 - 15} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
-                    {/* Right goalposts */}
-                    <line x1={W - EZ} y1={CY} x2={W - EZ + 12} y2={CY} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
-                    <line x1={W - EZ + 12} y1={CY - 40} x2={W - EZ + 12} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
-                    <line x1={W - EZ + 12} y1={CY - 40} x2={W - EZ + 12 + 15} y2={CY - 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
-                    <line x1={W - EZ + 12} y1={CY + 40} x2={W - EZ + 12 + 15} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
-
-                    {/* Home logo center */}
+                    {/* BIGGER HOME LOGO at midfield */}
                     {game.homeTeam.logo && (
-                        <image href={game.homeTeam.logo} x={CX - 40} y={CY - 40} width={80} height={80} opacity={0.13} preserveAspectRatio="xMidYMid meet" />
+                        <image href={game.homeTeam.logo} x={CX - 65} y={CY - 65} width={130} height={130} opacity={0.20} preserveAspectRatio="xMidYMid meet" />
                     )}
 
-                    {/* Play dots */}
+                    {/* Goal posts */}
+                    <line x1={EZ} y1={CY} x2={EZ - 12} y2={CY} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
+                    <line x1={EZ - 12} y1={CY - 40} x2={EZ - 12} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
+                    <line x1={EZ - 12} y1={CY - 40} x2={EZ - 27} y2={CY - 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
+                    <line x1={EZ - 12} y1={CY + 40} x2={EZ - 27} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
+                    <line x1={W - EZ} y1={CY} x2={W - EZ + 12} y2={CY} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
+                    <line x1={W - EZ + 12} y1={CY - 40} x2={W - EZ + 12} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2.5} />
+                    <line x1={W - EZ + 12} y1={CY - 40} x2={W - EZ + 27} y2={CY - 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
+                    <line x1={W - EZ + 12} y1={CY + 40} x2={W - EZ + 27} y2={CY + 40} stroke="rgba(255,220,0,0.8)" strokeWidth={2} />
+
                     {visible.map(p => {
                         const col = playColor[p.type];
-                        return (
-                            <circle key={p.id} cx={p.x} cy={p.y} r={6} fill={col} opacity={0.85}
-                                style={{ filter: `drop-shadow(0 0 4px ${col})` }}>
-                                <title>{`${p.team === 'home' ? game.homeTeam.name : game.awayTeam.name} ${p.type} • ${p.gain > 0 ? '+' : ''}${p.gain} yds`}</title>
-                            </circle>
-                        );
+                        return <circle key={p.id} cx={p.x} cy={p.y} r={6} fill={col} opacity={0.85} style={{ filter: `drop-shadow(0 0 4px ${col})` }}><title>{`${p.team === 'home' ? game.homeTeam.name : game.awayTeam.name} ${p.type} • ${p.gain > 0 ? '+' : ''}${p.gain} yds`}</title></circle>;
                     })}
                 </svg>
             </div>
@@ -168,6 +149,14 @@ export const NFLField: React.FC<NFLFieldProps> = ({ game }) => {
                     </div>
                 ))}
             </div>
+
+            {/* ── Matchup Efficiency ── */}
+            <MatchupEfficiencySection
+                game={game}
+                icon="analytics"
+                rows={effRows}
+                footNote="NFL efficiency stats based on simulated play-by-play data for this matchup"
+            />
         </div>
     );
 };
