@@ -4,6 +4,7 @@ import { isAuthValid } from '../../utils/auth';
 import { GlowingEffect } from '../ui/glowing-effect';
 import { PricingSection } from '../ui/pricing-section';
 import { LogoCloud } from '../ui/logo-cloud-3';
+import { BetSlipCompare } from '../ui/BetSlipCompare';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -180,29 +181,39 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
             </header>
 
             <section className="relative pt-20 pb-16 px-6 hero-gradient">
-                <div className="max-w-4xl mx-auto text-center space-y-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-purple/10 border border-accent-purple/30 text-accent-purple text-[10px] font-black uppercase tracking-widest mb-4">
-                        <span className="material-symbols-outlined text-sm">auto_awesome</span>
-                        v4.2 AI Simulation Engine Now Live
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+
+                    {/* ── Left: headline + CTAs ── */}
+                    <div className="flex-1 text-center lg:text-left space-y-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-purple/10 border border-accent-purple/30 text-accent-purple text-[10px] font-black uppercase tracking-widest mb-4">
+                            <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                            v4.2 AI Simulation Engine Now Live
+                        </div>
+                        <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main leading-tight">
+                            Predict the <span className="text-primary">Unpredictable.</span>
+                        </h2>
+                        <p className="text-lg md:text-xl text-text-muted max-w-xl leading-relaxed">
+                            Professional-grade sports simulations and sharp betting alerts powered by proprietary neural networks. Built for the modern bettor.
+                        </p>
+                        <div className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                            <button
+                                onClick={handleScrollToPricing}
+                                className="w-full md:w-auto px-10 py-5 bg-primary text-black font-black uppercase tracking-[0.2em] italic rounded-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(13,242,13,0.3)]">
+                                Start 7-Day Free Trial
+                            </button>
+                            <button
+                                onClick={() => onNavigate(isAuthValid() ? 'live-board' : 'login-page')}
+                                className="w-full md:w-auto px-10 py-5 bg-slate-900 dark:bg-neutral-900 border border-neutral-700 text-white font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-black dark:hover:bg-neutral-800 transition-all">
+                                View Live Board
+                            </button>
+                        </div>
                     </div>
-                    <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main leading-tight">
-                        Predict the <span className="text-primary">Unpredictable.</span>
-                    </h2>
-                    <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
-                        Professional-grade sports simulations and sharp betting alerts powered by proprietary neural networks. Built for the modern bettor.
-                    </p>
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-4">
-                        <button
-                            onClick={handleScrollToPricing}
-                            className="w-full md:w-auto px-10 py-5 bg-primary text-black font-black uppercase tracking-[0.2em] italic rounded-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(13,242,13,0.3)]">
-                            Start 7-Day Free Trial
-                        </button>
-                        <button
-                            onClick={() => onNavigate(isAuthValid() ? 'live-board' : 'login-page')}
-                            className="w-full md:w-auto px-10 py-5 bg-slate-900 dark:bg-neutral-900 border border-neutral-700 text-white font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-black dark:hover:bg-neutral-800 transition-all">
-                            View Live Board
-                        </button>
+
+                    {/* ── Right: Bet Slip Compare ── */}
+                    <div className="flex-shrink-0 w-full lg:w-[340px] xl:w-[380px] pt-8 lg:pt-0">
+                        <BetSlipCompare />
                     </div>
+
                 </div>
             </section>
 
