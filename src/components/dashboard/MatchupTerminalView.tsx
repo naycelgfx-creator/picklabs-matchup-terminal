@@ -57,7 +57,7 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                             onClick={() => setShowBetSlip(p => !p)}
                             className={`hidden md:flex px-8 py-5 border-2 rounded-full font-black uppercase tracking-[0.2em] italic transition-all items-center gap-3 ${showBetSlip
                                 ? 'border-accent-purple/60 bg-accent-purple/10 text-accent-purple'
-                                : 'border-neutral-700 bg-neutral-900 text-slate-400 hover:text-white hover:border-neutral-500'
+                                : 'border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 text-slate-500 dark:text-slate-400 hover:text-text-main hover:border-neutral-500'
                                 }`}
                         >
                             <span className="material-symbols-outlined">receipt_long</span>
@@ -79,8 +79,8 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                         <span className="text-xs font-bold uppercase tracking-widest text-primary sm:hidden">Handle Gaps (&gt;10%)</span>
                     </div>
                     <div className="flex gap-4">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold">Games Found: <span className="text-white">1</span></div>
-                        <div className="text-[10px] text-slate-500 uppercase font-bold hidden sm:block">Total Volume: <span className="text-white">$4.2M</span></div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Games Found: <span className="text-accent-purple dark:text-white font-black">1</span></div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold hidden sm:block">Total Volume: <span className="text-accent-purple dark:text-white font-black">$4.2M</span></div>
                     </div>
                 </div>
 

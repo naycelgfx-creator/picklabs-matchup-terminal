@@ -9,7 +9,7 @@ export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
     return (
         <div className="grid grid-cols-12 gap-3 xl:gap-6 items-stretch">
             {/* Away team card */}
-            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-4 xl:p-6 neon-glow-green relative overflow-hidden">
+            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-4 xl:p-6 neon-glow-green relative pt-6">
                 <div className="absolute -top-3 left-6">
                     <span className="text-[10px] px-3 py-1 bg-primary text-black font-black uppercase italic rounded-full shadow-[0_0_10px_rgba(13,242,13,0.5)]">
                         Sharp Action
@@ -47,7 +47,7 @@ export const TeamMatchupCard: React.FC<TeamMatchupCardProps> = ({ game }) => {
             </div>
 
             {/* Home team card */}
-            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-4 xl:p-6 neon-glow-purple overflow-hidden">
+            <div className="col-span-12 lg:col-span-5 flex items-center justify-between terminal-panel p-4 xl:p-6 neon-glow-purple">
                 <div className="text-left shrink-0 mr-2">
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Vegas Prob</p>
                     <p className="text-xl xl:text-3xl font-black text-text-main">{game.homeTeam.winProb}%</p>
