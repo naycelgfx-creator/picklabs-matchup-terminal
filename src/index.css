@@ -15,10 +15,10 @@
     --border-muted: 28 32 55;
     --text-main: 236 242 255;
     --text-muted: 130 145 180;
-    --primary: 17 248 183;
+    --primary: 12 168 16;
     --accent-purple: 155 79 245;
     --accent-blue: 56 128 250;
-    --accent-green: 17 248 183;
+    --accent-green: 12 168 16;
     --glass-bg: 13 15 26;
   }
 
@@ -30,10 +30,10 @@
     --border-muted: 196 204 230;
     --text-main: 12 16 40;
     --text-muted: 70 85 130;
-    --primary: 5 160 110;
+    --primary: 10 158 14;
     --accent-purple: 120 50 230;
     --accent-blue: 35 95 230;
-    --accent-green: 5 160 110;
+    --accent-green: 10 158 14;
     --glass-bg: 255 255 255;
   }
 
