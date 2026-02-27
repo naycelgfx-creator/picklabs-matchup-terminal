@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Footer } from '../layout/Footer';
 import { isAuthValid } from '../../utils/auth';
 import { GlowingEffect } from '../ui/glowing-effect';
+import { PricingSection } from '../ui/pricing-section';
+import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
 
@@ -57,24 +59,90 @@ const COMMUNITY_REVIEWS = [
 ];
 
 export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) => {
-    const [isAnnual, setIsAnnual] = useState(false);
 
-    const ALL_FEATURES = [
-        "Trending Insights", "Thousands of Props & Games", "Advanced Visuals", "Injury Reports",
-        "Odds Comparison", "Real Time Betting Alerts", "Real Time Odds Movement Charts",
-        "EV+ Bet Indicators", "Positive EV Power Feed", "Sharp Book Odds", "Boost Index",
-        "Arbitrage Feed", "Middle Betting"
+
+    const PICKLABS_TIERS = [
+        {
+            name: 'Free',
+            price: { monthly: '0', yearly: '0' },
+            description: 'No credit card required · Forever free',
+            accentColor: 'default' as const,
+            ctaLabel: 'Get Started Free',
+            onCta: () => onNavigate('login-page'),
+            icon: <Zap className="w-5 h-5" />,
+            features: [
+                { name: 'Trending Insights', description: 'Today\'s top sharp public picks', included: true },
+                { name: 'Thousands of Props & Games', description: 'All major sports & leagues', included: true },
+                { name: 'Advanced Visuals', description: 'Charts, heatmaps & team stats', included: true },
+                { name: 'Injury Reports', description: 'Real-time roster updates', included: true },
+                { name: 'Odds Comparison', description: 'Line shopping across books', included: false },
+                { name: 'Real Time Betting Alerts', description: 'Sharp money & line move alerts', included: false },
+                { name: 'EV+ Bet Indicators', description: 'Positive expected value tags', included: false },
+                { name: 'Arbitrage Feed', description: 'Guaranteed profit opportunities', included: false },
+            ],
+        },
+        {
+            name: 'Premium',
+            price: { monthly: '19.99', yearly: '199.99' },
+            description: 'Core analytics suite',
+            accentColor: 'default' as const,
+            ctaLabel: 'Get Premium',
+            icon: <Shield className="w-5 h-5" />,
+            features: [
+                { name: 'Trending Insights', description: 'Today\'s top sharp public picks', included: true },
+                { name: 'Thousands of Props & Games', description: 'All major sports & leagues', included: true },
+                { name: 'Advanced Visuals', description: 'Charts, heatmaps & team stats', included: true },
+                { name: 'Injury Reports', description: 'Real-time roster updates', included: true },
+                { name: 'Odds Comparison', description: 'Line shopping across books', included: true },
+                { name: 'Real Time Betting Alerts', description: 'Sharp money & line move alerts', included: true },
+                { name: 'EV+ Bet Indicators', description: 'Positive expected value tags', included: false },
+                { name: 'Arbitrage Feed', description: 'Guaranteed profit opportunities', included: false },
+            ],
+        },
+        {
+            name: 'Premium+',
+            price: { monthly: '29.99', yearly: '299.99' },
+            description: 'Early bird: 50% off · Best value',
+            highlight: true,
+            badge: 'Best Value',
+            accentColor: 'purple' as const,
+            ctaLabel: 'Get Premium+',
+            icon: <Sparkles className="w-5 h-5" />,
+            features: [
+                { name: 'Everything in Premium', description: 'All Premium features included', included: true },
+                { name: 'Odds Movement Charts', description: 'Real-time line history visualization', included: true },
+                { name: 'EV+ Bet Indicators', description: 'Positive expected value tags', included: true },
+                { name: 'Positive EV Power Feed', description: 'Live +EV opportunity stream', included: true },
+                { name: 'Sharp Book Odds', description: 'Pinnacle & sharp book comparisons', included: true },
+                { name: 'Boost Index', description: 'Promo value scoring', included: true },
+                { name: 'Arbitrage Feed', description: 'Guaranteed profit opportunities', included: false },
+                { name: 'Middle Betting', description: 'Two-way market gap detection', included: false },
+            ],
+        },
+        {
+            name: 'Pro',
+            price: { monthly: '79.99', yearly: '359.99' },
+            description: 'Get Pro for 38% off · Full access',
+            highlight: true,
+            badge: 'All Access',
+            accentColor: 'green' as const,
+            ctaLabel: 'Get Pro',
+            icon: <Star className="w-5 h-5" />,
+            features: [
+                { name: 'Everything in Premium+', description: 'All Premium+ features included', included: true },
+                { name: 'Arbitrage Feed', description: 'Guaranteed profit opportunities', included: true },
+                { name: 'Middle Betting', description: 'Two-way market gap detection', included: true },
+                { name: 'Unlimited API Access', description: 'Full REST & WebSocket endpoints', included: true },
+                { name: 'Priority Support', description: '24/7 dedicated support channel', included: true },
+                { name: 'Early Feature Access', description: 'Beta features before public release', included: true },
+                { name: 'Custom Alerts', description: 'Build personalized betting triggers', included: true },
+                { name: 'Export & Reporting', description: 'Download your full bet history & stats', included: true },
+            ],
+        },
     ];
 
-    const PREMIUM_FEATURES = [
-        "Trending Insights", "Thousands of Props & Games", "Advanced Visuals", "Injury Reports",
-        "Odds Comparison", "Real Time Betting Alerts"
-    ];
 
-    const PREMIUM_PLUS_FEATURES = [
-        ...PREMIUM_FEATURES,
-        "Real Time Odds Movement Charts", "EV+ Bet Indicators"
-    ];
+
 
     const handleScrollToPricing = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -488,147 +556,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
             </section>
 
             <section id="pricing" className="w-full px-4 sm:px-6 py-32">
-
-
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16 space-y-4">
-                        <h3 className="text-3xl md:text-5xl font-black italic uppercase text-text-main tracking-tight">Choose Your Edge</h3>
-                        <div className="flex items-center justify-center gap-4 mt-6">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${!isAnnual ? 'text-primary' : 'text-slate-500'}`}>Monthly</span>
-                            <div className={`toggle-knob ${isAnnual ? 'active' : ''}`} onClick={() => setIsAnnual(!isAnnual)}>
-                                <div className="toggle-circle"></div>
-                            </div>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${isAnnual ? 'text-primary' : 'text-slate-500'}`}>Yearly <span className="text-accent-purple">(Save 20%)</span></span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch max-w-[1400px] mx-auto">
-
-                        {/* ── FREE MODE ── */}
-                        <div className="pricing-card border-border-muted/50 bg-neutral-900/40 relative">
-                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                            <div className="mb-6">
-                                <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Free</h4>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No credit card required</p>
-                            </div>
-                            <div className="mb-6 flex flex-col items-start gap-1">
-                                <span className="text-5xl font-black text-text-main italic tracking-tighter">$0</span>
-                                <span className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">Forever free</span>
-                            </div>
-                            <button
-                                onClick={() => onNavigate('login-page')}
-                                className="w-full py-4 border-2 border-border-muted bg-neutral-900/60 text-text-muted rounded-xl text-xs font-black uppercase tracking-[0.2em] italic hover:border-primary/40 hover:text-text-main transition-all mb-8"
-                            >
-                                Get Started Free
-                            </button>
-                            <ul className="space-y-4 mb-4 flex-grow text-left">
-                                {ALL_FEATURES.map((feature, i) => {
-                                    const isIncluded = ['Trending Insights', 'Thousands of Props & Games', 'Advanced Visuals', 'Injury Reports'].includes(feature);
-                                    return (
-                                        <li key={i} className={`flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide ${isIncluded ? 'text-text-muted' : 'text-slate-700'}`}>
-                                            <span className={`material-symbols-outlined text-base ${isIncluded ? 'text-slate-400' : 'text-slate-800'}`}>
-                                                {isIncluded ? 'check_circle' : 'remove'}
-                                            </span>
-                                            {feature}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-
-                        {/* ── PREMIUM ── */}
-                        <div className="pricing-card relative">
-                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                            <div className="mb-6">
-                                <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Premium</h4>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core analytics suite</p>
-                            </div>
-                            <div className="mb-6 flex flex-col items-start gap-1">
-                                <span className="text-5xl font-black text-text-main italic tracking-tighter">${isAnnual ? '199.99' : '19.99'}</span>
-                                <span className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">{isAnnual ? 'Yearly billing' : 'Monthly billing'}</span>
-                            </div>
-                            <button className="w-full py-4 border-2 border-border-muted bg-neutral-900 text-text-main rounded-xl text-xs font-black uppercase tracking-[0.2em] italic hover:border-primary transition-all mb-8 shadow-sm">
-                                Get Premium
-                            </button>
-                            <ul className="space-y-4 mb-4 flex-grow text-left">
-                                {ALL_FEATURES.map((feature, i) => {
-                                    const isIncluded = PREMIUM_FEATURES.includes(feature);
-                                    return (
-                                        <li key={i} className={`flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide ${isIncluded ? 'text-text-muted' : 'text-slate-600'}`}>
-                                            <span className={`material-symbols-outlined text-base ${isIncluded ? 'text-primary' : 'text-slate-800'}`}>
-                                                {isIncluded ? 'check_circle' : 'remove'}
-                                            </span>
-                                            {feature}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-
-                        {/* ── PREMIUM + ── */}
-                        <div className="pricing-card featured relative xl:-mt-4 xl:mb-4 border-accent-purple/50 bg-neutral-900 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                            <div className="absolute top-0 right-0 bg-accent-purple text-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest italic rounded-bl-xl shadow-md">
-                                Best Value
-                            </div>
-                            <div className="mb-6">
-                                <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Premium +</h4>
-                                <p className="text-[10px] font-black text-accent-purple uppercase tracking-widest">Early bird discount: Get Plus for 50% off</p>
-                            </div>
-                            <div className="mb-6 flex flex-col items-start gap-1">
-                                <div className="flex items-end gap-3">
-                                    <span className="text-5xl font-black text-text-main italic tracking-tighter">${isAnnual ? '299.99' : '29.99'}</span>
-                                    <span className="text-xl font-bold text-slate-500 line-through mb-1.5">${isAnnual ? '599.99' : '59.99'}</span>
-                                </div>
-                                <span className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">{isAnnual ? 'Yearly billing' : 'Monthly billing'}</span>
-                            </div>
-                            <button className="w-full py-4 bg-accent-purple text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] italic hover:bg-purple-500 transition-colors mb-8 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-[1.02]">
-                                Get Premium +
-                            </button>
-                            <ul className="space-y-4 mb-4 flex-grow text-left">
-                                {ALL_FEATURES.map((feature, i) => {
-                                    const isIncluded = PREMIUM_PLUS_FEATURES.includes(feature);
-                                    return (
-                                        <li key={i} className={`flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide ${isIncluded ? 'text-text-main' : 'text-slate-400'}`}>
-                                            <span className={`material-symbols-outlined text-base ${isIncluded ? 'text-accent-purple' : 'text-slate-800'}`}>
-                                                {isIncluded ? 'check_circle' : 'remove'}
-                                            </span>
-                                            {feature}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-
-                        {/* ── PRO ── */}
-                        <div className="pricing-card border-primary/30 relative bg-neutral-900">
-                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                            <div className="mb-6">
-                                <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Pro</h4>
-                                <p className="text-[10px] font-black text-primary uppercase tracking-widest">Get Pro for 38% off</p>
-                            </div>
-                            <div className="mb-6 flex flex-col items-start gap-1">
-                                <div className="flex items-end gap-3">
-                                    <span className="text-5xl font-black text-primary italic tracking-tighter">${isAnnual ? '359.99' : '79.99'}</span>
-                                    <span className="text-xl font-bold text-slate-500 line-through mb-1.5">${isAnnual ? '579.99' : '129.99'}</span>
-                                </div>
-                                <span className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">{isAnnual ? 'Yearly billing' : 'Monthly billing'}</span>
-                            </div>
-                            <button className="w-full py-4 bg-primary text-black rounded-xl text-xs font-black uppercase tracking-[0.2em] italic hover:scale-[1.02] transition-transform mb-8 shadow-[0_0_20px_rgba(13,242,13,0.3)] hover:shadow-[0_0_25px_rgba(13,242,13,0.5)]">
-                                Get Pro
-                            </button>
-                            <ul className="space-y-4 mb-4 flex-grow text-left">
-                                {ALL_FEATURES.map((feature, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-[11px] font-bold text-text-muted uppercase tracking-wide">
-                                        <span className="material-symbols-outlined text-primary text-base">check_circle</span>
-                                        {feature}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-
-                </div>{/* /max-w-7xl */}
+                <div className="max-w-[1400px] mx-auto">
+                    <PricingSection tiers={PICKLABS_TIERS} />
+                </div>
             </section>
 
             <Footer />
