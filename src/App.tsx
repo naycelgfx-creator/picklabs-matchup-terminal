@@ -31,8 +31,34 @@ export interface BetPick {
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
 
+// ─── Auth helpers ─────────────────────────────────────────────────────────────
+const AUTH_KEY = 'picklabs_auth';
+const SESSION_DAYS = 3;
+
+function isAuthValid(): boolean {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return false;
+    const { expiry } = JSON.parse(raw) as { expiry: number };
+    if (Date.now() > expiry) { localStorage.removeItem(AUTH_KEY); return false; }
+    return true;
+  } catch { return false; }
+}
+
+export function saveAuth(): void {
+  const expiry = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ expiry }));
+}
+
+export function clearAuth(): void {
+  localStorage.removeItem(AUTH_KEY);
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 function App() {
-  const [currentView, setCurrentView] = useState<ViewType>('landing-page');
+  const [currentView, setCurrentView] = useState<ViewType>(
+    isAuthValid() ? 'live-board' : 'landing-page'
+  );
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [betSlip, setBetSlip] = useState<BetPick[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);

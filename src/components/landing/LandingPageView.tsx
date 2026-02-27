@@ -121,11 +121,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             className="w-full md:w-auto px-10 py-5 bg-primary text-black font-black uppercase tracking-[0.2em] italic rounded-xl hover:scale-105 transition-transform shadow-[0_0_20px_rgba(13,242,13,0.3)]">
                             Start 7-Day Free Trial
                         </button>
-                        <button
-                            onClick={() => onNavigate('live-board')}
-                            className="w-full md:w-auto px-10 py-5 bg-slate-900 dark:bg-neutral-900 border border-neutral-700 text-white font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-black dark:hover:bg-neutral-800 transition-all">
-                            View Live Board
-                        </button>
                     </div>
                 </div>
             </section>

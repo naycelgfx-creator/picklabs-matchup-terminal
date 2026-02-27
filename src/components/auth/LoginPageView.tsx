@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { saveAuth } from '../../utils/auth';
+
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
 
@@ -76,6 +78,7 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
         e.preventDefault();
         if (email === 'admin@picklabs.bet' && password === 'admin12345') {
             setError('');
+            saveAuth();
             onNavigate('live-board');
         } else {
             setError('Invalid email or password.');
