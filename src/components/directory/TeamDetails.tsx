@@ -18,23 +18,33 @@ interface TeamDetailsProps {
     onBack: () => void;
 }
 
+const TABS = [
+    { key: 'overview', label: 'Overview', icon: 'analytics' },
+    { key: 'schedule', label: 'Schedule', icon: 'calendar_month' },
+    { key: 'roster', label: 'Roster', icon: 'group' },
+    { key: 'depth', label: 'Depth', icon: 'schema' },
+    { key: 'props', label: 'Props', icon: 'sports' },
+] as const;
+
+type TabKey = typeof TABS[number]['key'];
+
 export const TeamDetails: React.FC<TeamDetailsProps> = ({ team, sport, onBack }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'roster' | 'depth' | 'props'>('overview');
+    const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
     return (
-        <div className="w-full flex justify-center bg-background-dark py-8 px-6 min-h-screen">
-            <div className="max-w-[1536px] w-full flex flex-col gap-6">
+        <div className="w-full flex justify-center bg-background-dark min-h-screen">
+            <div className="max-w-[1536px] w-full flex flex-col gap-4 px-3 sm:px-6 py-4 sm:py-8">
 
-                {/* Back Button & Header */}
-                <div className="flex items-center gap-4">
+                {/* ── Back Button & Team Header ── */}
+                <div className="flex items-center gap-3">
                     <button
                         onClick={onBack}
-                        className="p-2 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer group"
+                        className="p-2 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer group shrink-0"
                     >
                         <span className="material-symbols-outlined text-text-muted group-hover:text-primary transition-colors">arrow_back</span>
                     </button>
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-background-light rounded-xl flex items-center justify-center border border-border-muted p-2 shadow-[0_0_20px_rgba(57,255,20,0.1)]">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-background-light rounded-xl flex items-center justify-center border border-border-muted p-1.5 shadow-[0_0_20px_rgba(57,255,20,0.1)] shrink-0">
                             <img
                                 src={team.url}
                                 alt={team.name}
@@ -45,95 +55,64 @@ export const TeamDetails: React.FC<TeamDetailsProps> = ({ team, sport, onBack })
                                 }}
                             />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-3xl font-black text-white uppercase italic tracking-tight">{team.name}</h2>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h2 className="text-xl sm:text-3xl font-black text-white uppercase italic tracking-tight truncate">{team.name}</h2>
                                 {SPORT_LOGOS[sport] && (
-                                    <img src={SPORT_LOGOS[sport]} alt={sport} className="w-5 h-5 opacity-60 ml-2" />
+                                    <img src={SPORT_LOGOS[sport]} alt={sport} className="w-4 h-4 opacity-60 hidden sm:block" />
                                 )}
                             </div>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-text-muted font-medium">
-                                <span className="bg-neutral-800 px-2 flex items-center rounded text-xs gap-1 border border-border-muted">
-                                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted font-medium">
+                                <span className="bg-neutral-800 px-2 py-0.5 flex items-center rounded text-[10px] gap-1 border border-border-muted">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                                     {sport}
                                 </span>
-                                <span>{team.abbr.toUpperCase()}</span>
+                                <span className="text-slate-500">{team.abbr.toUpperCase()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                {/* Navigation Tabs */}
-                <div className="flex items-center gap-6 border-b border-border-muted pb-2">
-                    <button
-                        onClick={() => setActiveTab('overview')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-colors pb-2 relative ${activeTab === 'overview' ? 'text-primary' : 'text-slate-500 hover:text-text-main'
-                            }`}
-                    >
-                        Overview
-                        {activeTab === 'overview' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_0_10px_rgba(57,255,20,0.5)]"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('schedule')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-colors pb-2 relative ${activeTab === 'schedule' ? 'text-primary' : 'text-slate-500 hover:text-text-main'
-                            }`}
-                    >
-                        Schedule
-                        {activeTab === 'schedule' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_0_10px_rgba(57,255,20,0.5)]"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('roster')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-colors pb-2 relative ${activeTab === 'roster' ? 'text-primary' : 'text-slate-500 hover:text-text-main'
-                            }`}
-                    >
-                        Roster & Stats
-                        {activeTab === 'roster' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_0_10px_rgba(57,255,20,0.5)]"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('depth')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-colors pb-2 relative ${activeTab === 'depth' ? 'text-primary' : 'text-slate-500 hover:text-text-main'
-                            }`}
-                    >
-                        Depth Chart
-                        {activeTab === 'depth' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_0_10px_rgba(57,255,20,0.5)]"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('props')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-colors pb-2 relative ${activeTab === 'props' ? 'text-accent-secondary' : 'text-slate-500 hover:text-text-main'
-                            }`}
-                    >
-                        Player Props
-                        {activeTab === 'props' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-secondary rounded-t-full shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div>
-                        )}
-                    </button>
+
+                {/* ── Navigation Tabs — scrollable on mobile ── */}
+                <div className="overflow-x-auto -mx-3 sm:mx-0 scrollbar-none">
+                    <div className="flex items-center gap-1 sm:gap-2 border-b border-border-muted pb-0 px-3 sm:px-0 min-w-max sm:min-w-0">
+                        {TABS.map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors pb-3 pt-1 px-2 sm:px-3 relative whitespace-nowrap
+                                    ${activeTab === tab.key
+                                        ? (tab.key === 'props' ? 'text-accent-secondary' : 'text-primary')
+                                        : 'text-slate-500 hover:text-text-main'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined text-[14px] sm:text-[16px]">{tab.icon}</span>
+                                <span className="hidden xs:inline sm:inline">{tab.label}</span>
+                                <span className="xs:hidden sm:hidden">{tab.label.slice(0, 3)}</span>
+                                {activeTab === tab.key && (
+                                    <div className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full shadow-[0_0_10px_rgba(57,255,20,0.5)]
+                                        ${tab.key === 'props' ? 'bg-accent-secondary' : 'bg-primary'}`}
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="animate-fade-in py-2">
+                {/* ── Content Area ── */}
+                <div className="animate-fade-in py-1">
                     {activeTab === 'overview' && (
                         <TeamOverview teamName={team.name} abbr={team.abbr} sport={sport} />
                     )}
-
                     {activeTab === 'schedule' && (
                         <TeamSchedule teamName={team.name} sport={sport} />
                     )}
-
                     {activeTab === 'roster' && (
                         <RosterAndStats teamName={team.name} sport={sport} />
                     )}
-
                     {activeTab === 'depth' && (
                         <DepthChart teamName={team.name} sport={sport} />
                     )}
-
                     {activeTab === 'props' && (
                         <PlayerPropsModule sport={sport} team={team} />
                     )}

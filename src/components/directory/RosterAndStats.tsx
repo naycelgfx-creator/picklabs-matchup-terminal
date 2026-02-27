@@ -64,7 +64,7 @@ export const RosterAndStats: React.FC<RosterAndStatsProps> = ({ teamName, sport 
                     Team Leaders
                     {loading && <span className="text-[10px] text-slate-600 font-normal animate-pulse ml-2">Loading ESPN data...</span>}
                 </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {categories.map((cat, i) => {
                         const leader: (typeof rosterWithStats)[0] | undefined = loading ? undefined : getLeader(cat.key);
                         if (loading) return (
@@ -101,7 +101,7 @@ export const RosterAndStats: React.FC<RosterAndStatsProps> = ({ teamName, sport 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                 {/* Player Stats Table */}
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col h-[520px]">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col h-[400px] sm:h-[520px]">
                     <div className="bg-neutral-800 px-6 py-4 border-b border-neutral-700 flex justify-between items-center shrink-0">
                         <h4 className="font-black text-white uppercase tracking-widest text-sm flex items-center gap-2">
                             <span className="material-symbols-outlined text-accent-blue text-[18px]">group</span>
@@ -112,98 +112,102 @@ export const RosterAndStats: React.FC<RosterAndStatsProps> = ({ teamName, sport 
                             ESPN Live
                         </span>
                     </div>
-                    <div className="overflow-y-auto flex-1">
-                        <table className="w-full text-left border-collapse min-w-[500px]">
-                            <thead className="sticky top-0 bg-neutral-900 border-b border-neutral-800 z-10">
-                                <tr>
-                                    <th className="py-3 px-6 text-slate-500 font-black uppercase text-[10px] tracking-wider">Player</th>
-                                    {categories.map(c => (
-                                        <th key={c.key} className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">{c.title}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-800/50">
-                                {loading
-                                    ? Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
-                                    : rosterWithStats.map(p => (
-                                        <tr key={`ps-${p.id}`} className="hover:bg-neutral-800/30 transition-colors group">
-                                            <td className="py-3 px-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
-                                                        <img
-                                                            src={p.photoUrl}
-                                                            alt={p.fullName}
-                                                            className="w-full h-full object-cover"
-                                                            onError={e => { (e.target as HTMLImageElement).src = AVATAR(p.fullName); }}
-                                                        />
+                    <div className="overflow-x-auto flex-1">
+                        <div className="min-w-[400px]">
+                            <table className="w-full text-left border-collapse min-w-[500px]">
+                                <thead className="sticky top-0 bg-neutral-900 border-b border-neutral-800 z-10">
+                                    <tr>
+                                        <th className="py-3 px-6 text-slate-500 font-black uppercase text-[10px] tracking-wider">Player</th>
+                                        {categories.map(c => (
+                                            <th key={c.key} className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">{c.title}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-800/50">
+                                    {loading
+                                        ? Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
+                                        : rosterWithStats.map(p => (
+                                            <tr key={`ps-${p.id}`} className="hover:bg-neutral-800/30 transition-colors group">
+                                                <td className="py-3 px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
+                                                            <img
+                                                                src={p.photoUrl}
+                                                                alt={p.fullName}
+                                                                className="w-full h-full object-cover"
+                                                                onError={e => { (e.target as HTMLImageElement).src = AVATAR(p.fullName); }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-slate-200 font-bold text-sm group-hover:text-primary transition-colors">{p.shortName ?? p.fullName}</span>
+                                                            <span className="text-slate-500 text-[10px] font-bold">{p.position?.abbreviation ?? '—'}</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-slate-200 font-bold text-sm group-hover:text-primary transition-colors">{p.shortName ?? p.fullName}</span>
-                                                        <span className="text-slate-500 text-[10px] font-bold">{p.position?.abbreviation ?? '—'}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 text-right text-white font-black">{p.stat1.toFixed(1)}</td>
-                                            <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat2.toFixed(1)}</td>
-                                            <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat3.toFixed(1)}</td>
-                                            <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat4.toFixed(1)}</td>
-                                        </tr>
-                                    ))}
-                            </tbody>
-                        </table>
+                                                </td>
+                                                <td className="py-3 px-4 text-right text-white font-black">{p.stat1.toFixed(1)}</td>
+                                                <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat2.toFixed(1)}</td>
+                                                <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat3.toFixed(1)}</td>
+                                                <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.stat4.toFixed(1)}</td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 {/* Shooting / Advanced Stats Table */}
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col h-[520px]">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col h-[400px] sm:h-[520px]">
                     <div className="bg-neutral-800 px-6 py-4 border-b border-neutral-700 flex justify-between items-center shrink-0">
                         <h4 className="font-black text-white uppercase tracking-widest text-sm flex items-center gap-2">
                             <span className="material-symbols-outlined text-accent-purple text-[18px]">track_changes</span>
                             Shooting Stats
                         </h4>
                     </div>
-                    <div className="overflow-y-auto flex-1">
-                        <table className="w-full text-left border-collapse min-w-[480px]">
-                            <thead className="sticky top-0 bg-neutral-900 border-b border-neutral-800 z-10">
-                                <tr>
-                                    <th className="py-3 px-6 text-slate-500 font-black uppercase text-[10px] tracking-wider">Player</th>
-                                    <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">eFG%</th>
-                                    <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">TS%</th>
-                                    <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">AST%</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-800/50">
-                                {loading
-                                    ? Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} cols={4} />)
-                                    : rosterWithStats.map(p => (
-                                        <tr key={`as-${p.id}`} className="hover:bg-neutral-800/30 transition-colors group">
-                                            <td className="py-3 px-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-7 h-7 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
-                                                        <img
-                                                            src={p.photoUrl}
-                                                            alt={p.fullName}
-                                                            className="w-full h-full object-cover"
-                                                            onError={e => { (e.target as HTMLImageElement).src = AVATAR(p.fullName); }}
-                                                        />
+                    <div className="overflow-x-auto flex-1">
+                        <div className="min-w-[380px]">
+                            <table className="w-full text-left border-collapse min-w-[480px]">
+                                <thead className="sticky top-0 bg-neutral-900 border-b border-neutral-800 z-10">
+                                    <tr>
+                                        <th className="py-3 px-6 text-slate-500 font-black uppercase text-[10px] tracking-wider">Player</th>
+                                        <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">eFG%</th>
+                                        <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">TS%</th>
+                                        <th className="py-3 px-4 text-slate-500 font-black uppercase text-[10px] tracking-wider text-right">AST%</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-800/50">
+                                    {loading
+                                        ? Array.from({ length: 12 }).map((_, i) => <SkeletonRow key={i} cols={4} />)
+                                        : rosterWithStats.map(p => (
+                                            <tr key={`as-${p.id}`} className="hover:bg-neutral-800/30 transition-colors group">
+                                                <td className="py-3 px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-7 h-7 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
+                                                            <img
+                                                                src={p.photoUrl}
+                                                                alt={p.fullName}
+                                                                className="w-full h-full object-cover"
+                                                                onError={e => { (e.target as HTMLImageElement).src = AVATAR(p.fullName); }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-slate-200 font-bold text-sm group-hover:text-accent-purple transition-colors">{p.shortName ?? p.fullName}</span>
                                                     </div>
-                                                    <span className="text-slate-200 font-bold text-sm group-hover:text-accent-purple transition-colors">{p.shortName ?? p.fullName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-white font-black">{p.efg.toFixed(1)}%</span>
-                                                    <div className="w-16 h-1 bg-neutral-800 rounded-full mt-1 overflow-hidden">
-                                                        <div className="h-full bg-accent-purple rounded-full" style={{ width: `${p.efg}%` }}></div>
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-white font-black">{p.efg.toFixed(1)}%</span>
+                                                        <div className="w-16 h-1 bg-neutral-800 rounded-full mt-1 overflow-hidden">
+                                                            <div className="h-full bg-accent-purple rounded-full" style={{ width: `${p.efg}%` }}></div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.ts.toFixed(1)}%</td>
-                                            <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.astPct.toFixed(1)}%</td>
-                                        </tr>
-                                    ))}
-                            </tbody>
-                        </table>
+                                                </td>
+                                                <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.ts.toFixed(1)}%</td>
+                                                <td className="py-3 px-4 text-right text-slate-300 font-medium">{p.astPct.toFixed(1)}%</td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

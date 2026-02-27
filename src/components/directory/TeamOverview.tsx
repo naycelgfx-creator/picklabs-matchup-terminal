@@ -165,9 +165,9 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                     <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-yellow-400/10 to-yellow-500/5 pointer-events-none" />
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent" />
 
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 px-8 py-6">
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 px-4 sm:px-8 py-5 sm:py-6">
                         {/* Trophies row */}
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap justify-center">
                             {Array.from({ length: Math.min(franchise.championships, 8) }).map((_, i) => (
                                 <div key={i} className="flex flex-col items-center">
                                     <TrophySVG size={48} />
@@ -224,13 +224,13 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
             )}
 
             {/* ─── Top Stat Row ─── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {/* Season Record */}
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 shadow-lg flex flex-col items-center justify-center relative overflow-hidden group hover:border-primary/40 transition-colors">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 sm:p-5 shadow-lg flex flex-col items-center justify-center relative overflow-hidden group hover:border-primary/40 transition-colors">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Season Record</span>
                     {loading ? <Skeleton w="w-20" h="h-10" /> : (
-                        <span className="text-4xl font-black text-white tracking-tighter">{info?.record ?? '—'}</span>
+                        <span className="text-3xl sm:text-4xl font-black text-white tracking-tighter">{info?.record ?? '—'}</span>
                     )}
                     <span className="text-sm font-medium text-primary mt-1 truncate max-w-full text-center px-1">
                         {loading ? '' : (info?.standing ?? '')}
@@ -242,7 +242,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Current Streak</span>
                     {loading ? <Skeleton w="w-16" h="h-10" /> : (
-                        <span className={`text-4xl font-black tracking-tighter ${info?.streak?.startsWith('W') ? 'text-primary' : 'text-red-500'}`}>
+                        <span className={`text-3xl sm:text-4xl font-black tracking-tighter ${info?.streak?.startsWith('W') ? 'text-primary' : 'text-red-500'}`}>
                             {info?.streak ?? '—'}
                         </span>
                     )}
@@ -271,7 +271,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
             </div>
 
             {/* ─── Extended Stats Row ─── */}
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
                 {[
                     { label: 'PPG (L10)', value: avgPPG !== null ? String(avgPPG) : '—', color: 'text-primary' },
                     { label: 'PAPG (L10)', value: avgPAPG !== null ? String(avgPAPG) : '—', color: 'text-red-400' },
@@ -290,7 +290,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
             </div>
 
             {/* ─── Middle Content ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
                 {/* Franchise Profile + Team Bio */}
                 <div className="lg:col-span-1 flex flex-col gap-4">
 
@@ -371,12 +371,12 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                 <div className="lg:col-span-3 flex flex-col gap-4">
                     {/* Advanced Analytics Graph */}
                     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-lg flex flex-col relative overflow-hidden">
-                        <div className="flex items-center justify-between mb-6 relative z-10">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 relative z-10">
                             <div className="flex items-center gap-3">
                                 <span className="material-symbols-outlined text-accent-secondary text-xl">monitoring</span>
                                 <h3 className="text-white font-bold uppercase tracking-wider text-sm">Advanced Team Analytics</h3>
                             </div>
-                            <div className="flex bg-neutral-800 rounded-lg p-1">
+                            <div className="flex flex-wrap bg-neutral-800 rounded-lg p-1 gap-1">
                                 <button onClick={() => setActiveGraph('scoring')}
                                     className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${activeGraph === 'scoring' ? 'bg-primary text-black' : 'text-slate-400 hover:text-white'}`}>
                                     L10 Scoring Trend

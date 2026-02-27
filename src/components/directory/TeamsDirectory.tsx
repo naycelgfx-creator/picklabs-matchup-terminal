@@ -444,8 +444,8 @@ export const TeamsDirectory: React.FC = () => {
     }
 
     return (
-        <div className="w-full flex flex-col items-center bg-background-dark py-8 px-6 min-h-screen">
-            <div className="max-w-[1536px] w-full flex flex-col gap-8">
+        <div className="w-full flex flex-col items-center bg-background-dark py-4 sm:py-8 px-3 sm:px-6 min-h-screen">
+            <div className="max-w-[1536px] w-full flex flex-col gap-4 sm:gap-8">
 
                 {/* ── Header ── */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -459,7 +459,7 @@ export const TeamsDirectory: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <h2 className="text-3xl font-black text-text-main uppercase italic tracking-tight">
+                            <h2 className="text-2xl sm:text-3xl font-black text-text-main uppercase italic tracking-tight">
                                 {selectedSport} Teams
                             </h2>
                             <p className="text-text-muted text-sm mt-0.5">
