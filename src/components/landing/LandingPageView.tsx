@@ -460,8 +460,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             {/* blinking cursor */}
                             <span className="inline-block w-2 h-4 bg-primary animate-pulse mt-2 align-middle"></span>
                         </div>
-                        {/* Gradient fade at bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#0d0d0d] to-transparent pointer-events-none"></div>
+
                     </div>
 
                     {/* Right — copy */}
