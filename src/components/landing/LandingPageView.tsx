@@ -6,7 +6,7 @@ import { PricingSection } from '../ui/pricing-section';
 import { LogoCloud } from '../ui/logo-cloud-3';
 import { BetSlipCompare } from '../ui/BetSlipCompare';
 import { ThemeToggle } from '../ui/theme-toggle';
-import { MatrixText } from '../ui/matrix-text';
+import { RandomLetterSwapForward, RandomLetterSwapPingPong } from '../ui/random-letter-swap';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -199,29 +199,26 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             <span className="material-symbols-outlined text-sm">auto_awesome</span>
                             v4.2 AI Simulation Engine Now Live
                         </div>
-                        {/* Hero headline — MatrixText effect */}
-                        <h2 className="font-black italic uppercase tracking-tight text-text-main leading-tight flex flex-col gap-1" aria-label="Predict the Unpredictable.">
-                            {/* Line 1: 'Predict the' — green 0/1 scramble */}
-                            <MatrixText
-                                text="Predict the"
-                                textClassName="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main"
-                                matrixColor="#0ca810"
-                                matrixShadow="0 0 12px rgba(12,168,16,0.7)"
-                                initialDelay={400}
-                                letterAnimationDuration={500}
-                                letterInterval={75}
-                                loopInterval={4000}
+                        {/* Hero headline — RandomLetterSwap effect on hover */}
+                        <h2
+                            className="font-black italic uppercase tracking-tight leading-tight flex flex-col"
+                            aria-label="Predict the Unpredictable."
+                        >
+                            {/* Line 1: PingPong — slides away on hover, returns on hover-out */}
+                            <RandomLetterSwapPingPong
+                                label="Predict the"
+                                reverse={true}
+                                staggerDuration={0.025}
+                                transition={{ type: 'spring', duration: 0.7 }}
+                                className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main justify-start"
                             />
-                            {/* Line 2: 'Unpredictable.' — white 0/1 scramble */}
-                            <MatrixText
-                                text="Unpredictable."
-                                textClassName="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-primary"
-                                matrixColor="#ffffff"
-                                matrixShadow="0 0 8px rgba(255,255,255,0.5)"
-                                initialDelay={900}
-                                letterAnimationDuration={500}
-                                letterInterval={75}
-                                loopInterval={4000}
+                            {/* Line 2: Forward — slides through then snaps back */}
+                            <RandomLetterSwapForward
+                                label="Unpredictable."
+                                reverse={false}
+                                staggerDuration={0.025}
+                                transition={{ type: 'spring', duration: 0.7 }}
+                                className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-primary justify-start"
                             />
                         </h2>
                         <p className="text-lg md:text-xl text-text-muted max-w-xl leading-relaxed">
