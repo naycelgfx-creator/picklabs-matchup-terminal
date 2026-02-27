@@ -200,52 +200,58 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
                                 <span className="text-xs font-bold text-white tracking-widest">{m.matchupId}</span>
                             </div>
                         </div>
-                        <div className="terminal-panel p-8 border-primary/20">
-                            <div className="flex items-center justify-between mb-12">
-                                <div className="flex flex-col items-center flex-1">
-                                    <img alt={m.team1.name} className="w-16 h-16 mb-4 object-contain" src={m.team1.logo} />
-                                    <div className="text-center">
-                                        <h2 className="text-2xl font-black italic uppercase text-text-main"><span className="text-text-muted">{m.team1.name}</span> <span className={`${m.team1.color} ml-2`}>{m.team1.score}</span></h2>
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{m.team1.record}</p>
+                        <div className="terminal-panel p-4 xl:p-8 border-primary/20 overflow-hidden">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex flex-col items-center flex-1 min-w-0 overflow-hidden">
+                                    <img alt={m.team1.name} className="w-12 h-12 xl:w-16 xl:h-16 mb-2 object-contain" src={m.team1.logo} />
+                                    <div className="text-center w-full px-1">
+                                        <h2 className="text-xs xl:text-sm font-black italic uppercase text-text-main leading-tight">
+                                            <span className="text-text-muted block truncate">{m.team1.name}</span>
+                                            <span className={`${m.team1.color} block`}>{m.team1.score}</span>
+                                        </h2>
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate">{m.team1.record}</p>
                                     </div>
-                                    <div className="flex gap-1 mt-4">
+                                    <div className="flex gap-0.5 mt-2">
                                         {m.team1.form.map((res, i) => (
                                             <div key={`t1-${i}`} className={res === 'W' ? 'win-badge' : 'loss-badge'}>{res}</div>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-center gap-8 px-8">
+                                <div className="flex items-center justify-center gap-2 xl:gap-4 px-2 xl:px-4 shrink-0">
                                     <div className="relative flex flex-col items-center">
-                                        <div className="relative w-20 h-20 flex items-center justify-center">
+                                        <div className="relative w-14 h-14 xl:w-20 xl:h-20 flex items-center justify-center">
                                             <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
                                                 <circle className="text-neutral-800" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeWidth="4"></circle>
                                                 <circle className={m.team1.color} cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeDasharray="213.5" strokeDashoffset={213.5 * (1 - m.team1.prob / 100)} strokeWidth="4"></circle>
                                             </svg>
-                                            <span className="absolute text-sm font-black text-white italic">{m.team1.prob}%</span>
+                                            <span className="absolute text-xs font-black text-white italic">{m.team1.prob}%</span>
                                         </div>
-                                        <span className={`text-[8px] font-black ${m.team1.color} uppercase tracking-widest mt-2`}>WIN PROB</span>
+                                        <span className={`text-[7px] font-black ${m.team1.color} uppercase tracking-widest mt-1`}>WIN PROB</span>
                                     </div>
-                                    <div className="h-12 w-[1px] bg-border-muted relative">
-                                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 bg-neutral-950 py-1">VS</span>
+                                    <div className="h-10 w-[1px] bg-border-muted relative">
+                                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[9px] font-black text-slate-600 bg-neutral-950 py-0.5">VS</span>
                                     </div>
                                     <div className="relative flex flex-col items-center">
-                                        <div className="relative w-20 h-20 flex items-center justify-center">
+                                        <div className="relative w-14 h-14 xl:w-20 xl:h-20 flex items-center justify-center">
                                             <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
                                                 <circle className="text-neutral-800" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeWidth="4"></circle>
                                                 <circle className={m.team2.color} cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeDasharray="213.5" strokeDashoffset={213.5 * (1 - m.team2.prob / 100)} strokeWidth="4"></circle>
                                             </svg>
-                                            <span className="absolute text-sm font-black text-white italic">{m.team2.prob}%</span>
+                                            <span className="absolute text-xs font-black text-white italic">{m.team2.prob}%</span>
                                         </div>
-                                        <span className={`text-[8px] font-black ${m.team2.color} uppercase tracking-widest mt-2`}>WIN PROB</span>
+                                        <span className={`text-[7px] font-black ${m.team2.color} uppercase tracking-widest mt-1`}>WIN PROB</span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-center flex-1">
-                                    <img alt={m.team2.name} className="w-16 h-16 mb-4 object-contain" src={m.team2.logo} />
-                                    <div className="text-center">
-                                        <h2 className="text-2xl font-black italic uppercase text-text-main"><span className="text-text-muted">{m.team2.name}</span> <span className={`${m.team2.color} ml-2`}>{m.team2.score}</span></h2>
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{m.team2.record}</p>
+                                <div className="flex flex-col items-center flex-1 min-w-0 overflow-hidden">
+                                    <img alt={m.team2.name} className="w-12 h-12 xl:w-16 xl:h-16 mb-2 object-contain" src={m.team2.logo} />
+                                    <div className="text-center w-full px-1">
+                                        <h2 className="text-xs xl:text-sm font-black italic uppercase text-text-main leading-tight">
+                                            <span className="text-text-muted block truncate">{m.team2.name}</span>
+                                            <span className={`${m.team2.color} block`}>{m.team2.score}</span>
+                                        </h2>
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 truncate">{m.team2.record}</p>
                                     </div>
-                                    <div className="flex gap-1 mt-4">
+                                    <div className="flex gap-0.5 mt-2">
                                         {m.team2.form.map((res, i) => (
                                             <div key={`t2-${i}`} className={res === 'W' ? 'win-badge' : 'loss-badge'}>{res}</div>
                                         ))}
