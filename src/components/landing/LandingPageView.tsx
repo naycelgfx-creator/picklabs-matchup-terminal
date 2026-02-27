@@ -289,7 +289,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {AI_HELPERS.map((helper, idx) => (
-                            <div key={idx} className="terminal-panel p-6 bg-accent-purple/5 border border-accent-purple/20 hover:border-accent-purple/50 transition-colors flex flex-col items-center text-center group">
+                            <div key={idx} className="terminal-panel p-6 bg-accent-purple/5 border border-accent-purple/20 hover:border-accent-purple/50 transition-colors flex flex-col items-center text-center group relative">
+                                <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                                 <div className="w-12 h-12 rounded-full bg-accent-purple/10 flex items-center justify-center mb-4 group-hover:bg-accent-purple group-hover:text-black transition-colors">
                                     <span className="material-symbols-outlined text-accent-purple group-hover:text-black text-2xl">{helper.icon}</span>
                                 </div>
@@ -316,7 +317,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
                     {COMMUNITY_REVIEWS.map((review, idx) => (
-                        <div key={idx} className="terminal-panel p-6 bg-neutral-900 border-border-muted flex flex-col h-full hover:border-accent-purple/50 transition-colors">
+                        <div key={idx} className="terminal-panel p-6 bg-neutral-900 border-border-muted flex flex-col h-full hover:border-accent-purple/50 transition-colors relative">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="flex items-center gap-1 mb-4">
                                 {[...Array(review.rating)].map((_, i) => (
                                     <span key={i} className="material-symbols-outlined text-xs text-yellow-500 fill-current" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -503,7 +505,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch max-w-[1400px] mx-auto">
 
                         {/* ── FREE MODE ── */}
-                        <div className="pricing-card border-border-muted/50 bg-neutral-900/40">
+                        <div className="pricing-card border-border-muted/50 bg-neutral-900/40 relative">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="mb-6">
                                 <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Free</h4>
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No credit card required</p>
@@ -534,7 +537,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                         </div>
 
                         {/* ── PREMIUM ── */}
-                        <div className="pricing-card">
+                        <div className="pricing-card relative">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="mb-6">
                                 <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Premium</h4>
                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core analytics suite</p>
@@ -563,6 +567,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
                         {/* ── PREMIUM + ── */}
                         <div className="pricing-card featured relative xl:-mt-4 xl:mb-4 border-accent-purple/50 bg-neutral-900 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="absolute top-0 right-0 bg-accent-purple text-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest italic rounded-bl-xl shadow-md">
                                 Best Value
                             </div>
@@ -597,6 +602,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
                         {/* ── PRO ── */}
                         <div className="pricing-card border-primary/30 relative bg-neutral-900">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="mb-6">
                                 <h4 className="text-2xl font-black italic uppercase text-text-main mb-2">Pro</h4>
                                 <p className="text-[10px] font-black text-primary uppercase tracking-widest">Get Pro for 38% off</p>
