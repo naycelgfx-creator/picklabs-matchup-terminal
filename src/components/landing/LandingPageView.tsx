@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Footer } from '../layout/Footer';
 import { isAuthValid } from '../../utils/auth';
+import { GlowingEffect } from '../ui/glowing-effect';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
 
@@ -178,7 +179,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                     <h2 className="text-4xl md:text-5xl font-black italic uppercase text-text-main">How It Works</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <div className="terminal-panel p-8 group border-primary/10">
+                    <div className="terminal-panel p-8 group border-primary/10 relative">
+                        <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-black transition-all">
                             <span className="material-symbols-outlined">hub</span>
                         </div>
@@ -194,7 +196,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                         </ul>
                     </div>
 
-                    <div className="terminal-panel p-8 group border-accent-purple/10">
+                    <div className="terminal-panel p-8 group border-accent-purple/10 relative">
+                        <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                         <div className="w-12 h-12 rounded-lg bg-accent-purple/10 flex items-center justify-center text-accent-purple mb-6 group-hover:bg-accent-purple group-hover:text-white transition-all">
                             <span className="material-symbols-outlined">visibility</span>
                         </div>
@@ -209,7 +212,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             </li>
                         </ul>
                     </div>
-                    <div className="terminal-panel p-8 group border-accent-blue/10">
+                    <div className="terminal-panel p-8 group border-accent-blue/10 relative">
+                        <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                         <div className="w-12 h-12 rounded-lg bg-accent-blue/10 flex items-center justify-center text-accent-blue mb-6 group-hover:bg-accent-blue group-hover:text-white transition-all">
                             <span className="material-symbols-outlined">analytics</span>
                         </div>
@@ -224,7 +228,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             </li>
                         </ul>
                     </div>
-                    <div className="terminal-panel p-8 group border-primary/10">
+                    <div className="terminal-panel p-8 group border-primary/10 relative">
+                        <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-black transition-all">
                             <span className="material-symbols-outlined">balance</span>
                         </div>
@@ -255,7 +260,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
                     {BETTING_STRATEGIES.map((strategy, idx) => (
-                        <div key={idx} className="terminal-panel p-6 bg-neutral-900/40 hover:bg-neutral-800 transition-colors border-border-muted hover:border-primary/30 group">
+                        <div key={idx} className="terminal-panel p-6 bg-neutral-900/40 hover:bg-neutral-800 transition-colors border-border-muted hover:border-primary/30 group relative">
+                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
                             <div className="w-14 h-14 bg-neutral-900 rounded-lg border border-border-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 {strategy.useIcon ? (
                                     <span className="material-symbols-outlined text-primary text-3xl font-light">{strategy.icon}</span>
