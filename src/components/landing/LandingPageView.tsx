@@ -198,7 +198,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             <NeonButton
                                 onClick={handleScrollToPricing}
                                 neon
-                                className="w-full md:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] italic text-white bg-black border-white/10 rounded-xl text-sm hover:scale-105 transition-transform"
+                                className="w-full md:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] italic text-black bg-primary border-primary rounded-xl text-sm hover:scale-105 transition-transform [--neon-color:white]"
                             >
                                 Start 7-Day Free Trial
                             </NeonButton>
