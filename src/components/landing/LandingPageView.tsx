@@ -6,6 +6,7 @@ import { PricingSection } from '../ui/pricing-section';
 import { LogoCloud } from '../ui/logo-cloud-3';
 import { BetSlipCompare } from '../ui/BetSlipCompare';
 import { ThemeToggle } from '../ui/theme-toggle';
+import { BlurFade } from '../ui/blur-fade';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -198,9 +199,12 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             <span className="material-symbols-outlined text-sm">auto_awesome</span>
                             v4.2 AI Simulation Engine Now Live
                         </div>
-                        <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main leading-tight">
-                            Predict the <span className="text-primary">Unpredictable.</span>
-                        </h2>
+                        {/* Hero headline — BlurFade staggered entrance */}
+                        <BlurFade delay={0.1} inView blur="8px" duration={0.5}>
+                            <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main leading-tight">
+                                Predict the <span className="text-primary">Unpredictable.</span>
+                            </h2>
+                        </BlurFade>
                         <p className="text-lg md:text-xl text-text-muted max-w-xl leading-relaxed">
                             Professional-grade sports simulations and sharp betting alerts powered by proprietary neural networks. Built for the modern bettor.
                         </p>
