@@ -6,6 +6,7 @@ import { PricingSection } from '../ui/pricing-section';
 import { LogoCloud } from '../ui/logo-cloud-3';
 import { BetSlipCompare } from '../ui/BetSlipCompare';
 import { ThemeToggle } from '../ui/theme-toggle';
+import { GooeyText } from '../ui/gooey-text-morphing';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -198,8 +199,34 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             <span className="material-symbols-outlined text-sm">auto_awesome</span>
                             v4.2 AI Simulation Engine Now Live
                         </div>
-                        <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tight text-text-main leading-tight">
-                            Predict the <span className="text-primary">Unpredictable.</span>
+                        {/* Hero headline — each line morphs between 3 font styles */}
+                        <h2 className="leading-tight" aria-label="Predict the Unpredictable">
+                            {/* Line 1: "Predict the" – 3 font styles */}
+                            <GooeyText
+                                texts={["Predict the", "Predict the", "Predict the"]}
+                                fontClassNames={[
+                                    "font-black italic uppercase tracking-tight text-text-main",
+                                    "font-light not-italic uppercase tracking-[0.35em] text-text-main",
+                                    "font-extrabold not-italic uppercase tracking-tighter text-text-main",
+                                ]}
+                                morphTime={1.2}
+                                cooldownTime={2.5}
+                                className="h-16 md:h-24"
+                                textClassName="text-5xl md:text-7xl"
+                            />
+                            {/* Line 2: "Unpredictable." – 3 green font styles */}
+                            <GooeyText
+                                texts={["Unpredictable.", "Unpredictable.", "Unpredictable."]}
+                                fontClassNames={[
+                                    "font-black italic uppercase tracking-tight text-primary",
+                                    "font-bold not-italic uppercase tracking-[0.2em] text-primary",
+                                    "font-black italic uppercase tracking-tighter text-primary drop-shadow-[0_0_24px_rgba(13,242,13,0.7)]",
+                                ]}
+                                morphTime={1.2}
+                                cooldownTime={2.5}
+                                className="h-16 md:h-24"
+                                textClassName="text-5xl md:text-7xl"
+                            />
                         </h2>
                         <p className="text-lg md:text-xl text-text-muted max-w-xl leading-relaxed">
                             Professional-grade sports simulations and sharp betting alerts powered by proprietary neural networks. Built for the modern bettor.
