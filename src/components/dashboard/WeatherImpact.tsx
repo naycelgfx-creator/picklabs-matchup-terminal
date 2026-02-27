@@ -8,7 +8,9 @@ interface WeatherImpactProps {
 }
 
 // ── Sports that play outdoors ──────────────────────────────────────────
-const OUTDOOR_SPORTS = ['NFL', 'MLB', 'Soccer', 'Tennis', 'Golf'];
+const isOutdoor = (sport: string) =>
+    sport === 'NFL' || sport === 'MLB' || sport === 'CFB' ||
+    sport.startsWith('Soccer') || sport.startsWith('Tennis') || sport.startsWith('Golf');
 
 // ── Sport-specific weather impact text ────────────────────────────────
 function getImpactText(
@@ -23,7 +25,7 @@ function getImpactText(
         return { text: `Thunder/heavy precipitation severely limits ${sport === 'Golf' ? 'play (potential suspension)' : 'scoring and increases turnover risk'}.`, level: 'high' };
     }
 
-    if (sport === 'NFL') {
+    if (sport === 'NFL' || sport === 'CFB') {
         if (windSpeed > 20) return { text: `Wind ${windSpeed} mph forces both teams to abandon the pass game. Heavy Under play — target rushing props.`, level: 'high' };
         if (condition === 'Snow') return { text: 'Snow makes footing treacherous, reduces passing accuracy. Fumble props and Unders become premium.', level: 'high' };
         if (condition === 'Rain') return { text: 'Wet ball increases drops and fumbles. Consider Under and ball-security-focused props.', level: 'medium' };
@@ -37,20 +39,20 @@ function getImpactText(
         if (condition === 'Rain') return { text: 'Rain may delay or suspend game. Check weather windows before betting.', level: 'high' };
     }
 
-    if (sport === 'Soccer') {
+    if (sport.startsWith('Soccer')) {
         if (condition === 'Rain' && windSpeed > 15) return { text: 'Heavy rain and wind reduce ball control and technical play. Back physical teams and the Under.', level: 'high' };
         if (condition === 'Snow') return { text: 'Snow pitch conditions favor direct play. Possession-based teams lose edge.', level: 'high' };
         if (temp > 88) return { text: 'High heat increases fatigue. Expect late-game opportunities — target 2nd half lines.', level: 'medium' };
         if (windSpeed > 18) return { text: 'Strong crosswinds disrupt passing and long balls. Expect more direct play.', level: 'medium' };
     }
 
-    if (sport === 'Tennis') {
+    if (sport.startsWith('Tennis')) {
         if (windSpeed > 15) return { text: `Wind ${windSpeed} mph above 15 mph significantly disrupts serve accuracy and consistent ball-tossing. Neutral/defensive baseliners gain edge.`, level: 'high' };
         if (condition === 'Sunny' && temp > 90) return { text: 'Extreme heat can cause deceleration late in matches. Shorter set totals or set betting.', level: 'medium' };
         if (condition === 'Cloudy') return { text: 'Overcast conditions suit heavy-hitting players (no sun glare). Big server advantage.', level: 'low' };
     }
 
-    if (sport === 'Golf') {
+    if (sport.startsWith('Golf')) {
         if (windSpeed > 20) return { text: `Gale-force winds (${windSpeed} mph) make scoring extremely difficult. Target higher scoring totals and play long-shot values.`, level: 'high' };
         if (windSpeed > 10) return { text: `Wind ${windSpeed} mph will punish aggressive lines. Course management separates field — back precision drivers.`, level: 'medium' };
         if (condition === 'Rain') return { text: 'Soft greens hold shots longer — aggressive approach styles gain edge. Lower scoring likely.', level: 'medium' };
@@ -116,15 +118,24 @@ const IMPACT_COLORS = {
 
 // ─────────────────────────────────────────────────────────────────────
 export const WeatherImpact: React.FC<WeatherImpactProps> = ({ game }) => {
-    if (!OUTDOOR_SPORTS.includes(game.sport)) return null;
+    if (!isOutdoor(game.sport)) return null;
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { temp, condition, windSpeed, windDir } = useMemo(() => getWeather(game), [game]);
     const { text: impactText, level: impactLevel } = getImpactText(condition, windSpeed, windDir, temp, game.sport);
 
-    const sportLabel: Record<string, string> = {
-        NFL: '🏈 NFL', MLB: '⚾ MLB', Soccer: '⚽ Soccer', Tennis: '🎾 Tennis', Golf: '⛳ Golf',
+    const sport = game.sport;
+    const sportLabelMap: Record<string, string> = {
+        NFL: '🏈 NFL', CFB: '🏈 College Football', MLB: '⚾ MLB', NHL: '🏒 NHL',
+        'Soccer.EPL': '⚽ Premier League', 'Soccer.UCL': '⚽ Champions League',
+        'Soccer.LALIGA': '⚽ La Liga', 'Soccer.BUNDESLIGA': '⚽ Bundesliga',
+        'Soccer.SERIEA': '⚽ Serie A', 'Soccer.LIGUE1': '⚽ Ligue 1',
+        'Soccer.MLS': '⚽ MLS', 'Soccer.LIGAMX': '⚽ Liga MX',
+        'Tennis.ATP': '🎾 ATP Tour', 'Tennis.WTA': '🎾 WTA Tour',
+        'Golf.PGA': '⛳ PGA Tour',
     };
+    const sportDisplayLabel = sportLabelMap[sport] ??
+        (sport.startsWith('Soccer') ? '⚽ Soccer' : sport.startsWith('Tennis') ? '🎾 Tennis' : sport.startsWith('Golf') ? '⛳ Golf' : sport);
 
     return (
         <div className="terminal-panel mt-6 relative overflow-visible group">
@@ -135,7 +146,7 @@ export const WeatherImpact: React.FC<WeatherImpactProps> = ({ game }) => {
             <div className="p-4 border-b border-border-muted flex justify-between items-center bg-white/5 relative z-10">
                 <h3 className="text-xs font-black text-text-main uppercase tracking-[0.2em] flex items-center gap-2">
                     <span className="material-symbols-outlined text-blue-400 text-sm">thermostat</span>
-                    Weather Impact · {sportLabel[game.sport] ?? game.sport}
+                    Weather Impact · {sportDisplayLabel}
                 </h3>
                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${IMPACT_COLORS[impactLevel]}`}>
                     {impactLevel} Impact

@@ -107,6 +107,29 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                     if (s === 'NFL' || s === 'CFB') return <NFLField game={game} />;
                     if (s === 'MLB') return <BaseballField game={game} />;
                     if (s === 'NHL') return <HockeyRink game={game} />;
+                    // Tennis / Golf / unknown — show a styled info banner
+                    const isTennis = s.startsWith('Tennis');
+                    const isGolf = s.startsWith('Golf');
+                    if (isTennis || isGolf) {
+                        return (
+                            <div className="terminal-panel mt-2 p-8 flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40">
+                                <div className="text-6xl">{isTennis ? '🎾' : '⛳'}</div>
+                                <div className="text-center">
+                                    <h3 className="text-xl font-black uppercase tracking-[0.2em] text-text-main italic">
+                                        {game.awayTeam.name} <span className="text-primary">vs</span> {game.homeTeam.name}
+                                    </h3>
+                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-2">
+                                        {isTennis ? 'Live Court Visualization Coming Soon' : 'Course Leaderboard Coming Soon'}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    {game.awayTeam.logo && <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-16 h-16 object-contain" />}
+                                    <span className="text-2xl font-black text-slate-600">VS</span>
+                                    {game.homeTeam.logo && <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-16 h-16 object-contain" />}
+                                </div>
+                            </div>
+                        );
+                    }
                     return null;
                 })()}
 
@@ -119,8 +142,9 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                 {/* Non-NBA sports box score lineup */}
                 {(() => {
                     const s = game.sport as string;
-                    const showLineup = s !== 'NBA' && s !== 'NCAAB' && s !== 'CBB' && s !== 'WNBA';
-                    if (!showLineup) return null;
+                    const isBasketball = s === 'NBA' || s === 'NCAAB' || s === 'CBB' || s === 'WNBA';
+                    const isTennisOrGolf = s.startsWith('Tennis') || s.startsWith('Golf');
+                    if (isBasketball || isTennisOrGolf) return null;
                     return (
                         <div className="mt-8 border-t-2 border-border-muted/30 pt-8">
                             <SportBoxScoreLineup game={game} />

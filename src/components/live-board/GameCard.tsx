@@ -96,9 +96,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     ) : (
                         <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-1.5">
                             <span className="material-symbols-outlined text-slate-500 text-base">
-                                {game.sport === 'Soccer' ? 'sports_soccer' :
-                                    game.sport === 'NFL' ? 'sports_football' :
-                                        game.sport === 'MLB' ? 'sports_baseball' : 'sports_basketball'}
+                                {game.sport.startsWith('Soccer') ? 'sports_soccer' :
+                                    game.sport.startsWith('Tennis') ? 'sports_tennis' :
+                                        game.sport.startsWith('Golf') ? 'golf_course' :
+                                            game.sport === 'NFL' || game.sport === 'CFB' ? 'sports_football' :
+                                                game.sport === 'MLB' ? 'sports_baseball' :
+                                                    game.sport === 'NHL' ? 'sports_hockey' : 'sports_basketball'}
                             </span>
                         </div>
                     )}
