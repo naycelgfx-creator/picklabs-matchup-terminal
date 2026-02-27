@@ -5,6 +5,9 @@ import { WeatherImpact } from './WeatherImpact';
 import { HeadCoachMatchup } from './HeadCoachMatchup';
 import { MatchupScouting } from './MatchupScouting';
 import { BasketballCourt } from './BasketballCourt';
+import { SoccerField } from './SoccerField';
+import { NFLField } from './NFLField';
+import { BaseballField } from './BaseballField';
 
 import { SimulationResults } from './SimulationResults';
 import { OffenseVsDefense } from './OffenseVsDefense';
@@ -94,7 +97,11 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
 
                 <MatchupScouting game={game} />
 
-                <BasketballCourt game={game} />
+                {/* Sport-specific field / court / pitch */}
+                {(game.sport === 'NBA' || game.sport === 'NCAAB' || game.sport === 'WNBA') && <BasketballCourt game={game} />}
+                {game.sport === 'Soccer' && <SoccerField game={game} />}
+                {game.sport === 'NFL' && <NFLField game={game} />}
+                {game.sport === 'MLB' && <BaseballField game={game} />}
 
                 {game.sport === 'NBA' && (
                     <div className="mt-8 border-t-2 border-primary/30 pt-8" id="nba-context-dashboard">
