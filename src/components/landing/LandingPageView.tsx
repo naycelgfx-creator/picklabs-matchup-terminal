@@ -38,23 +38,8 @@ const SPORTSBOOK_LOGOS = [
 ];
 
 
-const BETTING_STRATEGIES = [
-    { title: 'NFL Betting', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png', desc: 'Simulate weather impacts, offensive line grades, and sharp money flow to find high-value spreads and player props.' },
-    { title: 'NBA Betting', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nba.png', desc: 'Track usage rates, minutes projections, and defensive matchups to beat the closing line on over/under markets.' },
-    { title: 'MLB Betting', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/mlb.png', desc: 'Leverage deep pitch-type data and batter vs pitcher (BvP) metrics to uncover strikeout and total base props.' },
-    { title: 'NHL Betting', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png', desc: 'Utilize expected goals (xG), high-danger chances, and goalie form to find the edge on pucklines and totals.' },
-    { title: 'College Football', logo: 'https://www.google.com/s2/favicons?domain=cbssports.com&sz=128', desc: 'Exploit inefficiencies in lower-tier conferences and leverage advanced metrics to predict blowout scenarios.' },
-    { title: 'College Basketball', logo: 'https://www.google.com/s2/favicons?domain=sports.yahoo.com&sz=128', desc: 'Analyze tempo, offensive efficiency, and home court advantage for precise spread and total predictions.' },
-    { title: 'Soccer Betting', logo: 'https://www.google.com/s2/favicons?domain=sports.yahoo.com&sz=128', desc: 'Evaluate expected goals, possession stats, and team form to find value in 3-way moneylines and Asian handicaps.' },
-    { title: 'Positive EV Betting', icon: 'query_stats', useIcon: true, desc: 'Scan across 20+ sportsbooks to find odds discrepancies and mathematically profitable (+EV) betting opportunities.' }
-];
 
-const AI_HELPERS = [
-    { title: 'Player Props', icon: 'person', desc: 'Our AI analyzes thousands of historical games, parsing minute details like usage rate and matchup defense to predict exact player performance.' },
-    { title: 'Team Props', icon: 'groups', desc: 'The generator evaluates team-wide metrics, weather conditions, and coaching tendencies to predict team totals and specific milestone achievements.' },
-    { title: 'Game Lines', icon: 'sports_score', desc: 'Neural networks simulate the match over 10,000 times to formulate a highly accurate projected score, highlighting value on the spread or moneyline.' },
-    { title: 'Parlays', icon: 'account_tree', desc: 'Intelligently identifies correlated outcomes (e.g., QB passing yards + WR receiving yards) to construct mathematically sound Same Game Parlays.' }
-];
+
 
 const COMMUNITY_REVIEWS = [
     { name: 'Ryan M.', platform: 'App Store', logo: 'https://www.google.com/s2/favicons?domain=apple.com&sz=128', text: '"Absolutely game changing. The AI terminal found two props I would have completely missed. Paid for itself on day one."', rating: 5 },
@@ -333,62 +318,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                 </div>
             </section>
 
-            <section className="max-w-7xl mx-auto px-6 py-32 border-b border-border-muted relative">
-                <div className="absolute top-0 right-0 w-full h-full bg-primary/5 pointer-events-none blur-[120px] rounded-full scale-150 transform -translate-y-1/2 opacity-20"></div>
-                <div className="text-center mb-16 relative z-10">
-                    <h2 className="text-3xl md:text-5xl font-black italic uppercase text-text-main tracking-tight">
-                        Become a <span className="text-primary">Smarter</span> Sports Bettor
-                    </h2>
-                    <p className="text-text-muted mt-4 max-w-2xl mx-auto text-sm md:text-base">
-                        Unlock professional-grade intelligence and distinct strategic advantages across all major global sports leagues with our advanced AI tools.
-                    </p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                    {BETTING_STRATEGIES.map((strategy, idx) => (
-                        <div key={idx} className="terminal-panel p-6 bg-neutral-900/40 hover:bg-neutral-800 transition-colors border-border-muted hover:border-primary/30 group relative">
-                            <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                            <div className="w-14 h-14 bg-neutral-900 rounded-lg border border-border-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                {strategy.useIcon ? (
-                                    <span className="material-symbols-outlined text-primary text-3xl font-light">{strategy.icon}</span>
-                                ) : (
-                                    <img src={strategy.logo} alt={strategy.title} className="w-10 h-10 object-contain" />
-                                )}
-                            </div>
-                            <h4 className="text-lg font-black uppercase text-text-main mb-2 tracking-wide group-hover:text-primary transition-colors">{strategy.title}</h4>
-                            <p className="text-[11px] text-text-muted leading-relaxed font-medium">
-                                {strategy.desc}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="mt-16 relative z-10 border-t border-border-muted pt-16">
-                    <div className="text-center mb-12">
-                        <h3 className="text-2xl md:text-3xl font-black italic uppercase text-text-main tracking-tight">
-                            AI-Generated <span className="text-accent-purple">Helpers</span>
-                        </h3>
-                        <p className="text-text-muted mt-2 text-sm max-w-xl mx-auto">
-                            Our proprietary neural networks instantly formulate predictions across four core betting markets.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {AI_HELPERS.map((helper, idx) => (
-                            <div key={idx} className="terminal-panel p-6 bg-accent-purple/5 border border-accent-purple/20 hover:border-accent-purple/50 transition-colors flex flex-col items-center text-center group relative">
-                                <GlowingEffect spread={40} glow={true} disabled={false} proximity={64} inactiveZone={0.01} borderWidth={2} variant="green" />
-                                <div className="w-12 h-12 rounded-full bg-accent-purple/10 flex items-center justify-center mb-4 group-hover:bg-accent-purple group-hover:text-black transition-colors">
-                                    <span className="material-symbols-outlined text-accent-purple group-hover:text-black text-2xl">{helper.icon}</span>
-                                </div>
-                                <h4 className="text-lg font-black uppercase text-text-main mb-3 tracking-wider">{helper.title}</h4>
-                                <p className="text-xs text-text-muted leading-relaxed">
-                                    {helper.desc}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             <section className="max-w-7xl mx-auto px-6 py-32 border-b border-border-muted bg-background-dark relative">
                 <div className="text-center mb-16 relative z-10">
