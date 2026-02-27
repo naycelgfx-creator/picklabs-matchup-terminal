@@ -3,6 +3,7 @@ import { Footer } from '../layout/Footer';
 import { isAuthValid } from '../../utils/auth';
 import { GlowingEffect } from '../ui/glowing-effect';
 import { PricingSection } from '../ui/pricing-section';
+import { LogoCloud } from '../ui/logo-cloud-3';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -11,23 +12,28 @@ interface LandingPageViewProps {
     onNavigate: (view: ViewType) => void;
 }
 
-const MARQUEE_LOGOS = [
-    { name: 'FanDuel', domain: 'fanduel.com' },
-    { name: 'DraftKings', domain: 'draftkings.com' },
-    { name: 'BetMGM', domain: 'betmgm.com' },
-    { name: 'Caesars', domain: 'caesars.com' },
-    { name: 'Bet365', domain: 'bet365.com' },
-    { name: 'Kalshi', domain: 'kalshi.com' },
-    { name: 'Underdog', domain: 'underdogfantasy.com' },
-    { name: 'theScore Bet', domain: 'thescore.com' },
-    { name: 'BetRivers', domain: 'betrivers.com' },
-    { name: 'Fliff', domain: 'getfliff.com' },
-    { name: 'Sleeper', domain: 'sleeper.com' },
-    { name: 'Novig', domain: 'novig.us' },
-    { name: 'ProphetX', domain: 'prophetx.co' },
-    { name: 'PrizePicks', domain: 'prizepicks.com' },
-    { name: 'Hard Rock', domain: 'hardrock.bet' }
+
+const SPORTSBOOK_LOGOS = [
+    { src: 'https://www.google.com/s2/favicons?domain=fanduel.com&sz=128', alt: 'FanDuel' },
+    { src: 'https://www.google.com/s2/favicons?domain=draftkings.com&sz=128', alt: 'DraftKings' },
+    { src: 'https://www.google.com/s2/favicons?domain=betmgm.com&sz=128', alt: 'BetMGM' },
+    { src: 'https://www.google.com/s2/favicons?domain=caesars.com&sz=128', alt: 'Caesars Sportsbook' },
+    { src: 'https://www.google.com/s2/favicons?domain=bet365.com&sz=128', alt: 'Bet365' },
+    { src: 'https://www.google.com/s2/favicons?domain=kalshi.com&sz=128', alt: 'Kalshi' },
+    { src: 'https://www.google.com/s2/favicons?domain=underdogfantasy.com&sz=128', alt: 'Underdog Fantasy' },
+    { src: 'https://www.google.com/s2/favicons?domain=betrivers.com&sz=128', alt: 'BetRivers' },
+    { src: 'https://www.google.com/s2/favicons?domain=getfliff.com&sz=128', alt: 'Fliff' },
+    { src: 'https://www.google.com/s2/favicons?domain=sleeper.com&sz=128', alt: 'Sleeper' },
+    { src: 'https://www.google.com/s2/favicons?domain=prizepicks.com&sz=128', alt: 'PrizePicks' },
+    { src: 'https://www.google.com/s2/favicons?domain=hardrock.bet&sz=128', alt: 'Hard Rock Bet' },
+    { src: 'https://www.google.com/s2/favicons?domain=novig.us&sz=128', alt: 'Novig' },
+    { src: 'https://www.google.com/s2/favicons?domain=thescore.com&sz=128', alt: 'theScore Bet' },
+    { src: 'https://www.google.com/s2/favicons?domain=pinnacle.com&sz=128', alt: 'Pinnacle' },
+    { src: 'https://www.google.com/s2/favicons?domain=pointsbet.com&sz=128', alt: 'PointsBet' },
+    { src: 'https://www.google.com/s2/favicons?domain=williamhill.com&sz=128', alt: 'William Hill' },
+    { src: 'https://www.google.com/s2/favicons?domain=bovada.lv&sz=128', alt: 'Bovada' },
 ];
+
 
 const BETTING_STRATEGIES = [
     { title: 'NFL Betting', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png', desc: 'Simulate weather impacts, offensive line grades, and sharp money flow to find high-value spreads and player props.' },
@@ -224,21 +230,14 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                 </div>
             </div>
 
-            <div className="marquee-container">
-                <div className="marquee-content">
-                    <div className="flex items-center gap-20">
-                        {[...Array(2)].map((_, idx) => (
-                            <React.Fragment key={idx}>
-                                {MARQUEE_LOGOS.map((logo, logoIdx) => (
-                                    <div key={logoIdx} className="marquee-logo-item flex items-center gap-3 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default hover:drop-shadow-[0_0_15px_rgba(13,242,13,0.3)] min-w-max">
-                                        <img src={`https://www.google.com/s2/favicons?domain=${logo.domain}&sz=128`} alt={logo.name} className="w-8 h-8 rounded-lg" />
-                                        <span className="font-black italic text-xl uppercase whitespace-nowrap">{logo.name}</span>
-                                    </div>
-                                ))}
-                            </React.Fragment>
-                        ))}
-                    </div>
+            <div className="bg-background-dark border-b border-border-muted">
+                <div className="py-3 text-center mb-1">
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Live odds aggregated across 20+ sportsbooks</p>
                 </div>
+                <LogoCloud
+                    logos={SPORTSBOOK_LOGOS}
+                    className="pb-4"
+                />
             </div>
 
             <section id="how-it-works" className="max-w-7xl mx-auto px-6 py-32 border-b border-border-muted">
