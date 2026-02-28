@@ -18,7 +18,17 @@ export default {
                 "text-muted": "rgb(var(--text-muted) / <alpha-value>)",
             },
             fontFamily: {
-                "display": ["Space Grotesk", "sans-serif"]
+                "sans": ["Inter", "sans-serif"],
+                "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+                'sm': '0px',
+                DEFAULT: '0px',
+                'md': '0px',
+                'lg': '0px',
+                'xl': '0px',
+                '2xl': '0px',
+                '3xl': '0px',
             },
             keyframes: {
                 'neon-pulse': {

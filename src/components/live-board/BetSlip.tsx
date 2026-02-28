@@ -80,21 +80,21 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
 
                 {/* ── Header ── */}
                 <div className="p-4 border-b border-border-muted bg-neutral-900 flex items-center justify-between">
-                    <h3 className="text-xs font-black text-text-main uppercase tracking-[0.2em] flex items-center gap-2">
+                    <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-sm">receipt_long</span>
                         Bet Slip
                     </h3>
-                    <div className="flex items-center gap-3">
-                        {betSlip.length > 0 && (
+                    {betSlip.length > 0 && (
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setBetSlip([])}
                                 className="text-[9px] font-bold uppercase tracking-widest text-text-muted hover:text-red-500 transition-colors"
                             >
                                 Clear All
                             </button>
-                        )}
-                        <span className="text-[10px] font-bold text-accent-purple">{betSlip.length} Picks</span>
-                    </div>
+                            <span className="text-[10px] font-bold text-accent-purple">{betSlip.length} Picks</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Singles / Parlay Tab Toggle ── */}
@@ -126,13 +126,12 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                     </div>
                 )}
 
-                {/* ── Content ── */}
                 <div className="p-4 space-y-3 max-h-[480px] overflow-y-auto custom-scrollbar">
                     {betSlip.length === 0 ? (
-                        <div className="text-center py-10 space-y-2">
-                            <span className="material-symbols-outlined text-3xl text-slate-600">receipt_long</span>
-                            <p className="text-text-muted text-xs italic">Your bet slip is empty.</p>
-                            <p className="text-[9px] text-slate-600">Click odds buttons to add picks</p>
+                        <div className="text-center py-20 space-y-3">
+                            <span className="material-symbols-outlined text-4xl text-slate-700/50 mb-4 inline-block">science</span>
+                            <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest">NO SELECTIONS YET</p>
+                            <p className="text-[10px] text-slate-600">Click odds on any game to add</p>
                         </div>
                     ) : mode === 'singles' ? (
                         <>
@@ -299,75 +298,59 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                     )}
                 </div>
 
-                {/* ── Footer: Totals + Place Bet ── */}
-                <div className="p-4 border-t border-border-muted bg-white dark:bg-neutral-900/80 space-y-3">
-                    {mode === 'singles' && betSlip.length > 0 && (
-                        <>
-                            <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
-                                <span>Total Stake</span>
-                                <span className="text-text-main">${totalStake.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase text-text-main">
-                                <span>Total Payout</span>
-                                <span className="text-primary">${totalPayout.toFixed(2)}</span>
-                            </div>
-                        </>
-                    )}
-                    {mode === 'parlay' && betSlip.length >= 2 && (
-                        <>
-                            <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
-                                <span>Parlay Stake</span>
-                                <span className="text-text-main">${parlayStake.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase">
-                                <span className="text-slate-500">Parlay Odds</span>
-                                <span className={`font-mono ${parlayOddsNum > 0 ? 'text-green-400' : 'text-primary'}`}>{parlayOdds}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase text-text-main">
-                                <span>Total Payout</span>
-                                <span className="text-primary">${parlayPayout.toFixed(2)}</span>
-                            </div>
-                        </>
-                    )}
+                <div className="p-4 border-t border-border-muted bg-neutral-900 space-y-4">
+                    {/* Always show Totals, even when empty (with $0.00) like screenshot */}
+                    <div className="space-y-1.5 border-b border-border-muted pb-3">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            <span>{mode === 'parlay' && betSlip.length >= 2 ? 'Total Stake (Parlay)' : 'Total Stake'}</span>
+                            <span className="text-slate-300">
+                                ${(betSlip.length === 0 ? 0 : mode === 'parlay' && betSlip.length >= 2 ? parlayStake : totalStake).toFixed(2)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            <span>Projected Yield</span>
+                            <span className="text-primary">
+                                ${(betSlip.length === 0 ? 0 : mode === 'parlay' && betSlip.length >= 2 ? parlayPayout : totalPayout).toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
 
-                    {/* Sportsbook buttons */}
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                        {enabledBooks.map(book => (
-                            <button
-                                key={book.id}
-                                className="relative overflow-hidden w-full py-2 font-black uppercase tracking-widest text-[8px] sm:text-[9px] rounded-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-1.5 group"
-                                style={{ backgroundColor: book.color, color: '#ffffff', boxShadow: `0 0 10px ${book.color}55` }}
-                            >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                <img
-                                    src={`https://www.google.com/s2/favicons?domain=${book.domain}&sz=128`}
-                                    alt={book.name}
-                                    className="h-3 w-3 rounded-sm object-contain relative z-10"
-                                />
-                                <span className="relative z-10 truncate">{book.shortName.toUpperCase()}</span>
-                            </button>
-                        ))}
-                        {enabledBooks.length === 0 && (
-                            <div className="col-span-2 text-center py-3 text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">
-                                All books hidden — enable one in the
-                                <span className="text-primary"> Bookie Manager</span>
-                            </div>
-                        )}
+                    {/* Available Books List */}
+                    <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3">Available to Wager</p>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                            {enabledBooks.map(book => (
+                                <div key={book.id} className="flex items-center gap-2 group cursor-pointer">
+                                    <div className="w-4 h-4 rounded bg-white flex items-center justify-center p-0.5 shrink-0">
+                                        <img
+                                            src={`https://www.google.com/s2/favicons?domain=${book.domain}&sz=128`}
+                                            alt={book.name}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate group-hover:text-white transition-colors">
+                                        {book.shortName.length > 4 ? book.name : book.shortName}
+                                    </span>
+                                </div>
+                            ))}
+                            {enabledBooks.length === 0 && (
+                                <div className="col-span-2 text-[9px] text-slate-600 font-bold uppercase py-2">No books enabled.</div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Calm Down warning */}
                     {betSlip.length > 4 && (
-                        <div className="p-3 border border-red-500/50 bg-red-500/10 rounded-lg text-center">
+                        <div className="p-3 border border-red-500/50 bg-red-500/10 rounded-sm text-center">
                             <span className="material-symbols-outlined text-red-500 text-lg">warning</span>
                             <p className="text-[8px] text-text-muted mt-1">You've added {betSlip.length} picks. Please bet responsibly.</p>
                         </div>
                     )}
 
-                    <div className="text-center border-t border-border-muted pt-3">
-                        <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mb-1">Problem Gambling?</p>
-                        <a href="tel:1800GAMBLER" className="text-red-500 font-black text-xs tracking-widest hover:text-red-400 transition-colors">Call 1-800-GAMBLER</a>
+                    <div className="text-center pt-2">
+                        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mb-1">Problem Gambling?</p>
+                        <a href="tel:1800GAMBLER" className="text-red-500 font-black text-xs tracking-widest hover:text-red-400 transition-colors">1-800-GAMBLER</a>
                     </div>
-                    <p className="text-[8px] text-center text-slate-600 font-bold uppercase italic">System Sync v4.2 Secured</p>
                 </div>
             </div>
         </aside>
