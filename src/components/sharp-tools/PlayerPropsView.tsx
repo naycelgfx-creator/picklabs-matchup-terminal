@@ -1,5 +1,48 @@
 import { useState, useMemo, useEffect } from 'react';
-import { fetchESPNTeamRoster, ESPNPlayer } from '../../data/espnTeams';
+export interface ESPNPlayer {
+    id: string;
+    displayName: string;
+    headshot?: string;
+    position: string;
+    jersey: string;
+    status?: string;
+}
+
+export async function fetchESPNTeamRoster(teamId: string, sport: string): Promise<ESPNPlayer[]> {
+    const ESPN_LEAGUE: Record<string, string> = {
+        NBA: 'basketball/nba',
+        NFL: 'football/nfl',
+        MLB: 'baseball/mlb',
+        NHL: 'hockey/nhl',
+        NCAAB: 'basketball/mens-college-basketball',
+        Soccer: 'soccer/eng.1',
+    };
+    const league = ESPN_LEAGUE[sport];
+    if (!league) return [];
+    try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/${league}/teams/${teamId}/roster`;
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const json = await res.json();
+        const athletes: ESPNPlayer[] = [];
+        const groups = json.athletes || [];
+        for (const group of groups) {
+            for (const item of (group.items || [])) {
+                athletes.push({
+                    id: item.id,
+                    displayName: item.displayName || item.fullName || '',
+                    headshot: item.headshot?.href,
+                    position: item.position?.abbreviation || '',
+                    jersey: item.jersey || '',
+                    status: item.status?.type?.name,
+                });
+            }
+        }
+        return athletes.slice(0, 20);
+    } catch {
+        return [];
+    }
+}
 
 // --- MOCK DATA ---
 export interface PlayerProp {
@@ -105,8 +148,8 @@ export const PlayerPropsView = () => {
 
                     const processPlayer = (p: ESPNPlayer, tm: string, opp: string) => {
                         // Pick a random category based on player id hash mapped to category length
-                        const cStr = String(p.id) || p.name;
-                        const hash = Array.from(cStr).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                        const cStr = String(p.id) || p.displayName;
+                        const hash = Array.from(cStr).reduce((acc, char: string) => acc + char.charCodeAt(0), 0);
 
                         // Assign 2 props per player
                         [0, 1].forEach(seed => {
@@ -138,7 +181,7 @@ export const PlayerPropsView = () => {
 
                             generated.push({
                                 id: `${p.id}-${cat}-${game.id}-${seed}`, // Added seed to make ID unique for 2 props per player
-                                player: p.name, // Use fullName for display
+                                player: p.displayName, // Use fullName for display
                                 team: tm,
                                 teamLogo: `https://a.espncdn.com/i/teamlogos/${espnSport.split('.')[0].toLowerCase()}/500/${tm.toLowerCase()}.png`,
                                 opponent: opp,

@@ -67,7 +67,7 @@ export interface BoxingEvent {
 }
 
 async function fetchMostRecentBoxingEvent(daysBack = 180): Promise<BoxingEvent | null> {
-    const base = ESPN_SCOREBOARD_URLS['Boxing'];
+    const base = (ESPN_SCOREBOARD_URLS as any)['Boxing'] || 'https://site.api.espn.com/apis/site/v2/sports/boxing/match/scoreboard';
     for (let d = 0; d <= daysBack; d++) {
         const dt = new Date();
         dt.setDate(dt.getDate() - d);

@@ -37,7 +37,7 @@ export interface NASCARRace {
 
 // Walk back up to 30 days to find a recent NASCAR race
 async function fetchMostRecentNASCARRace(daysBack = 30): Promise<NASCARRace | null> {
-    const base = ESPN_SCOREBOARD_URLS['NASCAR'];
+    const base = (ESPN_SCOREBOARD_URLS as any)['NASCAR'] || 'https://site.api.espn.com/apis/site/v2/sports/racing/nascar/scoreboard';
     for (let d = 0; d <= daysBack; d++) {
         const dt = new Date();
         dt.setDate(dt.getDate() - d);

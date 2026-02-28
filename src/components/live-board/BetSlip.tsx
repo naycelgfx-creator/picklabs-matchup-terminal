@@ -103,8 +103,8 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                         <button
                             onClick={() => setMode('singles')}
                             className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'singles'
-                                    ? 'text-primary border-b-2 border-primary bg-primary/5'
-                                    : 'text-text-muted hover:text-text-main'
+                                ? 'text-primary border-b-2 border-primary bg-primary/5'
+                                : 'text-text-muted hover:text-text-main'
                                 }`}
                         >
                             Singles ({betSlip.length})
@@ -112,8 +112,8 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                         <button
                             onClick={() => setMode('parlay')}
                             className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all relative ${mode === 'parlay'
-                                    ? 'text-primary border-b-2 border-primary bg-primary/5'
-                                    : 'text-text-muted hover:text-text-main'
+                                ? 'text-primary border-b-2 border-primary bg-primary/5'
+                                : 'text-text-muted hover:text-text-main'
                                 }`}
                         >
                             Parlay
@@ -153,7 +153,7 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                             )}
 
                             {/* Individual picks */}
-                            {betSlip.map((bet, idx) => (
+                            {betSlip.map((bet) => (
                                 <div key={bet.id} className="bg-white dark:bg-neutral-900/40 border border-border-muted p-3 rounded-lg space-y-2 relative group">
                                     {/* Remove */}
                                     <button
