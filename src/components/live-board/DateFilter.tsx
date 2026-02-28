@@ -8,7 +8,7 @@ const generateDates = (): string[] => {
     for (let i = -2; i <= 12; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
-        dates.push(d.toISOString().split('T')[0]);
+        dates.push(toLocalDateStr(d));
     }
     return dates;
 };

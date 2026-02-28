@@ -248,6 +248,13 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
 
     const liveCount = games.filter(g => g.status === 'in').length;
 
+    // Build status-grouped sections for rendering
+    const statusSections = [
+        { label: 'LIVE NOW', games: games.filter(g => g.status === 'in'), dot: 'green' as const },
+        { label: 'UPCOMING', games: games.filter(g => g.status === 'pre'), dot: 'yellow' as const },
+        { label: 'FINAL', games: games.filter(g => g.status === 'post'), dot: 'grey' as const },
+    ].filter(s => s.games.length > 0);
+
     return (
         <div className="mt-0">
             {/* Panel Header */}
@@ -315,19 +322,45 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
                     ))}
                 </div>
             ) : games.length > 0 ? (
-                layoutMode === 'grid' ? (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {games.map(game => (
-                            <ESPNGameCard key={game.id} game={game} onSelectGame={onSelectGame} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-2">
-                        {games.map(game => (
-                            <ESPNGameRow key={game.id} game={game} onSelectGame={onSelectGame} />
-                        ))}
-                    </div>
-                )
+                <div className="space-y-8">
+                    {statusSections.map(section => (
+                        <div key={section.label} className="space-y-3">
+                            <div className="flex items-center gap-2.5 pb-1.5 border-b border-neutral-800">
+                                {section.dot === 'green' && (
+                                    <span className="relative flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                    </span>
+                                )}
+                                {section.dot === 'yellow' && (
+                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
+                                )}
+                                {section.dot === 'grey' && (
+                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
+                                )}
+                                <span className={`text-[11px] font-black uppercase tracking-widest ${section.dot === 'green' ? 'text-green-400' :
+                                        section.dot === 'yellow' ? 'text-yellow-400' :
+                                            'text-neutral-500'
+                                    }`}>{section.label}</span>
+                                <span className="text-[10px] text-neutral-600 font-bold">({section.games.length})</span>
+                                <div className="flex-1 h-px bg-neutral-800"></div>
+                            </div>
+                            {layoutMode === 'grid' ? (
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                    {section.games.map(game => (
+                                        <ESPNGameCard key={game.id} game={game} onSelectGame={onSelectGame} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {section.games.map(game => (
+                                        <ESPNGameRow key={game.id} game={game} onSelectGame={onSelectGame} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             ) : !error ? (
                 <div className="py-12 flex flex-col items-center text-center border border-dashed border-neutral-800 rounded-xl">
                     <span className="material-symbols-outlined text-3xl text-slate-600 mb-2">event_busy</span>

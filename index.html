@@ -6,13 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PickLabs | Advanced Matchup Terminal</title>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <!-- Prevent FOUC entirely based on local storage toggle -->
+    <!-- Always dark — lock dark class permanently -->
     <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />

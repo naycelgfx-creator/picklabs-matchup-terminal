@@ -13,6 +13,7 @@ import { SavedPicksView } from './components/saved/SavedPicksView';
 import { ValueFinderView } from './components/value-finder/ValueFinderView';
 import { LandingPageView } from './components/landing/LandingPageView';
 import { LoginPageView } from './components/auth/LoginPageView';
+import { SportsbookView } from './components/sportsbook/SportsbookView';
 import { RookieModeProvider } from './contexts/RookieModeContext';
 import { SportsbookProvider } from './contexts/SportsbookContext';
 import { RookieTour } from './components/ui/RookieTour';
@@ -29,7 +30,7 @@ export interface BetPick {
   stake: number;
 }
 
-type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
+export type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page' | 'sportsbook' | 'ai-dashboard' | 'player-props' | 'trends' | 'live-odds' | 'leaderboard' | 'referrals' | 'account' | 'settings';
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 const AUTH_KEY = 'picklabs_auth';
@@ -79,8 +80,16 @@ function App() {
   };
 
   const handeAddBet = (bet: Omit<BetPick, 'id'>) => {
-    const newBet = { ...bet, id: crypto.randomUUID() };
-    setBetSlip(prev => [...prev, newBet]);
+    setBetSlip(prev => {
+      const existingIdx = prev.findIndex(
+        b => b.gameId === bet.gameId && b.type === bet.type
+      );
+      // Toggle: if already in slip → remove; otherwise → add
+      if (existingIdx !== -1) {
+        return prev.filter((_, i) => i !== existingIdx);
+      }
+      return [...prev, { ...bet, id: crypto.randomUUID() }];
+    });
   };
 
   // ─── AI Pick My Bets — uses real ESPN games + AI engine ──────────────────────
@@ -282,6 +291,14 @@ function App() {
 
             {currentView === 'value-finder' && (
               <ValueFinderView />
+            )}
+
+            {currentView === 'sportsbook' && (
+              <SportsbookView
+                betSlip={betSlip}
+                setBetSlip={setBetSlip}
+                onAddBet={handeAddBet}
+              />
             )}
           </main>
 

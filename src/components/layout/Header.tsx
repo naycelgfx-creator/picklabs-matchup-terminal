@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRookieMode } from '../../contexts/RookieModeContext';
 import { useSportsbooks, SPORTSBOOKS } from '../../contexts/SportsbookContext';
 import { PulsingBeacon } from '../ui/PulsingBeacon';
-
-type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder';
+import { ViewType } from '../../App';
 
 interface HeaderProps {
     currentView: ViewType;
@@ -111,8 +110,15 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                     </a>
 
                     {/* ── Desktop Nav ── */}
-                    <nav className="hidden xl:flex items-center gap-6">
+                    <nav className="hidden lg:flex items-center gap-5">
                         <a className={navLinkClass('live-board')} onClick={(e) => { e.preventDefault(); setCurrentView('live-board'); }}>Live Board</a>
+                        <a
+                            className={`flex items-center gap-1 text-xs font-bold uppercase tracking-widest cursor-pointer transition-colors ${currentView === 'sportsbook' ? 'text-green-400 border-b-2 border-green-400 pb-1' : 'text-text-muted hover:text-green-400'}`}
+                            onClick={(e) => { e.preventDefault(); setCurrentView('sportsbook'); }}
+                        >
+                            <span className="material-symbols-outlined text-[14px]">casino</span>
+                            Sportsbook
+                        </a>
                         <a className={navLinkClass('matchup-terminal')} onClick={(e) => { e.preventDefault(); setCurrentView('matchup-terminal'); }}>Matchup Terminal</a>
                         <a className={navLinkClass('teams-directory')} onClick={(e) => { e.preventDefault(); setCurrentView('teams-directory'); }}>Teams</a>
                         <a className={navLinkClass('sharp-tools')} onClick={(e) => { e.preventDefault(); setCurrentView('sharp-tools'); }}>Sharp Tools</a>
@@ -361,6 +367,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                         <a className={`text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'matchup-terminal' ? 'text-primary' : 'text-text-muted hover:text-white'}`} onClick={(e) => { e.preventDefault(); setCurrentView('matchup-terminal'); }}>Matchup Terminal</a>
                         <a className={`text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'teams-directory' ? 'text-primary' : 'text-text-muted hover:text-white'}`} onClick={(e) => { e.preventDefault(); setCurrentView('teams-directory'); }}>Teams</a>
                         <a className={`text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'sharp-tools' ? 'text-primary' : 'text-text-muted hover:text-white'}`} onClick={(e) => { e.preventDefault(); setCurrentView('sharp-tools'); }}>Sharp Tools</a>
+                        <a className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'sportsbook' ? 'text-green-400' : 'text-text-muted hover:text-green-400'}`} onClick={(e) => { e.preventDefault(); setCurrentView('sportsbook'); }}>
+                            <span className="material-symbols-outlined text-sm">casino</span> Sportsbook
+                        </a>
                         <a className={`text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'bankroll' ? 'text-primary' : 'text-text-muted hover:text-white'}`} onClick={(e) => { e.preventDefault(); setCurrentView('bankroll'); }}>Bankroll</a>
                         <div className="h-px bg-border-muted my-2" />
                         <a className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest cursor-pointer transition ${currentView === 'popular-bets' ? 'text-orange-500' : 'text-orange-500/70 hover:text-orange-400'}`} onClick={(e) => { e.preventDefault(); setCurrentView('popular-bets'); }}>

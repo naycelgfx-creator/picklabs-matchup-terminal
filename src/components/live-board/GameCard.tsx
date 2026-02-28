@@ -11,13 +11,20 @@ interface GameCardProps {
     game: Game;
     onSelectGame: () => void;
     onAddBet: (bet: Omit<BetPick, 'id'>) => void;
+    betSlip: BetPick[];
     publicBettingOpen?: boolean;
     onPublicBettingToggle?: () => void;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, publicBettingOpen = false, onPublicBettingToggle }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, betSlip, publicBettingOpen = false, onPublicBettingToggle }) => {
     const isLive = game.status === 'LIVE';
     const { isRookieModeActive } = useRookieMode();
+
+    // Which bet types are already in slip for this game?
+    const selectedTypes = new Set(betSlip.filter(b => b.gameId === game.id).map(b => b.type));
+    const isSel = (t: BetPick['type']) => selectedTypes.has(t);
+    // Inline style for a lit/selected odds button
+    const selStyle = { background: 'rgba(17,248,183,0.15)', borderColor: 'rgba(17,248,183,0.75)', color: 'rgb(17,248,183)', boxShadow: '0 0 10px rgba(17,248,183,0.25)' } as React.CSSProperties;
 
     // Build plain-English translations for rookie mode
     const spreadNum = parseFloat(game.odds.spread);
@@ -215,50 +222,41 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
             {isRookieModeActive ? (
                 /* ── ROOKIE ODDS ROW ── */
                 <div id="rookie-odds-row" className="grid grid-cols-3 gap-2 border-t border-border-muted pt-4">
-                    {/* Moneyline */}
+                    {/* ML */}
                     <div
-                        className="cursor-pointer bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-2.5 hover:border-yellow-400/50 hover:bg-yellow-400/10 transition-all"
+                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
+                        style={isSel('ML') ? selStyle : {}}
                         onClick={() => onAddBet({ gameId: game.id, type: 'ML', team: game.awayTeam.name, odds: game.odds.moneyline, matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10 })}
                     >
                         <div className="flex items-center gap-1 mb-1">
-                            <PulsingBeacon color="yellow" />
-                            <GlossaryTooltip
-                                term="Moneyline"
-                                definition="You are simply picking which team will win the game outright."
-                                example={`If ${game.awayTeam.name} win the game, you win.`}
-                            />
+                            {isSel('ML') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
+                            <GlossaryTooltip term="Moneyline" definition="Pick which team wins outright." example={`If ${game.awayTeam.name} win, you win.`} />
                         </div>
                         <p className="text-[10px] text-slate-300 leading-snug mb-2">{mlText}</p>
                         <RiskMeter odds={game.odds.moneyline} />
                     </div>
                     {/* Spread */}
                     <div
-                        className="cursor-pointer bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-2.5 hover:border-yellow-400/50 hover:bg-yellow-400/10 transition-all"
+                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
+                        style={isSel('Spread') ? selStyle : {}}
                         onClick={() => onAddBet({ gameId: game.id, type: 'Spread', team: `${game.awayTeam.name} ${game.odds.spread}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10 })}
                     >
                         <div className="flex items-center gap-1 mb-1">
-                            <PulsingBeacon color="yellow" />
-                            <GlossaryTooltip
-                                term="Point Spread"
-                                definition="The predicted score gap. The favorite must win by more than this; the underdog must lose by less."
-                                example={awaySpreadText}
-                            />
+                            {isSel('Spread') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
+                            <GlossaryTooltip term="Point Spread" definition="The predicted score gap." example={awaySpreadText} />
                         </div>
                         <p className="text-[10px] text-slate-300 leading-snug mb-2">{awaySpreadText}</p>
                         <RiskMeter odds="-110" />
                     </div>
-                    {/* Over/Under */}
+                    {/* O/U */}
                     <div
-                        className="cursor-pointer bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-2.5 hover:border-yellow-400/50 hover:bg-yellow-400/10 transition-all"
+                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
+                        style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : {}}
                         onClick={() => onAddBet({ gameId: game.id, type: ouPick === 'Over' ? 'Over' : 'Under', team: `${ouPick} ${ouVal}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10 })}
                     >
                         <div className="flex items-center gap-1 mb-1">
-                            <PulsingBeacon color="yellow" />
-                            <GlossaryTooltip
-                                term="Over/Under"
-                                definition="A bet on the combined score. Pick Over if you think both teams will score a lot, Under if you expect a low-scoring game."
-                                example={`If the total score is ${ouPick === 'Over' ? 'above' : 'below'} ${ouVal}, you win.`}
-                            />
+                            {isSel(ouPick === 'Over' ? 'Over' : 'Under') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
+                            <GlossaryTooltip term="Over/Under" definition="Bet on combined total score." example={ouText} />
                         </div>
                         <p className="text-[10px] text-slate-300 leading-snug mb-2">{ouText}</p>
                         <RiskMeter odds="-110" />
@@ -267,47 +265,35 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
             ) : (
                 /* ── STANDARD ODDS BOXES ── */
                 <div className="grid grid-cols-3 gap-3 border-t border-border-muted pt-4">
+                    {/* ML */}
                     <div
-                        className="odd-box cursor-pointer hover:border-primary/40 transition-colors"
-                        onClick={() => onAddBet({
-                            gameId: game.id,
-                            type: 'ML',
-                            team: game.awayTeam.name,
-                            odds: game.odds.moneyline,
-                            matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
-                            stake: 50
-                        })}
+                        className="odd-box cursor-pointer transition-all"
+                        style={isSel('ML') ? selStyle : {}}
+                        onClick={() => onAddBet({ gameId: game.id, type: 'ML', team: game.awayTeam.name, odds: game.odds.moneyline, matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50 })}
                     >
-                        <span className="text-[8px] text-slate-500 uppercase font-black">Moneyline</span>
-                        <span className="text-xs font-black text-primary">{game.odds.moneyline}</span>
+                        <span className="text-[8px] uppercase font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>Moneyline</span>
+                        <span className="text-xs font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.moneyline}</span>
+                        {isSel('ML') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
                     </div>
+                    {/* Spread */}
                     <div
-                        className="odd-box cursor-pointer hover:border-accent-purple/40 transition-colors"
-                        onClick={() => onAddBet({
-                            gameId: game.id,
-                            type: 'Spread',
-                            team: `${game.awayTeam.name} ${game.odds.spread}`,
-                            odds: '-110',
-                            matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
-                            stake: 50
-                        })}
+                        className="odd-box cursor-pointer transition-all"
+                        style={isSel('Spread') ? selStyle : {}}
+                        onClick={() => onAddBet({ gameId: game.id, type: 'Spread', team: `${game.awayTeam.name} ${game.odds.spread}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50 })}
                     >
-                        <span className="text-[8px] text-slate-500 uppercase font-black">Spread</span>
-                        <span className="text-xs font-black text-accent-purple">{game.odds.spread}</span>
+                        <span className="text-[8px] uppercase font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>Spread</span>
+                        <span className="text-xs font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.spread}</span>
+                        {isSel('Spread') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
                     </div>
+                    {/* O/U */}
                     <div
-                        className="odd-box cursor-pointer hover:border-text-main/40 transition-colors"
-                        onClick={() => onAddBet({
-                            gameId: game.id,
-                            type: game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under',
-                            team: `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`,
-                            odds: '-110',
-                            matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
-                            stake: 50
-                        })}
+                        className="odd-box cursor-pointer transition-all"
+                        style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : {}}
+                        onClick={() => onAddBet({ gameId: game.id, type: game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', team: `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50 })}
                     >
-                        <span className="text-[8px] text-slate-500 uppercase font-black">O/U {game.odds.overUnder.value}</span>
-                        <span className="text-xs font-black text-text-main">{game.odds.overUnder.pick}</span>
+                        <span className="text-[8px] uppercase font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>O/U {game.odds.overUnder.value}</span>
+                        <span className="text-xs font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.overUnder.pick}</span>
+                        {isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
                     </div>
                 </div>
             )}

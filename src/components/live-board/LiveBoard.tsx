@@ -117,7 +117,7 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
     const [showPublicBets, setShowPublicBets] = useState<boolean>(true);
     const [showBetSlip, setShowBetSlip] = useState<boolean>(true);
-    const today = new Date().toISOString().split('T')[0];
+    const today = (() => { const d = new Date(); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; })();
     const [selectedDate, setSelectedDate] = useState<string>(today);
 
     // Soccer league sub-selection (defaults to EPL)
@@ -175,15 +175,16 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
         fetchSimulatedGames();
     }, [fetchSimulatedGames]);
 
-    // For sports without ESPN, fall back to mock
-    const simulatedGames = espnGames;
+    // Split games into three status buckets
+    const liveGames = espnGames.filter(g => g.status === 'LIVE');
+    const upcomingGames = espnGames.filter(g => g.status === 'UPCOMING');
+    const finalGames = espnGames.filter(g => g.status !== 'LIVE' && g.status !== 'UPCOMING');
 
-    const groupedGames = simulatedGames.reduce((acc, game) => {
-        const groupName = game.league || activeSport;
-        if (!acc[groupName]) acc[groupName] = [];
-        acc[groupName].push(game);
-        return acc;
-    }, {} as Record<string, Game[]>);
+    const statusSections = [
+        { label: 'LIVE NOW', games: liveGames, dot: 'green' as const },
+        { label: 'UPCOMING', games: upcomingGames, dot: 'yellow' as const },
+        { label: 'FINAL', games: finalGames, dot: 'grey' as const },
+    ].filter(s => s.games.length > 0);
 
     return (
         <>
@@ -380,36 +381,54 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                                 )}
                             </div>
 
-                            {simulatedGames.length > 0 ? (
-                                Object.entries(groupedGames).map(([groupName, groupGames]) => (
-                                    <div key={groupName} className="space-y-4">
-                                        {(activeSport === 'Soccer' || groupName !== activeSport) && (
-                                            <div className="flex items-center gap-3 border-b border-border-muted/50 pb-2">
-                                                <h3 className="font-black uppercase tracking-widest text-sm text-text-muted">{groupName}</h3>
-                                                <div className="h-px bg-gradient-to-r from-border-muted/50 to-transparent flex-1"></div>
+                            {espnGames.length > 0 ? (
+                                <div className="space-y-10">
+                                    {statusSections.map(section => (
+                                        <div key={section.label} className="space-y-4">
+                                            {/* Section header with colored indicator dot */}
+                                            <div className="flex items-center gap-3 pb-2 border-b border-border-muted/40">
+                                                {section.dot === 'green' && (
+                                                    <span className="relative flex h-2.5 w-2.5">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                                    </span>
+                                                )}
+                                                {section.dot === 'yellow' && (
+                                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
+                                                )}
+                                                {section.dot === 'grey' && (
+                                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
+                                                )}
+                                                <h3 className={`font-black uppercase tracking-widest text-xs ${section.dot === 'green' ? 'text-green-400' :
+                                                    section.dot === 'yellow' ? 'text-yellow-400' :
+                                                        'text-neutral-500'
+                                                    }`}>{section.label}</h3>
+                                                <span className="text-[10px] font-bold text-neutral-600">({section.games.length})</span>
+                                                <div className="h-px bg-gradient-to-r from-border-muted/40 to-transparent flex-1"></div>
                                             </div>
-                                        )}
-                                        <div className={layoutMode === 'grid'
-                                            ? 'grid grid-cols-1 xl:grid-cols-2 gap-6'
-                                            : 'flex flex-col gap-3'
-                                        }>
-                                            {groupGames.map(game => (
-                                                <GameCard
-                                                    key={game.id}
-                                                    game={game}
-                                                    publicBettingOpen={showPublicBets}
-                                                    onPublicBettingToggle={() => setShowPublicBets(p => !p)}
 
-                                                    onSelectGame={() => {
-                                                        onSelectGame(game);
-                                                        setCurrentView('matchup-terminal');
-                                                    }}
-                                                    onAddBet={onAddBet}
-                                                />
-                                            ))}
+                                            <div className={layoutMode === 'grid'
+                                                ? 'grid grid-cols-1 xl:grid-cols-2 gap-6'
+                                                : 'flex flex-col gap-3'
+                                            }>
+                                                {section.games.map(game => (
+                                                    <GameCard
+                                                        key={game.id}
+                                                        game={game}
+                                                        betSlip={betSlip}
+                                                        publicBettingOpen={showPublicBets}
+                                                        onPublicBettingToggle={() => setShowPublicBets(p => !p)}
+                                                        onSelectGame={() => {
+                                                            onSelectGame(game);
+                                                            setCurrentView('matchup-terminal');
+                                                        }}
+                                                        onAddBet={onAddBet}
+                                                    />
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))}
+                                </div>
                             ) : loadingEspn ? (
                                 <div className="col-span-full py-20 flex flex-col items-center justify-center text-center border border-dashed border-border-muted rounded-xl bg-[#0a0f16]">
                                     <span className="material-symbols-outlined text-4xl text-primary mb-2 animate-pulse">sports_basketball</span>

@@ -10,12 +10,19 @@
   :root,
   html.dark {
     --bg-dark: 4 5 10;
+    /* TRUE black like the screenshot */
     --neutral-800: 13 15 26;
+    /* cold dark card surface */
     --neutral-900: 8 9 18;
+    /* slightly darker card */
     --border-muted: 28 32 55;
+    /* subtle cold border */
     --text-main: 236 242 255;
+    /* cold white */
     --text-muted: 130 145 180;
+    /* faded blue-grey */
     --primary: 12 168 16;
+    /* vivid PickLabs green — matches screenshot exactly */
     --accent-purple: 155 79 245;
     --accent-blue: 56 128 250;
     --accent-green: 12 168 16;
