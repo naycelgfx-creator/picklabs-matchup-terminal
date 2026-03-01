@@ -176,7 +176,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
     if (isBaseball) scoringLabel = 'Runs';
 
     // Resolve franchise data — prefer the short abbr (e.g. "ATL"), fallback to full name
-    const franchise = getFranchise(abbr ?? teamName);
+    const franchise = getFranchise(abbr ?? teamName, teamName, sport);
 
     // Scoring trend graph
     const graphData = useMemo(() => {

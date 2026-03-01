@@ -12,7 +12,6 @@ import { PopularBetsView } from './components/popular/PopularBetsView';
 import { SavedPicksView } from './components/saved/SavedPicksView';
 import { ValueFinderView } from './components/value-finder/ValueFinderView';
 import { LandingPageView } from './components/landing/LandingPageView';
-import { LiveBetsMeter } from './components/shared/LiveBetsMeter';
 import { LoginPageView } from './components/auth/LoginPageView';
 import { SportsbookView } from './components/sportsbook/SportsbookView';
 import { HolographicBoardView } from './components/holographic-board/HolographicBoardView';

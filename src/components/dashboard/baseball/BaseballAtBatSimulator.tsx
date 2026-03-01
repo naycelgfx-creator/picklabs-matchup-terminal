@@ -8,7 +8,7 @@ interface BaseballAtBatSimulatorProps {
 export const BaseballAtBatSimulator: React.FC<BaseballAtBatSimulatorProps> = ({ game }) => {
     // Determine who is batting and pitching based on mock game logic
     // For a real app, this would be an API feed
-    const [isHomeBatting, setIsHomeBatting] = useState(false);
+    const [isHomeBatting] = useState(false);
 
     const batterTeam = isHomeBatting ? game.homeTeam : game.awayTeam;
     const pitcherTeam = isHomeBatting ? game.awayTeam : game.homeTeam;

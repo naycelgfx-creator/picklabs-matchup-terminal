@@ -18,7 +18,7 @@ interface HolographicBoardViewProps {
     activeTickets: BetPick[][];
 }
 
-export const HolographicBoardView: React.FC<HolographicBoardViewProps> = ({ betSlip, activeTickets }) => {
+export const HolographicBoardView: React.FC<HolographicBoardViewProps> = ({ activeTickets }) => {
     const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
     const [needsPermission, setNeedsPermission] = useState<boolean>(true);
     const cardsRef = useRef<(HTMLDivElement | null)[]>([]);

@@ -20,7 +20,7 @@ export const LiveBetsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('isLiveBetsActive', JSON.stringify(isLiveBetsActive));
     }, [isLiveBetsActive]);
 
-    const toggleLiveBets = () => setIsLiveBetsActive(prev => !prev);
+    const toggleLiveBets = () => setIsLiveBetsActive((prev: boolean) => !prev);
 
     return (
         <LiveBetsContext.Provider value={{ isLiveBetsActive, toggleLiveBets }}>
