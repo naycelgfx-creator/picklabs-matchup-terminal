@@ -1,10 +1,34 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
+from flask_login import LoginManager, login_required, current_user
 from ai_engine import BettingEngine, SportsPredictionModel, get_upcoming_games
+from models import db, User, Betlist, Pick
+import os
 
 app = Flask(__name__)
 # Enable CORS so the React app running on a different port can fetch data
 CORS(app)
+
+app.config['SECRET_KEY'] = 'picklabs_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///picklabs.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+with app.app_context():
+    db.create_all()
+    # Mock user if none exists
+    if not User.query.first():
+        mock_user = User(username='MarcusLocks', email='marcus@example.com', is_public=True, verified_roi=12.5)
+        db.session.add(mock_user)
+        db.session.commit()
 
 # Initialize the AI model once when the server starts
 print("Initializing AI Model...")
@@ -104,6 +128,42 @@ def predict_games():
         "predictions": results
     })
 
+@app.route('/save_betlist/<int:betlist_id>', methods=['POST'])
+@login_required
+def toggle_save_betlist(betlist_id):
+    """Handles saving or unsaving a Betlist to the user's personal library."""
+    betlist = Betlist.query.get_or_404(betlist_id)
+    
+    if betlist in current_user.saved_lists:
+        current_user.saved_lists.remove(betlist)
+        action = 'unsaved'
+        message = 'Removed from Library'
+    else:
+        current_user.saved_lists.append(betlist)
+        action = 'saved'
+        message = 'Saved to Library'
+        
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success', 
+        'action': action,
+        'message': message
+    })
+
+@app.route('/my-library')
+@login_required
+def my_library():
+    """
+    Fetches every single Betlist the user has clicked 'Save' on,
+    and sends it to their personal library page.
+    """
+    saved_lists = current_user.saved_lists.all()
+    return render_template('library.html', betlists=saved_lists, user=current_user)
+
+@app.route('/social-feed')
+def social_feed():
+    return render_template('social-feed.html')
+
 if __name__ == '__main__':
-    print("🚀 Starting PickLabs AI API Server on http://localhost:8005")
     app.run(port=8005, debug=False, threaded=True)

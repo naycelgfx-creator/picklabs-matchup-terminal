@@ -74,3 +74,10 @@ class Pick(db.Model):
     prop_type = db.Column(db.String(50)) # e.g., "Over 26.5 Points"
     sportsbook = db.Column(db.String(50)) # e.g., "DraftKings"
     odds = db.Column(db.String(10)) # e.g., "+110"
+    
+    # The new grading column. Defaults to 'Pending' when created.
+    status = db.Column(db.String(20), default='Pending') 
+    
+    # We also need to know how much risk/reward was attached to calculate ROI
+    units_risked = db.Column(db.Float, default=1.0)
+    units_won = db.Column(db.Float, default=0.0)
