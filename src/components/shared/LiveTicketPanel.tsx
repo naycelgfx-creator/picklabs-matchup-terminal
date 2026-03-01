@@ -69,9 +69,20 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
     const sumStakes = ticket.reduce((acc, b) => acc + (b.stake || 0), 0);
     const riskAmount = isParlay ? (sumStakes > 0 ? sumStakes : 50) : (sumStakes || 10);
     const payoutAmount = riskAmount + toWin(riskAmount, combinedOddsStr);
+    const ticketStatus = hitPercent >= 50 ? 'WON' : 'LOST';
 
     return (
-        <div className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-700 rounded-none shadow-2xl overflow-hidden font-sans mb-2 flex flex-col transition-all duration-300 relative group">
+        <div className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-700 rounded-none shadow-2xl font-sans mb-2 flex flex-col transition-all duration-300 relative group">
+
+            {/* Floating Status Badge — centered perfectly on the right vertical border */}
+            <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 z-20 flex bg-[#0a0a0c] p-1 rounded-full items-center justify-center pointer-events-none">
+                <div
+                    className={`px-1.5 py-3 text-[10px] font-black uppercase tracking-[0.15em] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] ${ticketStatus === 'WON' ? 'bg-[#A3FF00] text-black' : 'bg-red-500 text-white'}`}
+                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                >
+                    {ticketStatus}
+                </div>
+            </div>
             {/* Remove Button */}
             {onRemove && (
                 <button

@@ -96,11 +96,11 @@ export function PricingSection({ tiers, className, title = 'Choose Your Edge', s
                         /* Outer wrapper: pt-5 reserves space so the badge sitting above the card is never clipped */
                         <div key={tier.name} className="relative pt-5 flex flex-col">
 
-                            {/* Badge — rendered OUTSIDE the card div so it floats above it */}
+                            {/* Badge — rendered OUTSIDE the card div so it flows properly and sits perfectly centered on the top card border */}
                             {tier.badge && (
-                                <div className="absolute top-0 left-5 z-20">
+                                <div className="absolute top-5 left-6 -translate-y-1/2 z-20 bg-background-dark p-1 rounded-full flex items-center justify-center">
                                     <Badge className={cn(
-                                        'px-3 py-1 text-[9px] font-black uppercase tracking-widest border-none shadow-lg',
+                                        'px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] border-none shadow-[0_0_15px_rgba(0,0,0,0.5)]',
                                         tier.accentColor === 'purple'
                                             ? 'bg-accent-purple text-white'
                                             : 'bg-primary text-black'
