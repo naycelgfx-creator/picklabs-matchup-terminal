@@ -37,7 +37,9 @@ const toWin = (stake: number, oddsStr: string): number => {
 const getLogoForPick = (bet: BetPick) => {
     const isPlayerProp = ['Over', 'Under', 'Prop'].includes(bet.type);
     if (isPlayerProp) {
-        const results = searchPlayers(bet.team);
+        // Remove betting terms to isolate the player name
+        const playerCleanName = bet.team.replace(/(Over|Under|Prop|\+|-|[0-9.]+|Pts|Rebs|Asts|Threes|Points|Rebounds|Assists|Steals|Blocks|Turnovers|O\/U).*$/i, '').trim();
+        const results = searchPlayers(playerCleanName);
         if (results.length > 0 && results[0].headshot) {
             return results[0].headshot;
         }
@@ -121,7 +123,8 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                     const pickProgress = isHitting ? 100 : 30 + (i * 25) % 65;
                     const logoUrl = getLogoForPick(bet);
 
-                    const targetStringMatch = bet.type.match(/[0-9.]+/);
+                    // Extract the numerical target from either bet.type or bet.team
+                    const targetStringMatch = (bet.team + " " + bet.type).match(/[0-9.]+/);
                     const targetNum = targetStringMatch ? parseFloat(targetStringMatch[0]) : null;
 
                     let currentNum = 0;
@@ -137,8 +140,8 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                     };
                     const barColor = getColor(pickProgress);
 
-                    // To show player/team name for espn fallback
-                    const cleanTeamName = bet.team.replace(/ (ML|Spread|PK|\+|-).*$/i, '').trim();
+                    // Clean the team/player name for display and avatar fallback
+                    const cleanTeamName = bet.team.replace(/(Over|Under|Prop|ML|Spread|PK|\+|-|[0-9.]+|Pts|Rebs|Asts|Threes|Points|Rebounds|Assists|Steals|Blocks|Turnovers|O\/U).*$/i, '').trim();
 
                     // Display Logic
                     const isMoneyline = bet.type === 'ML' || bet.type.toLowerCase().includes('moneyline');
