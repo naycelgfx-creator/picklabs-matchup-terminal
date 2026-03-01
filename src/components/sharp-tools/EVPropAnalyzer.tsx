@@ -10,7 +10,7 @@ function formatOdds(odds: number): string {
 }
 
 const EV_CONFIG = {
-    high: { label: '🔥 ACTION', color: 'text-emerald-400', bg: 'bg-emerald-500/12', border: 'border-emerald-500/35', glow: 'shadow-[0_0_14px_rgba(16,185,129,0.25)]' },
+    high: { label: <><span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span> ACTION</>, color: 'text-emerald-400', bg: 'bg-emerald-500/12', border: 'border-emerald-500/35', glow: 'shadow-[0_0_14px_rgba(16,185,129,0.25)]' },
     low: { label: 'PASS', color: 'text-text-muted', bg: 'bg-white/3', border: 'border-border', glow: '' },
 };
 

@@ -76,7 +76,7 @@ export const AIDashboardView: React.FC = () => {
                 </div>
                 <div>
                     <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-3 py-1.5 rounded text-xs font-mono font-bold uppercase tracking-wider shadow-sm">
-                        🔥 Aggressive
+                        <span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span> Aggressive
                     </span>
                 </div>
             </div>

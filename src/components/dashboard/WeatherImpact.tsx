@@ -163,7 +163,7 @@ export const WeatherImpact: React.FC<WeatherImpactProps> = ({ game }) => {
                     transition={{ duration: 0.5 }}
                     className="flex flex-col items-center justify-center p-5 bg-white dark:bg-neutral-900/40 rounded-xl border border-border-muted/50 gap-3"
                 >
-                    <WeatherConditionIcon condition={condition} size={60} />
+                    <WeatherConditionIcon condition={condition} size={90} />
                     <span className="text-2xl font-black text-text-main">{temp}°F</span>
                     <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">
                         {CONDITION_LABELS[condition]}

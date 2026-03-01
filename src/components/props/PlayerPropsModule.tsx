@@ -319,13 +319,13 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                 <line
                     x1={PAD_LEFT} y1={lineY}
                     x2={PAD_LEFT + chartW} y2={lineY}
-                    stroke="#ef4444" strokeWidth="2" strokeDasharray="8 5" opacity="0.9"
+                    stroke="#f87171" strokeWidth="2" strokeDasharray="8 5" opacity="0.9"
                 />
                 {/* Prop line label */}
                 <rect x={PAD_LEFT + chartW - 42} y={lineY - 12} width="44" height="15" rx="3"
-                    fill="#ef4444" opacity="0.15" />
+                    fill="#f87171" opacity="0.15" />
                 <text x={PAD_LEFT + chartW - 20} y={lineY - 2} textAnchor="middle"
-                    fontSize="11" fill="#ef4444" fontWeight="800">{line}</text>
+                    fontSize="11" fill="#f87171" fontWeight="800">{line}</text>
 
                 {/* ── Bars ── */}
                 {logs.map((log, i) => {
@@ -334,8 +334,8 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                     const y = PAD_TOP + chartH - barH;
                     const isActiveHover = hover?.log === log;
                     const fill = log.isOver
-                        ? (isActiveHover ? '#34d399' : '#10b981')
-                        : (isActiveHover ? '#f87171' : '#7f1d1d');
+                        ? (isActiveHover ? '#bdfc3d' : '#a3ff00') // Lighter lime on hover, #a3ff00 standard
+                        : (isActiveHover ? '#fb923c' : '#f97316'); // Lighter orange on hover, #f97316 standard
 
                     return (
                         <g key={i}>
@@ -366,16 +366,15 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                                     x={x - 2} y={y - 2} width={barWidth + 4} height={Math.max(barH, 2) + 4}
                                     rx="4" ry="4"
                                     fill="none"
-                                    stroke={log.isOver ? '#34d399' : '#f87171'}
+                                    stroke={log.isOver ? '#bdfc3d' : '#fb923c'}
                                     strokeWidth="2" opacity="0.6"
                                 />
                             )}
-                            {/* Value label on top */}
                             {/* Value label */}
                             <text
                                 x={x + barWidth / 2} y={y - 6}
                                 textAnchor="middle" fontSize="13" fontWeight="800"
-                                fill={log.isOver ? '#10b981' : '#f87171'} opacity={0.95}
+                                fill={log.isOver ? '#bdfc3d' : '#fb923c'} opacity={0.95}
                             >
                                 {log.value % 1 === 0 ? log.value : log.value.toFixed(1)}
                             </text>
@@ -429,7 +428,7 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                     {hover.log.date}
                                 </span>
-                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${hover.log.isOver ? 'text-emerald-400 bg-emerald-400/15' : 'text-red-400 bg-red-400/15'}`}>
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${hover.log.isOver ? 'text-[#a3ff00] bg-[#a3ff00]/15' : 'text-orange-500 bg-orange-500/15'}`}>
                                     {hover.log.isOver ? 'OVER ✓' : 'UNDER ✗'}
                                 </span>
                             </div>
@@ -448,7 +447,7 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                             {/* Stat value */}
                             <div className="flex items-center justify-between mb-1.5">
                                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{propType}</span>
-                                <span className={`text-lg font-black tabular-nums ${hover.log.isOver ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <span className={`text-lg font-black tabular-nums ${hover.log.isOver ? 'text-[#a3ff00]' : 'text-orange-500'}`}>
                                     {hover.log.value % 1 === 0 ? hover.log.value : hover.log.value.toFixed(1)}
                                 </span>
                             </div>
@@ -456,9 +455,9 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                             {/* Opp rank */}
                             <div className="flex items-center justify-between">
                                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Opp Rank</span>
-                                <span className={`text-xs font-black px-1.5 py-0.5 rounded border ${hover.log.oppRank <= 10 ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                                <span className={`text-xs font-black px-1.5 py-0.5 rounded border ${hover.log.oppRank <= 10 ? 'text-[#a3ff00] border-[#a3ff00]/30 bg-[#a3ff00]/10'
                                     : hover.log.oppRank <= 20 ? 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'
-                                        : 'text-red-400 border-red-500/30 bg-red-500/10'
+                                        : 'text-orange-500 border-orange-500/30 bg-orange-500/10'
                                     }`}>
                                     {hover.log.oppRank}{OrdinalSuffix(hover.log.oppRank)}
                                 </span>
@@ -646,7 +645,7 @@ const InsightsPanel: React.FC<{
     insights: string[]; hitPct: number; count: number; onClose: () => void;
 }> = ({ insights, hitPct, count, onClose }) => {
     const [selected, setSelected] = useState(0);
-    const pctColor = hitPct >= 70 ? 'text-emerald-400' : hitPct >= 50 ? 'text-yellow-400' : 'text-red-400';
+    const pctColor = hitPct >= 70 ? 'text-[#a3ff00]' : hitPct >= 50 ? 'text-yellow-400' : 'text-orange-500';
     useEffect(() => {
         const h = (e: MouseEvent) => { if (!(e.target as Element).closest('.insights-panel')) onClose(); };
         window.addEventListener('mousedown', h); return () => window.removeEventListener('mousedown', h);
@@ -712,7 +711,7 @@ const PlayerHero: React.FC<PlayerHeroProps> = ({ prop, onClose, sport }) => {
         const wl = generateGameLogs(ws, baseLine, sport, activePropType, cnt);
         return Math.round(wl.filter(l => l.value >= effectiveLine).length / wl.length * 100);
     };
-    const pctColor = (pct: number) => pct >= 70 ? 'text-emerald-400' : pct >= 50 ? 'text-yellow-400' : 'text-red-400';
+    const pctColor = (pct: number) => pct >= 70 ? 'text-[#a3ff00]' : pct >= 50 ? 'text-yellow-400' : 'text-orange-500';
     const windows: ChartWindow[] = ['L5', 'L10', 'L20', 'H2H', '2025'];
     const windowPcts = Object.fromEntries(windows.map(w => [w, getWindowPct(w)])) as Record<ChartWindow, number>;
     const altLines = generateAltLineEntries(baseLine, seed);
@@ -739,7 +738,7 @@ const PlayerHero: React.FC<PlayerHeroProps> = ({ prop, onClose, sport }) => {
                             className="w-full h-full object-contain p-0.5"
                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
-                    {prop.isTrending && <span className="absolute -top-1 -left-1 text-sm">🔥</span>}
+                    {prop.isTrending && <span className="absolute -top-1 -left-1 text-sm material-symbols-outlined text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]">local_fire_department</span>}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -836,7 +835,7 @@ const PlayerHero: React.FC<PlayerHeroProps> = ({ prop, onClose, sport }) => {
             {/* ── Opp Rank pill ── */}
             <div className="flex items-center gap-2 px-5 pb-1">
                 <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Opp Rank vs {activePropType}:</span>
-                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${prop.oppRank.color === 'green' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : prop.oppRank.color === 'red' ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'}`}>
+                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${prop.oppRank.color === 'green' ? 'text-[#a3ff00] border-[#a3ff00]/30 bg-[#a3ff00]/10' : prop.oppRank.color === 'red' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10' : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'}`}>
                     {prop.oppRank.rank}{OrdinalSuffix(prop.oppRank.rank)} in league
                 </span>
             </div>
@@ -889,7 +888,7 @@ export const PlayerPropsModule: React.FC<PlayerPropsModuleProps> = ({ sport, tea
         setTimeout(() => heroRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
     };
 
-    const pctColor = (pct: number) => pct >= 70 ? 'text-emerald-400' : pct >= 50 ? 'text-yellow-400' : 'text-red-400';
+    const pctColor = (pct: number) => pct >= 70 ? 'text-[#a3ff00]' : pct >= 50 ? 'text-yellow-400' : 'text-orange-500';
 
     return (
         <div className="flex flex-col gap-5 w-full animate-fade-in">
@@ -988,7 +987,7 @@ export const PlayerPropsModule: React.FC<PlayerPropsModuleProps> = ({ sport, tea
                                                 {prop.position !== '—' && (
                                                     <span className="text-[8px] font-black text-slate-600 bg-neutral-800 px-1 rounded uppercase">{prop.position}</span>
                                                 )}
-                                                {prop.isTrending && <span className="text-[9px]">🔥</span>}
+                                                {prop.isTrending && <span className="text-[12px] material-symbols-outlined text-orange-500">local_fire_department</span>}
                                             </div>
                                             <span className="text-[9px] text-slate-600 font-bold">{prop.propType}</span>
                                         </div>
@@ -1014,8 +1013,8 @@ export const PlayerPropsModule: React.FC<PlayerPropsModuleProps> = ({ sport, tea
 
                                     {/* Opp Rank */}
                                     <div className="flex items-center justify-center">
-                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${prop.oppRank.color === 'green' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                                            : prop.oppRank.color === 'red' ? 'text-red-400 border-red-500/30 bg-red-500/10'
+                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${prop.oppRank.color === 'green' ? 'text-[#a3ff00] border-[#a3ff00]/30 bg-[#a3ff00]/10'
+                                            : prop.oppRank.color === 'red' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10'
                                                 : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'}`}>
                                             {prop.oppRank.rank}{OrdinalSuffix(prop.oppRank.rank)}
                                         </span>

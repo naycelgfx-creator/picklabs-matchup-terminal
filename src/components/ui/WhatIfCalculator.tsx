@@ -5,8 +5,9 @@ interface WhatIfCalculatorProps {
 }
 
 function calcToWin(stake: number, oddsStr: string): number {
+    if (!oddsStr || typeof oddsStr !== 'string' || oddsStr === 'N/A') return 0;
     const n = parseInt(oddsStr.replace(/\s/g, '').replace('+', ''));
-    if (isNaN(n)) return stake;
+    if (isNaN(n)) return 0;
     if (n > 0) return stake * (n / 100);
     return stake / (Math.abs(n) / 100);
 }

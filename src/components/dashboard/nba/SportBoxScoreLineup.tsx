@@ -57,7 +57,7 @@ const PlayerRow: React.FC<{ player: BoxScorePlayer; badgeColor: string }> = ({ p
                         <div className="min-w-0">
                             <div className="text-[10px] font-black text-text-main leading-tight flex items-center gap-1 flex-wrap">
                                 <span className="truncate">{player.name}</span>
-                                {hot && <span title="Hot performer">🔥</span>}
+                                {hot && <span title="Hot performer" className="material-symbols-outlined text-orange-500 text-[10px] align-middle">local_fire_department</span>}
                                 {cold && !player.didNotPlay && <span title="Cold performer">❄️</span>}
                             </div>
                             <div className="text-[8px] text-slate-500 uppercase font-bold">{player.position} {player.jersey && `#${player.jersey}`}</div>

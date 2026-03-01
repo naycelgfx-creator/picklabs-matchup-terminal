@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface Team {
     id: string;
     name: string;
@@ -24,7 +26,7 @@ export interface Game {
         spread: string;
         overUnder: { value: string; pick: 'Over' | 'Under' };
     };
-    streakLabel: string;
+    streakLabel: React.ReactNode;
     date: string;
     league?: string;
     venue: {
@@ -32,6 +34,15 @@ export interface Game {
         location: string;
     };
     broadcast: string;
+    aiData?: {
+        ai_probability: number;
+        edge: number;
+        suggestions: {
+            kelly: number;
+            fixed: number;
+            target: number;
+        };
+    };
 }
 
 export const SPORT_LOGOS: Record<string, string> = {
@@ -258,6 +269,20 @@ export const REAL_TEAMS: Record<string, { name: string, abbr: string, type?: 'te
         { name: 'Tigers', abbr: '99', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/99.png' },
         { name: 'Trojans', abbr: '30', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/30.png' },
         { name: 'Wolfpack', abbr: '152', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/152.png' }
+    ],
+    CFB: [
+        { name: 'Alabama', abbr: 'ala', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/333.png' },
+        { name: 'Georgia', abbr: 'uga', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/61.png' },
+        { name: 'Ohio State', abbr: 'osu', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/194.png' },
+        { name: 'Texas', abbr: 'tex', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/251.png' },
+        { name: 'Michigan', abbr: 'mich', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/130.png' },
+        { name: 'Oregon', abbr: 'ore', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/2483.png' },
+        { name: 'LSU', abbr: 'lsu', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/99.png' },
+        { name: 'Penn State', abbr: 'psu', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/213.png' },
+        { name: 'Ole Miss', abbr: 'miss', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/145.png' },
+        { name: 'Notre Dame', abbr: 'nd', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/87.png' },
+        { name: 'Tennessee', abbr: 'tenn', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/2433.png' },
+        { name: 'Clemson', abbr: 'clem', url: 'https://a.espncdn.com/i/teamlogos/ncaa/500/228.png' }
     ]
 };
 
@@ -275,6 +300,7 @@ const getLogoUrl = (sport: string, playerTeam: { name: string, abbr: string, typ
     if (sport === 'NBA') return `https://a.espncdn.com/i/teamlogos/nba/500/${playerTeam.abbr}.png`;
     if (sport === 'WNBA') return `https://a.espncdn.com/i/teamlogos/wnba/500/${playerTeam.abbr}.png`;
     if (sport === 'NCAAW') return `https://a.espncdn.com/i/teamlogos/ncaa/500/${playerTeam.abbr}.png`;
+    if (sport === 'CFB') return `https://a.espncdn.com/i/teamlogos/ncaa/500/${playerTeam.abbr}.png`;
     if (sport === 'NFL') return `https://a.espncdn.com/i/teamlogos/nfl/500/${playerTeam.abbr}.png`;
     if (sport === 'MLB') return `https://a.espncdn.com/i/teamlogos/mlb/500/${playerTeam.abbr}.png`;
     if (sport === 'NHL') return `https://a.espncdn.com/i/teamlogos/nhl/500/${playerTeam.abbr}.png`;
@@ -353,7 +379,7 @@ const generateDummyGames = (sport: string, count: number): Game[] => {
     });
 };
 
-export const SPORTS = ['NBA', 'WNBA', 'NCAAB', 'NCAAW', 'NFL', 'MLB', 'NHL', 'Soccer', 'Tennis', 'Golf', 'UFC'];
+export const SPORTS = ['NBA', 'WNBA', 'NCAAB', 'NCAAW', 'CFB', 'NFL', 'MLB', 'NHL', 'Soccer', 'Tennis', 'Golf', 'UFC'];
 
 export const mockGamesBySport: Record<string, Game[]> = SPORTS.reduce((acc, sport) => {
     const games = generateDummyGames(sport, 6);

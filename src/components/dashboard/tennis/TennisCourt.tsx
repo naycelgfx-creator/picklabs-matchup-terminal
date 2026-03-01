@@ -47,101 +47,85 @@ export const TennisCourt: React.FC<TennisCourtProps> = ({ game }) => {
                 </div>
 
                 {/* Court SVG */}
-                <div className="relative w-full max-w-[580px]">
-                    <svg
-                        viewBox="0 0 580 320"
-                        className="w-full rounded-lg overflow-hidden"
-                        aria-label="Tennis court diagram"
-                    >
-                        {/* Court surface — hard blue */}
-                        <rect width="580" height="320" fill="#1a4b7a" rx="4" />
+                <div className="relative w-full overflow-x-auto overflow-y-hidden pb-4">
+                    <div className="min-w-[700px] w-full max-w-[1000px] mx-auto">
+                        <svg
+                            viewBox="0 0 800 400"
+                            className="w-full h-auto drop-shadow-xl"
+                            aria-label="Tennis court diagram"
+                        >
+                            {/* Outer Surround (Dark Blue/Gray) */}
+                            <rect width="800" height="400" fill="#1e3a5f" rx="6" />
 
-                        {/* Court outer boundary */}
-                        <rect x="40" y="30" width="500" height="260" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
+                            {/* Inner Playing Court (Slightly lighter Blue) */}
+                            <rect x="100" y="50" width="600" height="300" fill="#154979" />
 
-                        {/* Singles sidelines */}
-                        <rect x="40" y="64" width="500" height="192" fill="none" stroke="white" strokeWidth="1.5" opacity="0.7" />
+                            <g stroke="#ffffff" strokeOpacity="0.8" fill="none">
+                                {/* Doubles Sidelines (Outer) */}
+                                <rect x="100" y="50" width="600" height="300" strokeWidth="2.5" />
 
-                        {/* Center line (net) */}
-                        <line x1="290" y1="30" x2="290" y2="290" stroke="white" strokeWidth="2" opacity="0.8" />
+                                {/* Singles Sidelines (Inner) */}
+                                <line x1="100" y1="95" x2="700" y2="95" strokeWidth="2" />
+                                <line x1="100" y1="305" x2="700" y2="305" strokeWidth="2" />
 
-                        {/* Service boxes */}
-                        {/* Left side */}
-                        <line x1="40" y1="160" x2="290" y2="160" stroke="white" strokeWidth="1.5" opacity="0.6" />
-                        <line x1="165" y1="64" x2="165" y2="256" stroke="white" strokeWidth="1.5" opacity="0.6" />
-                        {/* Right side */}
-                        <line x1="290" y1="160" x2="540" y2="160" stroke="white" strokeWidth="1.5" opacity="0.6" />
-                        <line x1="415" y1="64" x2="415" y2="256" stroke="white" strokeWidth="1.5" opacity="0.6" />
+                                {/* Service Lines */}
+                                <line x1="260" y1="95" x2="260" y2="305" strokeWidth="2" />
+                                <line x1="540" y1="95" x2="540" y2="305" strokeWidth="2" />
 
-                        {/* Net */}
-                        <rect x="275" y="30" width="30" height="260" fill="#00000040" />
-                        <line x1="275" y1="30" x2="275" y2="290" stroke="white" strokeWidth="3" opacity="0.9" />
-                        <line x1="305" y1="30" x2="305" y2="290" stroke="white" strokeWidth="3" opacity="0.9" />
-                        {/* Net strap */}
-                        <line x1="275" y1="160" x2="305" y2="160" stroke="white" strokeWidth="4" opacity="1" />
-                        {/* Net posts */}
-                        <circle cx="275" cy="30" r="4" fill="white" opacity="0.9" />
-                        <circle cx="305" cy="30" r="4" fill="white" opacity="0.9" />
-                        <circle cx="275" cy="290" r="4" fill="white" opacity="0.9" />
-                        <circle cx="305" cy="290" r="4" fill="white" opacity="0.9" />
+                                {/* Center Service Line */}
+                                <line x1="260" y1="200" x2="540" y2="200" strokeWidth="2" />
 
-                        {/* Baseline ticks */}
-                        <line x1="290" y1="30" x2="290" y2="44" stroke="white" strokeWidth="2" opacity="0.7" />
-                        <line x1="290" y1="276" x2="290" y2="290" stroke="white" strokeWidth="2" opacity="0.7" />
-
-                        {/* P2 shot dots (primary green — left/away side) */}
-                        {rallyShotsP2.map((s, i) => (
-                            <g key={`p2-${i}`}>
-                                <circle
-                                    cx={(s.x / 100) * 580}
-                                    cy={(s.y / 100) * 320}
-                                    r="7"
-                                    fill="#10b981"
-                                    opacity="0.85"
-                                    className="animate-pulse"
-                                />
-                                <circle
-                                    cx={(s.x / 100) * 580}
-                                    cy={(s.y / 100) * 320}
-                                    r="3"
-                                    fill="white"
-                                    opacity="0.9"
-                                />
+                                {/* Center Marks on Baselines */}
+                                <line x1="100" y1="200" x2="110" y2="200" strokeWidth="3" />
+                                <line x1="690" y1="200" x2="700" y2="200" strokeWidth="3" />
                             </g>
-                        ))}
 
-                        {/* P1 shot dots (purple — right/home side) */}
-                        {rallyShotsP1.map((s, i) => (
-                            <g key={`p1-${i}`}>
-                                <circle
-                                    cx={(s.x / 100) * 580}
-                                    cy={(s.y / 100) * 320}
-                                    r="7"
-                                    fill="#8b5cf6"
-                                    opacity="0.85"
-                                    className="animate-pulse"
-                                />
-                                <circle
-                                    cx={(s.x / 100) * 580}
-                                    cy={(s.y / 100) * 320}
-                                    r="3"
-                                    fill="white"
-                                    opacity="0.9"
-                                />
+                            {/* Net & Posts */}
+                            <g>
+                                <line x1="400" y1="35" x2="400" y2="365" stroke="#ffffff" strokeWidth="6" strokeLinecap="round" />
+                                <circle cx="400" cy="35" r="5" fill="#ffffff" />
+                                <circle cx="400" cy="365" r="5" fill="#ffffff" />
                             </g>
-                        ))}
 
-                        {/* "NET" label */}
-                        <text x="290" y="22" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" opacity="0.6" letterSpacing="2">NET</text>
+                            {/* "NET" label at the top */}
+                            <text x="400" y="24" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="800" opacity="0.7" letterSpacing="3">NET</text>
 
-                        {/* Player name labels */}
-                        <text x="145" y="312" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold" opacity="0.8" letterSpacing="1">
-                            {p2.toUpperCase().substring(0, 14)}
-                        </text>
-                        <text x="435" y="312" textAnchor="middle" fill="#8b5cf6" fontSize="9" fontWeight="bold" opacity="0.8" letterSpacing="1">
-                            {p1.toUpperCase().substring(0, 14)}
-                        </text>
-                    </svg>
+                            {/* P2 shot dots (green — left/away side) */}
+                            {rallyShotsP2.map((s, i) => {
+                                // map s.x 0-100 to left side of court: x: 100 to 400
+                                const cx = 100 + (s.x / 100) * 300;
+                                // map s.y 0-100 to y: 50 to 350
+                                const cy = 50 + (s.y / 100) * 300;
+                                return (
+                                    <g key={`p2-${i}`}>
+                                        <circle cx={cx} cy={cy} r="6" fill="#10b981" opacity="0.9" className="animate-pulse" />
+                                        <circle cx={cx} cy={cy} r="2.5" fill="#ffffff" />
+                                    </g>
+                                );
+                            })}
+
+                            {/* P1 shot dots (purple — right/home side) */}
+                            {rallyShotsP1.map((s, i) => {
+                                // map s.x 0-100 to right side of court (mirrored): x: 400 to 700
+                                const cx = 400 + ((100 - s.x) / 100) * 300;
+                                const cy = 50 + (s.y / 100) * 300;
+                                return (
+                                    <g key={`p1-${i}`}>
+                                        <circle cx={cx} cy={cy} r="6" fill="#a855f7" opacity="0.9" className="animate-pulse" />
+                                        <circle cx={cx} cy={cy} r="2.5" fill="#ffffff" />
+                                    </g>
+                                );
+                            })}
+
+                            {/* Player Name Labels on Court Floor */}
+                            <text x="250" y="385" textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="900" opacity="0.6" letterSpacing="1.5">
+                                {game.awayTeam.name.toUpperCase()}
+                            </text>
+                            <text x="550" y="385" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="900" opacity="0.6" letterSpacing="1.5">
+                                {game.homeTeam.name.toUpperCase()}
+                            </text>
+                        </svg>
+                    </div>
                 </div>
 
                 {/* Legend */}

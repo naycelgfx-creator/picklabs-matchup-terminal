@@ -8,6 +8,7 @@ import { BetSlipCompare } from '../ui/BetSlipCompare';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { BlurFade } from '../ui/blur-fade';
 import { ShimmerButton } from '../ui/shimmer-button';
+import { ContainerScroll } from '../ui/container-scroll-animation';
 import { Sparkles, Zap, Shield, Star } from 'lucide-react';
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -46,7 +47,7 @@ const COMMUNITY_REVIEWS = [
     { name: 'Ryan M.', platform: 'App Store', logo: 'https://www.google.com/s2/favicons?domain=apple.com&sz=128', text: '"Absolutely game changing. The AI terminal found two props I would have completely missed. Paid for itself on day one."', rating: 5 },
     { name: 'SharpShooter99', platform: 'Discord', logo: 'https://www.google.com/s2/favicons?domain=discord.com&sz=128', text: '"The community here is unmatched. The correlation matrix tools are what pros use, now available to us. Crazy value."', rating: 5 },
     { name: 'AlexTheBettor', platform: 'Twitter', logo: 'https://www.google.com/s2/favicons?domain=twitter.com&sz=128', text: '"PickLabs just saved me from a massive bad beat by alerting me to a sharp money move against my team. Unreal." - @AlexTheBettor', rating: 5 },
-    { name: 'Sammy_Sports', platform: 'Instagram', logo: 'https://www.google.com/s2/favicons?domain=instagram.com&sz=128', text: '"Every single morning starts by checking the PickLabs terminal. The UI is sleek and the stats are deadly accurate. 🔥"', rating: 5 },
+    { name: 'Sammy_Sports', platform: 'Instagram', logo: 'https://www.google.com/s2/favicons?domain=instagram.com&sz=128', text: <>"Every single morning starts by checking the PickLabs terminal. The UI is sleek and the stats are deadly accurate. <span className="material-symbols-outlined text-orange-500 text-[10px] align-middle">local_fire_department</span>"</>, rating: 5 },
     { name: 'David L.', platform: 'App Store', logo: 'https://www.google.com/s2/favicons?domain=apple.com&sz=128', text: '"Finally an app that gives real data without the fluff. The +EV scanner prints. Period."', rating: 5 },
     { name: 'VegasInsider0', platform: 'Twitter', logo: 'https://www.google.com/s2/favicons?domain=twitter.com&sz=128', text: '"Their model on NBA totals is hitting at ~62% this week. Unprecedented consistency from an AI tool. Highly recommend." - @VegasInsider0', rating: 5 },
     { name: 'PropKing', platform: 'Discord', logo: 'https://www.google.com/s2/favicons?domain=discord.com&sz=128', text: '"Joined the Discord, tailed the top 3 EV plays, woke up to green. Best investment I\'ve made all year."', rating: 5 },
@@ -152,7 +153,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                     <img
                         src="/picklabs-full-logo.svg"
                         alt="PickLabs Logo"
-                        className="h-10 w-auto transition-transform duration-300 drop-shadow-[0_0_15px_rgba(13,242,13,0.3)] hover:scale-105"
+                        className="h-16 w-auto transition-transform duration-300 drop-shadow-[0_0_15px_rgba(13,242,13,0.3)] hover:scale-105"
                     />
                 </a>
                 <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-text-muted">
@@ -506,6 +507,31 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                             <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-16 mt-1 align-middle"></span>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* ── SCROLL ANIMATION ── */}
+            <section className="w-full bg-background-dark border-b border-border-muted overflow-hidden">
+                <div className="flex flex-col overflow-hidden">
+                    <ContainerScroll
+                        titleComponent={
+                            <>
+                                <h1 className="text-4xl md:text-5xl font-black italic uppercase text-text-main tracking-tight leading-none mb-4">
+                                    Witness the <span className="text-primary">Power</span> of <br />
+                                    <span className="text-4xl md:text-[6rem] font-black mt-2 leading-none">
+                                        Data Intelligence
+                                    </span>
+                                </h1>
+                            </>
+                        }
+                    >
+                        <img
+                            src="/Screenshot 2026-02-28 at 6.02.26 AM.png"
+                            alt="PickLabs Dashboard"
+                            className="mx-auto rounded-2xl object-cover h-full object-left-top"
+                            draggable={false}
+                        />
+                    </ContainerScroll>
                 </div>
             </section>
 

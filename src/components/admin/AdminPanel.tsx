@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     getAllUsers, DBUser,
-    adminUpgrade, adminDowngrade, adminDelete,
+    adminUpgrade, adminDowngrade, adminDelete, adminToggleActive,
     applyVIPCode, VALID_UPGRADE_CODES,
     isAdminEmail, signup,
 } from '../../data/PickLabsAuthDB';
@@ -41,15 +41,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUserEmail, onClos
         }
     };
 
-    const handleAction = (userId: string, action: 'upgrade' | 'downgrade' | 'delete') => {
+    const handleAction = (userId: string, action: 'upgrade' | 'downgrade' | 'delete' | 'toggleActive') => {
         if (action === 'upgrade') adminUpgrade(userId);
         if (action === 'downgrade') adminDowngrade(userId);
         if (action === 'delete') adminDelete(userId);
+        if (action === 'toggleActive') adminToggleActive(userId);
         refresh();
         showToast(
             action === 'delete' ? '🗑 User deleted.' :
                 action === 'upgrade' ? '⭐ Upgraded to Premium!' :
-                    '↓ Downgraded to Free.'
+                    action === 'downgrade' ? '↓ Downgraded to Free.' :
+                        '🔄 User active status toggled.'
         );
     };
 
@@ -210,8 +212,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUserEmail, onClos
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={`text-[11px] font-black ${u.isPremium ? 'text-emerald-400' : 'text-text-muted'}`}>
-                                            {u.isPremium ? '⭐ PREMIUM' : 'Free User'}
+                                        <span className={`text-[11px] font-black ${u.isActive === false ? 'text-red-400' : (u.isPremium ? 'text-emerald-400' : 'text-text-muted')}`}>
+                                            {u.isActive === false ? '⛔ DEACTIVATED' : (u.isPremium ? '⭐ PREMIUM' : 'Free User')}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-[10px] text-text-muted">
@@ -237,6 +239,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUserEmail, onClos
                                                 disabled={isAdminEmail(u.email)}
                                                 className="px-2.5 py-1 rounded-md text-[9px] font-black uppercase bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                             >Delete</button>
+                                            <button
+                                                onClick={() => handleAction(u.id, 'toggleActive')}
+                                                disabled={isAdminEmail(u.email)}
+                                                className="px-2.5 py-1 rounded-md text-[9px] font-black uppercase bg-stone-500/15 border border-stone-500/30 text-stone-400 hover:bg-stone-500/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                            >{u.isActive === false ? 'Activate' : 'Deactivate'}</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -308,6 +315,8 @@ export const VIPUpgradeModal: React.FC<VIPUpgradeModalProps> = ({ currentEmail, 
                         <div>
                             <p className="text-[9px] font-black uppercase text-text-muted mb-1">Account Email</p>
                             <input
+                                title="Account Email"
+                                placeholder="Enter email"
                                 type="email" value={email} onChange={e => setEmail(e.target.value)} required
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-[12px] text-white outline-none focus:border-amber-400/40"
                             />

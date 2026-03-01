@@ -1,5 +1,6 @@
 import React from 'react';
 import { Game, mockGamesBySport } from '../../data/mockGames';
+import { generateAIPrediction } from '../../data/espnTeams';
 
 interface ActiveSharpMatchupsProps {
     game?: Game | null;
@@ -7,6 +8,7 @@ interface ActiveSharpMatchupsProps {
 
 export const ActiveSharpMatchups: React.FC<ActiveSharpMatchupsProps> = ({ game }) => {
     const activeGame = game || mockGamesBySport['NBA']![0];
+    const aiPred = activeGame ? generateAIPrediction(activeGame.homeTeam.record || '0-0', activeGame.awayTeam.record || '0-0', 'NBA', [], []) : null;
 
     return (
         <div className="col-span-12 lg:col-span-8">
@@ -56,6 +58,17 @@ export const ActiveSharpMatchups: React.FC<ActiveSharpMatchupsProps> = ({ game }
                                 </div>
                             </div>
                         </div>
+
+                        {aiPred && (
+                            <div className="flex flex-col items-center px-6 py-2 border border-green-500/30 bg-green-500/10 rounded-lg mx-4">
+                                <span className="text-[9px] text-green-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[10px]">psychology</span> AI Projection
+                                </span>
+                                <div className="text-sm font-black text-text-main text-center">
+                                    {aiPred.homeWinProb > aiPred.awayWinProb ? activeGame.homeTeam.name : activeGame.awayTeam.name} {Math.max(Number(aiPred.homeWinProb), Number(aiPred.awayWinProb)).toFixed(1)}%
+                                </div>
+                            </div>
+                        )}
 
                         <div className="hidden xl:flex items-center gap-3">
                             <div className="text-right">

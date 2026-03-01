@@ -49,6 +49,7 @@ export interface DBUser {
     dripDay2Sent?: boolean;
     dripDay3Sent?: boolean;
     phoneNumber?: string;      // SMS Alerts
+    isActive?: boolean;        // Allow admin to deactivate user
 }
 
 export interface SessionData {
@@ -290,6 +291,51 @@ export async function login(email: string, password: string): Promise<{ ok: bool
 
         return { ok: true, message: 'Admin Access Granted.', user: adminUser };
     }
+
+    // --- Sample Accounts Bypass ---
+    const sampleAccounts: Record<string, { isPremium: boolean, id: string }> = {
+        'sampleadmin@picklabs.bet': { isPremium: true, id: 'sample-admin' },
+        'samplepremium@picklabs.bet': { isPremium: true, id: 'sample-premium' },
+        'samplebasic@picklabs.bet': { isPremium: false, id: 'sample-basic' },
+        'samplenew@picklabs.bet': { isPremium: false, id: 'sample-new' }
+    };
+
+    if (sampleAccounts[email.toLowerCase()] && password === 'sample123') {
+        const config = sampleAccounts[email.toLowerCase()];
+
+        // Find existing sample user to check if deactivated
+        const currentUsers = getAllUsers();
+        let sampleUser = currentUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+        if (!sampleUser) {
+            sampleUser = {
+                id: config.id,
+                email: email.toLowerCase(),
+                passwordHash: 'bypassed',
+                isPremium: config.isPremium,
+                createdAt: email.toLowerCase() === 'samplenew@picklabs.bet' ? Date.now() : Date.now() - 10 * 24 * 60 * 60 * 1000,
+                referralCode: config.id + '_ref',
+                referralsCount: 0,
+                isActive: true
+            };
+            currentUsers.push(sampleUser);
+            saveAllUsers(currentUsers);
+        }
+
+        if (sampleUser.isActive === false) {
+            return { ok: false, message: '❌ Account has been deactivated by admin.' };
+        }
+
+        const session: SessionData = {
+            userId: sampleUser.id,
+            email: sampleUser.email,
+            isPremium: sampleUser.isPremium,
+            expiry: Date.now() + SESSION_TTL_MS,
+        };
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+        return { ok: true, message: `Sample ${config.isPremium ? 'Premium' : 'Free'} Access Granted.`, user: sampleUser };
+    }
     // ------------------------------
 
     const users = getAllUsers();
@@ -306,6 +352,10 @@ export async function login(email: string, password: string): Promise<{ ok: bool
     }
 
     if (!valid) return { ok: false, message: '❌ Invalid email or password.' };
+
+    if (user.isActive === false) {
+        return { ok: false, message: '❌ Account has been deactivated by admin.' };
+    }
 
     // 2FA IP Check
     const currentIp = getMockClientIP();
@@ -329,7 +379,7 @@ export async function login(email: string, password: string): Promise<{ ok: bool
     const session: SessionData = {
         userId: user.id,
         email: user.email,
-        isPremium: user.isPremium,
+        isPremium: user.isPremium || isAdminEmail(user.email),
         expiry: Date.now() + SESSION_TTL_MS,
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -353,7 +403,7 @@ export function getCurrentUser(): SessionData | null {
 
         const user = findUserById(session.userId);
         if (user) {
-            session.isPremium = user.isPremium;
+            session.isPremium = user.isPremium || isAdminEmail(user.email);
         }
         return session;
     } catch {
@@ -362,7 +412,8 @@ export function getCurrentUser(): SessionData | null {
 }
 
 export function isAdminEmail(email: string): boolean {
-    return email.toLowerCase() === 'admin@picklabs.bet';
+    const e = email.toLowerCase();
+    return e === 'admin@picklabs.bet' || e === 'sampleadmin@picklabs.bet';
 }
 
 // ─── /upgrade equivalent (VIP code) ─────────────────────────────────────────
@@ -408,6 +459,15 @@ export function adminDowngrade(userId: string): void {
     const users = getAllUsers();
     const u = users.find(u => u.id === userId);
     if (u) { u.isPremium = false; saveAllUsers(users); }
+}
+
+export function adminToggleActive(userId: string): void {
+    const users = getAllUsers();
+    const u = users.find(u => u.id === userId);
+    if (u) {
+        u.isActive = u.isActive === false ? true : false;
+        saveAllUsers(users);
+    }
 }
 
 export function adminDelete(userId: string): void {

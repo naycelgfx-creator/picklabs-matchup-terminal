@@ -4,22 +4,25 @@ import { useSportsbooks, SPORTSBOOKS } from '../../contexts/SportsbookContext';
 import { useRookieMode } from '../../contexts/RookieModeContext';
 import { WhatIfCalculator } from '../ui/WhatIfCalculator';
 
-interface BetSlipProps {
+export interface BetSlipProps {
     betSlip: BetPick[];
     setBetSlip: React.Dispatch<React.SetStateAction<BetPick[]>>;
+    activeTickets?: BetPick[][];
+    setActiveTickets?: React.Dispatch<React.SetStateAction<BetPick[][]>>;
 }
 
 type SlipMode = 'singles' | 'parlay';
 
 /* ── Odds math ── */
 const americanToDecimal = (oddsStr: string): number => {
+    if (!oddsStr || oddsStr === 'N/A') return 1.909; // -110 default
     const odds = parseInt(oddsStr.replace('+', ''));
     if (isNaN(odds)) return 1.909; // -110 default
     return odds > 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
 };
 
 const decimalToAmerican = (decimal: number): string => {
-    if (decimal <= 1) return 'N/A';
+    if (!decimal || isNaN(decimal) || decimal <= 1) return 'N/A';
     if (decimal >= 2) return `+${Math.round((decimal - 1) * 100)}`;
     return `${Math.round(-100 / (decimal - 1))}`;
 };
@@ -31,13 +34,13 @@ const calculateParlayOdds = (picks: BetPick[]): string => {
 };
 
 const toWin = (stake: number, oddsStr: string): number => {
-    if (!oddsStr || stake <= 0) return 0;
+    if (!oddsStr || oddsStr === 'N/A' || stake <= 0) return 0;
     const odds = parseInt(oddsStr.replace('+', ''));
     if (isNaN(odds)) return 0;
     return odds > 0 ? stake * (odds / 100) : stake / (Math.abs(odds) / 100);
 };
 
-export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
+export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip, activeTickets, setActiveTickets }) => {
     const { isBookEnabled } = useSportsbooks();
     const { isRookieModeActive } = useRookieMode();
     const [mode, setMode] = useState<SlipMode>('singles');
@@ -78,23 +81,30 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
         <aside id="bet-slip-sidebar" className="col-span-12 xl:col-span-3">
             <div className="xl:sticky xl:top-[140px] terminal-panel bg-neutral-900/50 overflow-hidden">
 
-                {/* ── Header ── */}
-                <div className="p-4 border-b border-border-muted bg-neutral-900 flex items-center justify-between">
-                    <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-sm">receipt_long</span>
-                        Bet Slip
-                    </h3>
-                    {betSlip.length > 0 && (
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setBetSlip([])}
-                                className="text-[9px] font-bold uppercase tracking-widest text-text-muted hover:text-red-500 transition-colors"
-                            >
-                                Clear All
-                            </button>
-                            <span className="text-[10px] font-bold text-accent-purple">{betSlip.length} Picks</span>
-                        </div>
-                    )}
+                <div className="p-4 border-b border-border-muted bg-neutral-900 pb-3">
+                    <div className="text-[9px] font-black tracking-[0.2em] text-[#A3FF00] flex items-center gap-1.5 mb-2">
+                        <span className="w-1.5 h-1.5 bg-[#A3FF00] inline-block rotate-45 transform"></span>
+                        SESSION LOG
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-[14px] font-black text-white tracking-[0.1em] flex items-center gap-2 uppercase">
+                            <span className="material-symbols-outlined text-[#9B4FF5] text-lg">receipt_long</span>
+                            BET SLIP
+                        </h3>
+                        {betSlip.length > 0 ? (
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setBetSlip([])}
+                                    className="text-[9px] font-bold uppercase tracking-widest text-text-muted hover:text-red-500 transition-colors"
+                                >
+                                    Clear All
+                                </button>
+                                <span className="text-[10px] font-black text-[#9B4FF5]">{betSlip.length < 10 ? `0${betSlip.length}` : betSlip.length}</span>
+                            </div>
+                        ) : (
+                            <span className="text-[11px] font-black text-[#9B4FF5] tracking-widest">00</span>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Singles / Parlay Tab Toggle ── */}
@@ -128,10 +138,10 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
 
                 <div className="p-4 space-y-3 max-h-[480px] overflow-y-auto custom-scrollbar">
                     {betSlip.length === 0 ? (
-                        <div className="text-center py-20 space-y-3">
-                            <span className="material-symbols-outlined text-4xl text-slate-700/50 mb-4 inline-block">science</span>
-                            <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest">NO SELECTIONS YET</p>
-                            <p className="text-[10px] text-slate-600">Click odds on any game to add</p>
+                        <div className="text-center py-24 space-y-4">
+                            <span className="material-symbols-outlined text-[40px] text-[#A3FF00]/40 mb-2 inline-block">science</span>
+                            <p className="text-[#A3FF00]/60 text-[10px] font-black uppercase tracking-[0.2em]">NO SPECIMENS QUEUED</p>
+                            <p className="text-[10px] text-slate-500 font-bold tracking-widest mt-1">Click odds on any game to add</p>
                         </div>
                     ) : mode === 'singles' ? (
                         <>
@@ -298,30 +308,54 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                     )}
                 </div>
 
-                <div className="p-4 border-t border-border-muted bg-neutral-900 space-y-4">
+                <div className="p-4 border-t border-border-muted bg-neutral-900 space-y-5">
                     {/* Always show Totals, even when empty (with $0.00) like screenshot */}
-                    <div className="space-y-1.5 border-b border-border-muted pb-3">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            <span>{mode === 'parlay' && betSlip.length >= 2 ? 'Total Stake (Parlay)' : 'Total Stake'}</span>
-                            <span className="text-slate-300">
+                    <div className="space-y-4 border-b border-border-muted pb-5 pt-2">
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.15em] text-slate-500">
+                            <span className="flex items-center gap-2">
+                                <span className="text-[13px] font-mono leading-none">Σ</span>
+                                <span>{mode === 'parlay' && betSlip.length >= 2 ? 'Total Stake (Parlay)' : 'Total stake'}</span>
+                            </span>
+                            <span className="text-slate-300 font-mono text-[11px] tracking-wider">
                                 ${(betSlip.length === 0 ? 0 : mode === 'parlay' && betSlip.length >= 2 ? parlayStake : totalStake).toFixed(2)}
                             </span>
                         </div>
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            <span>Projected Yield</span>
-                            <span className="text-primary">
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.15em] text-slate-500">
+                            <span className="pl-5">Projected Yield</span>
+                            <span className="text-[#A3FF00] font-mono text-[12px] tracking-wider">
                                 ${(betSlip.length === 0 ? 0 : mode === 'parlay' && betSlip.length >= 2 ? parlayPayout : totalPayout).toFixed(2)}
                             </span>
                         </div>
                     </div>
 
+                    {/* Complete Slip Button */}
+                    <div className="pt-2 pb-1">
+                        <button
+                            onClick={() => {
+                                if (setActiveTickets && activeTickets && betSlip.length > 0) {
+                                    setActiveTickets([[...betSlip], ...activeTickets]);
+                                    setBetSlip([]);
+                                }
+                            }}
+                            disabled={betSlip.length === 0}
+                            className={`w-full py-3 rounded-lg font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all ${betSlip.length > 0
+                                    ? 'bg-[#A3FF00] text-black hover:bg-[#8ee600] shadow-[0_4px_14px_rgba(163,255,0,0.3)]'
+                                    : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-lg">description</span>
+                            Complete Ticket
+                        </button>
+                    </div>
+
                     {/* Available Books List */}
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3">Available to Wager</p>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                    <div className="pt-1">
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">Distribute to station:</p>
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                             {enabledBooks.map(book => (
-                                <div key={book.id} className="flex items-center gap-2 group cursor-pointer">
-                                    <div className="w-4 h-4 rounded bg-white flex items-center justify-center p-0.5 shrink-0">
+                                <div key={book.id} className="flex items-center gap-2.5 p-1.5 border border-[#2c2c2c] rounded-sm bg-[#161616] hover:bg-white/5 cursor-pointer relative group transition-colors">
+                                    <div className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-sm" style={{ backgroundColor: book.color }}></div>
+                                    <div className="w-5 h-5 rounded-sm bg-white flex items-center justify-center p-0.5 shrink-0 ml-1.5">
                                         <img
                                             src={`https://www.google.com/s2/favicons?domain=${book.domain}&sz=128`}
                                             alt={book.name}
@@ -334,7 +368,7 @@ export const BetSlip: React.FC<BetSlipProps> = ({ betSlip, setBetSlip }) => {
                                 </div>
                             ))}
                             {enabledBooks.length === 0 && (
-                                <div className="col-span-2 text-[9px] text-slate-600 font-bold uppercase py-2">No books enabled.</div>
+                                <div className="col-span-2 text-[9px] text-slate-600 font-bold uppercase py-2 tracking-widest">No books enabled.</div>
                             )}
                         </div>
                     </div>

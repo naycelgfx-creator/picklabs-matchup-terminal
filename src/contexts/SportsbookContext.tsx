@@ -47,7 +47,7 @@ const SportsbookContext = createContext<SportsbookContextType | undefined>(undef
 // ── Provider ────────────────────────────────────────────────────────────────
 export const SportsbookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [enabledBooks, setEnabledBooks] = useState<Record<string, boolean>>(
-        () => Object.fromEntries(SPORTSBOOKS.map(b => [b.id, true]))
+        () => Object.fromEntries(SPORTSBOOKS.map((b, index) => [b.id, index < 4]))
     );
 
     const toggleBook = useCallback((id: string) => {

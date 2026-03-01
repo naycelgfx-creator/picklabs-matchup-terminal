@@ -21,6 +21,8 @@ interface SGPBet {
     homeLogo: string;
     awayLogo: string;
     isLive: boolean;
+    aiProbability?: string;
+    aiEdge?: string;
 }
 
 // ── Build a popular SGP from a real ESPN game ─────────────────────────────
@@ -72,6 +74,11 @@ const generateSGP = (game: ESPNGame, idx: number): SGPBet => {
     const baseCount = bigMarket ? Math.floor(80 + Math.random() * 120) : Math.floor(20 + Math.random() * 60);
     const placedCount = `${baseCount}K`;
 
+    // AI calculations to highlight PickLabs engine
+    const aiWinProb = Number(pred.homeWinProb);
+    const aiProbability = `${Math.round(aiWinProb * 0.8 + 10)}%`; // Simulated 40-70% SGP hit prob
+    const aiEdge = `+${(Math.random() * 5 + 2).toFixed(1)}%`;
+
     return {
         id: `sgp-${game.id}-${idx}`,
         description: `${away} vs ${home} — SGP #${idx + 1}`,
@@ -84,6 +91,8 @@ const generateSGP = (game: ESPNGame, idx: number): SGPBet => {
         homeLogo: game.homeTeam.logo,
         awayLogo: game.awayTeam.logo,
         isLive,
+        aiProbability,
+        aiEdge,
     };
 };
 
@@ -217,9 +226,20 @@ export const PopularBetsView: React.FC = () => {
                                             <img src={bet.homeLogo} alt={bet.homeTeam} className="w-5 h-5 object-contain" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                             <span className="text-xs font-bold text-text-main">{bet.homeTeam}</span>
                                         </div>
+                                        {/* AI Edge Badge */}
+                                        <div className="flex items-center gap-2 mt-1.5">
+                                            <span className="text-[9px] font-black text-green-400 bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 rounded tracking-wider flex items-center gap-1 uppercase">
+                                                <span className="material-symbols-outlined text-[10px]">psychology</span>
+                                                AI Edge {bet.aiEdge}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="text-right shrink-0">
                                         <span className="text-xl font-black text-primary bg-primary/10 px-3 py-1 rounded">{bet.odds}</span>
+                                        <div className="mt-1 flex flex-col justify-end">
+                                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">AI Win Prob</span>
+                                            <span className="text-[11px] font-black text-text-main tabular-nums">{bet.aiProbability}</span>
+                                        </div>
                                     </div>
                                 </div>
 

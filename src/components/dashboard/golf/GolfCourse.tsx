@@ -42,95 +42,107 @@ export const GolfCourse: React.FC<GolfCourseProps> = ({ game }) => {
                 </div>
 
                 {/* Hole SVG */}
-                <div className="relative w-full max-w-[580px]">
+                <div className="relative w-full overflow-hidden">
                     <svg
-                        viewBox="0 0 580 360"
-                        className="w-full rounded-lg overflow-hidden"
+                        viewBox="0 0 1000 500"
+                        className="w-full h-auto drop-shadow-xl"
                         aria-label="Golf hole diagram"
                     >
-                        {/* Sky/background */}
-                        <rect width="580" height="360" fill="#1a2e1a" />
+                        {/* Rough (dark green background) */}
+                        <rect width="1000" height="500" fill="#20401b" />
 
-                        {/* Rough (full background) */}
-                        <rect width="580" height="360" fill="#2d5c1e" opacity="0.6" />
-
-                        {/* Fairway — dogleg left shape */}
+                        {/* Fairway */}
                         <path
-                            d="M 220 340 L 310 340 L 315 240 L 320 160 L 280 100 L 230 80 L 160 75 L 140 85 L 145 110 L 180 115 L 210 120 L 215 160 L 210 240 L 215 340 Z"
-                            fill="#4a9e35"
-                            opacity="0.9"
+                            d="M 460 440 L 540 440 L 530 350 L 500 250 L 460 200 L 410 160 L 350 140 L 320 180 L 380 230 L 410 260 L 430 320 L 440 370 Z"
+                            fill="#3f8a2f"
                         />
 
                         {/* Tee box */}
-                        <rect x="228" y="326" width="50" height="16" fill="#5db84a" rx="2" />
-                        <text x="253" y="338" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" opacity="0.8">TEE</text>
+                        <rect x="475" y="420" width="50" height="15" fill="#4d9e3b" rx="2" />
+                        <text x="500" y="432" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="800" opacity="0.9">TEE</text>
 
-                        {/* Bunkers */}
-                        <ellipse cx="330" cy="200" rx="25" ry="18" fill="#d4b483" opacity="0.8" />
-                        <ellipse cx="145" cy="200" rx="20" ry="14" fill="#d4b483" opacity="0.8" />
-                        <ellipse cx="195" cy="95" rx="18" ry="12" fill="#d4b483" opacity="0.7" />
-
-                        {/* Water hazard */}
-                        <ellipse cx="270" cy="280" rx="28" ry="14" fill="#1e6b9e" opacity="0.7" />
-                        <text x="270" y="284" textAnchor="middle" fill="#7ec8e3" fontSize="7" fontWeight="bold" opacity="0.9">WATER</text>
-
-                        {/* Green */}
-                        <ellipse cx="173" cy="93" rx="42" ry="30" fill="#38d966" opacity="0.95" />
-
-                        {/* Fringe around green */}
-                        <ellipse cx="173" cy="93" rx="50" ry="38" fill="none" stroke="#5db84a" strokeWidth="4" opacity="0.5" />
+                        {/* Green multi-layer (lighter greens) */}
+                        {/* Fringe */}
+                        <circle cx="340" cy="150" r="55" fill="#306b23" opacity="0.6" />
+                        <circle cx="340" cy="150" r="50" fill="none" stroke="#4d9e3b" strokeWidth="4" opacity="0.4" />
+                        <circle cx="330" cy="140" r="50" fill="none" stroke="#4d9e3b" strokeWidth="2" opacity="0.2" />
+                        {/* Putting Green */}
+                        <circle cx="340" cy="150" r="42" fill="#40c451" />
+                        <circle cx="340" cy="150" r="30" fill="#4ade80" opacity="0.5" />
 
                         {/* Flag pin */}
-                        <line x1="173" y1="93" x2="173" y2="55" stroke="white" strokeWidth="1.5" opacity="0.9" />
-                        <polygon points="173,55 190,62 173,69" fill="#ef4444" opacity="0.95" />
-                        <circle cx="173" cy="93" r="3" fill="white" opacity="0.9" />
+                        <line x1="340" y1="150" x2="340" y2="100" stroke="#ffffff" strokeWidth="2" opacity="0.9" />
+                        <polygon points="340,100 365,110 340,120" fill="#ef4444" opacity="0.95" />
+                        <circle cx="340" cy="150" r="3" fill="#ffffff" />
 
-                        {/* Shot tracer dots */}
+                        {/* Bunkers */}
+                        <ellipse cx="580" cy="270" rx="40" ry="25" fill="#d0b48a" opacity="0.85" />
+                        <text x="580" y="274" textAnchor="middle" fill="#a68452" fontSize="9" fontWeight="800" letterSpacing="1">BUNKER</text>
+
+                        <ellipse cx="280" cy="280" rx="35" ry="20" fill="#d0b48a" opacity="0.85" />
+                        <text x="280" y="284" textAnchor="middle" fill="#a68452" fontSize="9" fontWeight="800" letterSpacing="1">BUNKER</text>
+
+                        {/* Water hazard overlay on fairway */}
+                        <ellipse cx="480" cy="350" rx="55" ry="22" fill="#2b6b91" opacity="0.8" />
+                        <text x="480" y="354" textAnchor="middle" fill="#75c0ed" fontSize="10" fontWeight="800" letterSpacing="1">WATER</text>
+
+                        {/* Shot tracer connecting lines and dots */}
                         {shotPath.map((s, i) => {
-                            const cx = (s.x / 100) * 580;
-                            const cy = (s.y / 100) * 360;
+                            // Map coordinates roughly from 0-100 to the 1000x500 svg box
+                            // s.x: 0-100 -> x
+                            // s.y: 0-100 -> y
+                            const cx = 500 - ((50 - s.x) * 8);
+                            const cy = 430 - ((88 - s.y) * 4.5);
+
                             const isLast = i === shotPath.length - 1;
+
+                            // To draw the line to the *previous* point
+                            let px = cx, py = cy;
+                            if (i > 0) {
+                                px = 500 - ((50 - shotPath[i - 1].x) * 8);
+                                py = 430 - ((88 - shotPath[i - 1].y) * 4.5);
+                            }
+
                             return (
                                 <g key={`shot-${i}`}>
                                     {i > 0 && (
                                         <line
-                                            x1={(shotPath[i - 1].x / 100) * 580}
-                                            y1={(shotPath[i - 1].y / 100) * 360}
+                                            x1={px}
+                                            y1={py}
                                             x2={cx}
                                             y2={cy}
-                                            stroke="#8b5cf6"
-                                            strokeWidth="1.5"
-                                            strokeDasharray="4 3"
-                                            opacity="0.7"
+                                            stroke="#a855f7"
+                                            strokeWidth="3"
+                                            strokeDasharray="8 6"
+                                            opacity="0.8"
                                         />
                                     )}
                                     <circle
                                         cx={cx}
                                         cy={cy}
-                                        r={isLast ? 6 : 4}
-                                        fill={isLast ? '#8b5cf6' : '#c4b5fd'}
-                                        opacity={isLast ? 1 : 0.8}
+                                        r={isLast ? 8 : 6}
+                                        fill={isLast ? '#8b5cf6' : '#d8b4fe'}
+                                        opacity={isLast ? 1 : 0.9}
                                         className={isLast ? 'animate-pulse' : ''}
                                     />
-                                    {i === 0 && (
-                                        <text x={cx + 8} y={cy + 4} fill="white" fontSize="7" opacity="0.7">Drive</text>
+                                    {/* Drive text next to the first shot outcome (i=1 usually, or just 0) */}
+                                    {i === 1 && (
+                                        <text x={cx + 15} y={cy + 4} fill="#ffffff" fontSize="11" fontWeight="600" opacity="0.9">Drive</text>
                                     )}
                                 </g>
                             );
                         })}
 
-                        {/* Yardage markers */}
-                        <text x="295" y="180" fill="white" fontSize="8" opacity="0.5" fontWeight="bold">150 YDS</text>
-                        <text x="295" y="250" fill="white" fontSize="8" opacity="0.5" fontWeight="bold">100 YDS</text>
+                        {/* Yardage markers text on the right side of the fairway */}
+                        <text x="530" y="230" fill="#ffffff" fontSize="11" fontWeight="700" opacity="0.6">150 YDS</text>
+                        <text x="515" y="300" fill="#ffffff" fontSize="11" fontWeight="700" opacity="0.6">100 YDS</text>
 
-                        {/* Compass / hole info */}
-                        <text x="540" y="340" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" opacity="0.5">Hole 18</text>
-                        <text x="540" y="350" textAnchor="middle" fill="white" fontSize="8" opacity="0.4">Par 4 · 418 YDS</text>
+                        {/* Bottom Right hole info overlay */}
+                        <text x="960" y="450" textAnchor="end" fill="#ffffff" fontSize="16" fontWeight="900" opacity="0.6">Hole 18</text>
+                        <text x="960" y="470" textAnchor="end" fill="#ffffff" fontSize="12" opacity="0.5">Par 4 · 418 YDS</text>
 
-                        {/* Labels */}
-                        <text x="173" y="57" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" opacity="0.8">PIN</text>
-                        <text x="330" y="220" textAnchor="middle" fill="#c4a355" fontSize="7" fontWeight="bold" opacity="0.8">BUNKER</text>
-                        <text x="145" y="210" textAnchor="middle" fill="#c4a355" fontSize="7" fontWeight="bold" opacity="0.8">BUNKER</text>
+                        {/* Top Left PIN label */}
+                        <text x="340" y="85" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="800" opacity="0.9">PIN</text>
                     </svg>
                 </div>
 

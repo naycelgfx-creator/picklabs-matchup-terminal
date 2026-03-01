@@ -106,7 +106,7 @@ const PlayerRow: React.FC<{ player: BoxScorePlayer; isExpanded: boolean; onClick
     const isCold = player.hotScore <= -3;
 
     const indicator = isHot
-        ? <span className="text-orange-400 text-sm leading-none" title="Hot game">🔥</span>
+        ? <span className="material-symbols-outlined text-orange-500 text-sm leading-none align-middle" title="Hot game">local_fire_department</span>
         : isCold
             ? <span className="text-blue-400 text-sm leading-none" title="Cold game">❄️</span>
             : <span className="text-slate-600 text-xs leading-none">•</span>;
@@ -146,8 +146,8 @@ const PlayerRow: React.FC<{ player: BoxScorePlayer; isExpanded: boolean; onClick
             <button
                 onClick={onClick}
                 className={`w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-all cursor-pointer border ${isExpanded
-                        ? isHot ? 'border-orange-500/30 bg-orange-950/10' : isCold ? 'border-blue-500/30 bg-blue-950/10' : 'border-primary/20 bg-primary/5'
-                        : 'border-transparent'
+                    ? isHot ? 'border-orange-500/30 bg-orange-950/10' : isCold ? 'border-blue-500/30 bg-blue-950/10' : 'border-primary/20 bg-primary/5'
+                    : 'border-transparent'
                     } ${player.didNotPlay ? 'opacity-40' : ''} ${side === 'right' ? 'flex-row-reverse' : ''}`}
             >
                 {headshotEl}
@@ -282,7 +282,7 @@ export const NBABoxScoreLineup: React.FC<NBABoxScoreLineupProps> = ({ game }) =>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest">
-                    <span className="flex items-center gap-1 text-orange-400"><span>🔥</span> Hot game</span>
+                    <span className="flex items-center gap-1 text-orange-400"><span><span className="material-symbols-outlined text-orange-500 text-sm align-middle">local_fire_department</span></span> Hot game</span>
                     <span className="flex items-center gap-1 text-blue-400"><span>❄️</span> Cold game</span>
                 </div>
             </div>

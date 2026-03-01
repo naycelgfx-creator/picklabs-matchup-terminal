@@ -12,13 +12,18 @@ import { PopularBetsView } from './components/popular/PopularBetsView';
 import { SavedPicksView } from './components/saved/SavedPicksView';
 import { ValueFinderView } from './components/value-finder/ValueFinderView';
 import { LandingPageView } from './components/landing/LandingPageView';
+import { LiveBetsMeter } from './components/shared/LiveBetsMeter';
 import { LoginPageView } from './components/auth/LoginPageView';
 import { SportsbookView } from './components/sportsbook/SportsbookView';
+import { HolographicBoardView } from './components/holographic-board/HolographicBoardView';
 import { RookieModeProvider } from './contexts/RookieModeContext';
 import { SportsbookProvider } from './contexts/SportsbookContext';
+import { LiveBetsProvider } from './contexts/LiveBetsContext';
 import { RookieTour } from './components/ui/RookieTour';
 import { APP_SPORT_TO_ESPN, fetchESPNScoreboardByDate, ESPNGame, SportKey } from './data/espnScoreboard';
 import { generateAIPrediction } from './data/espnTeams';
+import { getCurrentUser, isAdminEmail } from './data/PickLabsAuthDB';
+import { isAuthValid } from './utils/auth';
 
 export interface BetPick {
   id: string;
@@ -30,30 +35,31 @@ export interface BetPick {
   stake: number;
 }
 
-export type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page' | 'sportsbook' | 'ai-dashboard' | 'player-props' | 'trends' | 'live-odds' | 'leaderboard' | 'referrals' | 'account' | 'settings';
+export type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page' | 'sportsbook' | 'ai-dashboard' | 'player-props' | 'trends' | 'live-odds' | 'leaderboard' | 'referrals' | 'account' | 'settings' | '3d-board';
 
-// ─── Auth helpers ─────────────────────────────────────────────────────────────
-const AUTH_KEY = 'picklabs_auth';
-const SESSION_DAYS = 3;
-
-function isAuthValid(): boolean {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) return false;
-    const { expiry } = JSON.parse(raw) as { expiry: number };
-    if (Date.now() > expiry) { localStorage.removeItem(AUTH_KEY); return false; }
-    return true;
-  } catch { return false; }
-}
-
-export function saveAuth(): void {
-  const expiry = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ expiry }));
-}
-
-export function clearAuth(): void {
-  localStorage.removeItem(AUTH_KEY);
-}
+// ─── Premium Lock Helper View ─────────────────────────────────────────────────
+const PremiumLockView: React.FC<{ featureName: string; onNavigate: (v: ViewType) => void }> = ({ featureName, onNavigate }) => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
+      <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+        <span className="material-symbols-outlined text-4xl text-amber-500">lock</span>
+      </div>
+      <h2 className="text-3xl font-black italic uppercase text-text-main mb-3 tracking-tight">
+        Premium Feature
+      </h2>
+      <p className="text-sm text-text-muted max-w-md mb-8 leading-relaxed">
+        <span className="text-amber-500 font-bold">{featureName}</span> is exclusive to PickLabs Premium members. Upgrade your account to unlock advanced analytics and AI-driven insights.
+      </p>
+      <button
+        onClick={() => onNavigate('landing-page')}
+        className="px-8 py-4 bg-amber-500 text-neutral-900 font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-amber-400 hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2"
+      >
+        <span className="material-symbols-outlined">workspace_premium</span>
+        Upgrade to Premium
+      </button>
+    </div>
+  );
+};
 // ──────────────────────────────────────────────────────────────────────────────
 
 function App() {
@@ -62,6 +68,7 @@ function App() {
   );
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [betSlip, setBetSlip] = useState<BetPick[]>([]);
+  const [activeTickets, setActiveTickets] = useState<BetPick[][]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
   const [hasSimulated, setHasSimulated] = useState(false);
   const [isAIPickLoading, setIsAIPickLoading] = useState(false);
@@ -95,6 +102,14 @@ function App() {
   // ─── AI Pick My Bets — uses real ESPN games + AI engine ──────────────────────
   const handleAIPicks = useCallback(async () => {
     if (isAIPickLoading) return;
+
+    // Feature gating for AI Picks
+    const user = getCurrentUser();
+    if (!user || (!user.isPremium && !isAdminEmail(user.email))) {
+      alert("AI Pick My Bets is a Premium feature. Please upgrade your account to access AI predictions.");
+      return;
+    }
+
     setIsAIPickLoading(true);
     const today = new Date().toISOString().split('T')[0];
 
@@ -105,29 +120,69 @@ function App() {
     type Candidate = BetPick & { score: number };
     const candidates: Candidate[] = [];
 
+    const allGames: { game: ESPNGame, sportLabel: string }[] = [];
+
     await Promise.allSettled(
       sportKeys.map(async ([sportLabel, espnKey]) => {
         try {
-          const games: ESPNGame[] = await fetchESPNScoreboardByDate(espnKey, today);
+          const games = await fetchESPNScoreboardByDate(espnKey, today);
           for (const game of games) {
+            allGames.push({ game, sportLabel });
+          }
+        } catch { /* skip */ }
+      })
+    );
+
+    if (allGames.length > 0) {
+      try {
+        const payload = allGames.map(g => {
+          let decOdds = 1.90;
+          // Generate local odds fallback to find ML
+          const pred = generateAIPrediction(
+            g.game.homeTeam.record,
+            g.game.awayTeam.record,
+            g.sportLabel,
+            [],
+            []
+          );
+
+          if (pred.moneylineHome && pred.moneylineHome !== 'N/A') {
+            const ml = parseInt(pred.moneylineHome.replace(/[^0-9-]/g, ''));
+            if (!isNaN(ml)) decOdds = ml < 0 ? (100 / Math.abs(ml)) + 1 : (ml / 100) + 1;
+          }
+          return { id: g.game.id, odds: decOdds };
+        });
+
+        const res = await fetch('http://localhost:8005/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games: payload })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.predictions) {
+          for (const { game, sportLabel } of allGames) {
+            const aiData = data.predictions[game.id];
+            if (!aiData) continue;
+
+            // Generate fallback odds strings locally
             const pred = generateAIPrediction(
               game.homeTeam.record,
               game.awayTeam.record,
               sportLabel,
-              [], // last-5 form (fast mode, no extra fetch)
               [],
+              []
             );
 
             const matchupStr = `${game.awayTeam.displayName} vs ${game.homeTeam.displayName}`;
             const gameId = `espn-${game.id}`;
-            const edge = Math.abs(pred.homeWinProb - 50); // 0–25, higher = bigger edge
+            const edge = aiData.edge;
 
-            // ── Pick 1: Moneyline on the stronger side ──
-            const mlFavors = pred.homeWinProb > pred.awayWinProb ? 'home' : 'away';
-            // Only recommend ML if edge > 10% (meaningful advantage)
-            if (edge > 10) {
-              const mlTeam = mlFavors === 'home' ? game.homeTeam.displayName : game.awayTeam.displayName;
-              const mlOdds = mlFavors === 'home' ? pred.moneylineHome : pred.moneylineAway;
+            // Pick 1: Kelly ML
+            if (aiData.suggestions.kelly > 0) {
+              const aiFavoredHome = aiData.ai_probability >= 50;
+              const mlTeam = aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName;
+              const mlOdds = aiFavoredHome ? pred.moneylineHome : pred.moneylineAway;
               candidates.push({
                 id: `ai-ml-${game.id}`,
                 gameId,
@@ -135,20 +190,37 @@ function App() {
                 team: `${mlTeam} ML`,
                 odds: mlOdds,
                 matchupStr,
-                stake: 50,
-                score: pred.confidence + edge * 1.2,
+                stake: aiData.suggestions.kelly,
+                score: aiData.ai_probability + edge * 2,
               });
             }
 
-            // ── Pick 2: Spread on favourite if edge is significant ──
-            if (edge > 7) {
-              const spreadSide = pred.homeWinProb > 50 ? 'home' : 'away';
-              const spreadTeam = spreadSide === 'home' ? game.homeTeam.displayName : game.awayTeam.displayName;
-              // Negate spread for away favourite (they cover the spread against home)
-              const rawSpread = parseFloat(pred.spread);
-              const spreadDisplay = spreadSide === 'home'
-                ? `${rawSpread >= 0 ? '+' : ''}${rawSpread}`
-                : `${(-rawSpread) >= 0 ? '+' : ''}${(-rawSpread).toFixed(1)}`;
+            // Pick 2: Target O/U
+            if (aiData.suggestions.target > 0) {
+              const ouPick = pred.overUnderPick;
+              candidates.push({
+                id: `ai-ou-${game.id}`,
+                gameId,
+                type: ouPick === 'Over' ? 'Over' : 'Under',
+                team: `${ouPick} ${pred.total}`,
+                odds: '-110',
+                matchupStr,
+                stake: aiData.suggestions.target,
+                score: 50 + edge,
+              });
+            }
+
+            // Pick 3: Fixed Spread
+            if (aiData.suggestions.fixed > 0) {
+              const aiFavoredHome = aiData.ai_probability >= 50;
+              const spreadTeam = aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName;
+              // Format spread relative to the favored team
+              let spreadDisplay = pred.spread;
+              if (!aiFavoredHome && spreadDisplay.startsWith('-')) {
+                spreadDisplay = '+' + spreadDisplay.substring(1);
+              } else if (!aiFavoredHome && spreadDisplay.startsWith('+')) {
+                spreadDisplay = '-' + spreadDisplay.substring(1);
+              }
               candidates.push({
                 id: `ai-spread-${game.id}`,
                 gameId,
@@ -156,28 +228,16 @@ function App() {
                 team: `${spreadTeam} ${spreadDisplay}`,
                 odds: '-110',
                 matchupStr,
-                stake: 50,
-                score: pred.confidence + edge * 0.8,
+                stake: aiData.suggestions.fixed,
+                score: aiData.ai_probability + edge * 1.5,
               });
             }
-
-            // ── Pick 3: Over/Under — pick the line the AI prefers ──
-            // Push Over when both teams are in form (high homeForm + awayForm implied by high total)
-            const ouScore = pred.confidence * 0.7;
-            candidates.push({
-              id: `ai-ou-${game.id}`,
-              gameId,
-              type: pred.overUnderPick === 'Over' ? 'Over' : 'Under',
-              team: `${pred.overUnderPick} ${pred.total}`,
-              odds: '-110',
-              matchupStr,
-              stake: 50,
-              score: ouScore,
-            });
           }
-        } catch { /* skip sport on API error */ }
-      })
-    );
+        }
+      } catch (err) {
+        console.error('AI API failed, falling back...', err);
+      }
+    }
 
     // Sort by score desc, pick top 5, deduplicate per game (max 1 pick per game)
     const seenGames = new Set<string>();
@@ -206,113 +266,127 @@ function App() {
 
   return (
     <SportsbookProvider>
-      <RookieModeProvider>
-        <RookieTour />
-        <div className="flex flex-col min-h-screen overflow-x-hidden w-full">
-          {!isMarketingView && (
-            <Header
-              currentView={currentView}
-              setCurrentView={setCurrentView}
-              onAIPick={handleAIPicks}
-              isAIPickLoading={isAIPickLoading}
-            />
-          )}
-
-          <main className={`flex-1 ${!isMarketingView ? 'pt-[80px]' : ''}`}>
-            {currentView === 'landing-page' && (
-              <LandingPageView onNavigate={(view) => setCurrentView(view as ViewType)} />
-            )}
-
-            {currentView === 'login-page' && (
-              <LoginPageView onNavigate={(view) => setCurrentView(view as ViewType)} />
-            )}
-
-            {currentView === 'live-board' && (
-              <LiveBoard
+      <LiveBetsProvider>
+        <RookieModeProvider>
+          <RookieTour />
+          <div className={`flex flex-col min-h-screen overflow-x-hidden w-full ${!isMarketingView ? 'pb-10' : ''}`}>
+            {!isMarketingView && (
+              <Header
+                currentView={currentView}
                 setCurrentView={setCurrentView}
-                onSelectGame={setSelectedGame}
-                betSlip={betSlip}
-                setBetSlip={setBetSlip}
-                onAddBet={handeAddBet}
+                onAIPick={handleAIPicks}
+                isAIPickLoading={isAIPickLoading}
               />
             )}
 
-            {currentView === 'matchup-terminal' && !selectedGame && (
-              <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
-                <div className="w-20 h-20 rounded-full bg-accent-purple/10 border border-accent-purple/30 flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-4xl text-accent-purple">model_training</span>
+            <main className={`flex-1 ${!isMarketingView ? 'pt-[80px]' : ''}`}>
+              {currentView === 'landing-page' && (
+                <LandingPageView onNavigate={(view) => setCurrentView(view as ViewType)} />
+              )}
+
+              {currentView === 'login-page' && (
+                <LoginPageView onNavigate={(view) => setCurrentView(view as ViewType)} />
+              )}
+
+              {currentView === 'live-board' && (
+                <LiveBoard
+                  setCurrentView={setCurrentView}
+                  onSelectGame={setSelectedGame}
+                  betSlip={betSlip}
+                  setBetSlip={setBetSlip}
+                  activeTickets={activeTickets}
+                  setActiveTickets={setActiveTickets}
+                  onAddBet={handeAddBet}
+                />
+              )}
+
+              {currentView === 'matchup-terminal' && !selectedGame && (
+                <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
+                  <div className="w-20 h-20 rounded-full bg-accent-purple/10 border border-accent-purple/30 flex items-center justify-center mb-6">
+                    <span className="material-symbols-outlined text-4xl text-accent-purple">model_training</span>
+                  </div>
+                  <h2 className="text-2xl font-black italic uppercase text-text-main mb-3 tracking-tight">
+                    No Matchup Selected
+                  </h2>
+                  <p className="text-sm text-text-muted max-w-md mb-8 leading-relaxed">
+                    Head to the <span className="text-primary font-bold">Live Board</span>, click on any game card, and hit <span className="text-primary font-bold">Open Matchup Terminal</span> to run AI simulations and deep analysis.
+                  </p>
+                  <button
+                    onClick={() => setCurrentView('live-board')}
+                    className="px-8 py-4 bg-accent-purple text-white font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-purple-500 hover:scale-105 transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">sports_score</span>
+                    Browse Live Games
+                  </button>
                 </div>
-                <h2 className="text-2xl font-black italic uppercase text-text-main mb-3 tracking-tight">
-                  No Matchup Selected
-                </h2>
-                <p className="text-sm text-text-muted max-w-md mb-8 leading-relaxed">
-                  Head to the <span className="text-primary font-bold">Live Board</span>, click on any game card, and hit <span className="text-primary font-bold">Open Matchup Terminal</span> to run AI simulations and deep analysis.
-                </p>
-                <button
-                  onClick={() => setCurrentView('live-board')}
-                  className="px-8 py-4 bg-accent-purple text-white font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-purple-500 hover:scale-105 transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center gap-3"
-                >
-                  <span className="material-symbols-outlined">sports_score</span>
-                  Browse Live Games
-                </button>
-              </div>
+              )}
+
+              {currentView === 'matchup-terminal' && selectedGame && (
+                <MatchupTerminalView
+                  game={selectedGame}
+                  onAddBet={handeAddBet}
+                  hasSimulated={hasSimulated}
+                  onRunSimulation={handleRunSimulation}
+                  betSlip={betSlip}
+                  setBetSlip={setBetSlip}
+                />
+              )}
+
+              {currentView === 'teams-directory' && (
+                <TeamsDirectory />
+              )}
+
+              {currentView === 'sharp-tools' && (
+                getCurrentUser()?.isPremium || isAdminEmail(getCurrentUser()?.email || '')
+                  ? <SharpToolsView selectedGame={selectedGame} />
+                  : <PremiumLockView featureName="Sharp Tools" onNavigate={(view) => setCurrentView(view)} />
+              )}
+
+              {currentView === 'bankroll' && (
+                <BankrollView />
+              )}
+
+              {currentView === 'popular-bets' && (
+                <PopularBetsView />
+              )}
+
+              {currentView === 'saved-picks' && (
+                <SavedPicksView />
+              )}
+
+              {currentView === 'value-finder' && (
+                getCurrentUser()?.isPremium || isAdminEmail(getCurrentUser()?.email || '')
+                  ? <ValueFinderView />
+                  : <PremiumLockView featureName="Value Finder" onNavigate={(view) => setCurrentView(view)} />
+              )}
+
+              {currentView === '3d-board' && (
+                <HolographicBoardView betSlip={betSlip} activeTickets={activeTickets} />
+              )}
+
+              {currentView === 'sportsbook' && (
+                <SportsbookView
+                  betSlip={betSlip}
+                  setBetSlip={setBetSlip}
+                  activeTickets={activeTickets}
+                  setActiveTickets={setActiveTickets}
+                  onAddBet={handeAddBet}
+                />
+              )}
+            </main>
+
+            {!isMarketingView && (
+              <Footer />
             )}
 
-            {currentView === 'matchup-terminal' && selectedGame && (
-              <MatchupTerminalView
-                game={selectedGame}
-                onAddBet={handeAddBet}
-                hasSimulated={hasSimulated}
-                onRunSimulation={handleRunSimulation}
-                betSlip={betSlip}
-                setBetSlip={setBetSlip}
-              />
-            )}
-
-            {currentView === 'teams-directory' && (
-              <TeamsDirectory />
-            )}
-
-            {currentView === 'sharp-tools' && (
-              <SharpToolsView selectedGame={selectedGame} />
-            )}
-
-            {currentView === 'bankroll' && (
-              <BankrollView />
-            )}
-
-            {currentView === 'popular-bets' && (
-              <PopularBetsView />
-            )}
-
-            {currentView === 'saved-picks' && (
-              <SavedPicksView />
-            )}
-
-            {currentView === 'value-finder' && (
-              <ValueFinderView />
-            )}
-
-            {currentView === 'sportsbook' && (
-              <SportsbookView
-                betSlip={betSlip}
-                setBetSlip={setBetSlip}
-                onAddBet={handeAddBet}
-              />
-            )}
-          </main>
-
-          {!isMarketingView && (
-            <Footer />
-          )}
-
-          <SimulationOverlay
-            isOpen={isSimulating}
-            onCancel={handleSimulationCancel}
-            onComplete={handleSimulationComplete}
-          />
-        </div>
-      </RookieModeProvider>
+            <SimulationOverlay
+              isOpen={isSimulating}
+              onCancel={handleSimulationCancel}
+              onComplete={handleSimulationComplete}
+            />
+          </div>
+        </RookieModeProvider>
+      </LiveBetsProvider>
     </SportsbookProvider>
   );
 }

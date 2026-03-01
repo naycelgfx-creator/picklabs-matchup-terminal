@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { saveAuth } from '../../utils/auth';
+import { login } from '../../data/PickLabsAuthDB';
 
 
 type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page';
@@ -74,14 +75,17 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
 
     const m = MATCHUPS[activeIndex];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email === 'admin@picklabs.bet' && password === 'admin12345') {
+
+        const res = await login(email, password);
+
+        if (res.ok) {
             setError('');
             saveAuth();
             onNavigate('live-board');
         } else {
-            setError('Invalid email or password.');
+            setError(res.message || 'Invalid email or password.');
             setShaking(true);
             setTimeout(() => setShaking(false), 600);
         }
@@ -99,7 +103,7 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
                         <img
                             src="/picklabs-full-logo.svg"
                             alt="PickLabs Logo"
-                            className="h-24 w-auto transition-transform duration-300 drop-shadow-[0_0_15px_rgba(13,242,13,0.3)] hover:scale-105"
+                            className="h-32 w-auto transition-transform duration-300 hover:scale-105"
                         />
                     </a>
                 </div>
@@ -181,7 +185,27 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
                     </form>
                 </div>
                 <div className="mt-auto pt-12">
-                    <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 justify-center">
+                        {/* Apple Store Button */}
+                        <a href="#" className="flex items-center justify-center gap-3 bg-black border border-neutral-800 hover:border-neutral-600 text-white px-5 py-2.5 rounded-xl transition-all hover:scale-105 w-full sm:w-auto">
+                            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.11.78.9-.04 2.19-.83 3.69-.65 1.58.19 2.73.81 3.46 1.83-3.13 1.88-2.58 6.32.48 7.57-.61 1.49-1.43 2.97-2.74 3.44zM12.03 7.25c-.02-2.39 1.95-4.4 4.19-4.25.26 2.51-2.2 4.6-4.19 4.25z"></path></svg>
+                            <div className="flex flex-col items-start leading-none">
+                                <span className="text-[9px] text-slate-400">Download on the</span>
+                                <span className="text-sm font-bold">App Store</span>
+                            </div>
+                        </a>
+
+                        {/* Google Play Button */}
+                        <a href="#" className="flex items-center justify-center gap-3 bg-black border border-neutral-800 hover:border-neutral-600 text-white px-5 py-2.5 rounded-xl transition-all hover:scale-105 w-full sm:w-auto">
+                            <span className="material-symbols-outlined text-[26px]">shop</span>
+                            <div className="flex flex-col items-start leading-none">
+                                <span className="text-[9px] text-slate-400">GET IT ON</span>
+                                <span className="text-sm font-bold">Google Play</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <p className="text-[9px] text-slate-600 text-center font-bold uppercase tracking-widest leading-relaxed">
                         By continuing, I acknowledge that I've read and agree to the <a className="text-text-muted hover:text-primary underline" href="#">Terms of Service</a> &amp; <a className="text-text-muted hover:text-primary underline" href="#">Privacy Policy</a>.
                     </p>
                 </div>

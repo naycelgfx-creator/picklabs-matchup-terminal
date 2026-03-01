@@ -301,7 +301,7 @@ export const PlayerPropsForm: React.FC<PlayerPropsFormProps> = ({ game, onAddBet
                                                 <div>
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="text-[11px] font-black text-text-main uppercase leading-tight">{player.name}</span>
-                                                        {row.l10Pct >= 70 && <span className="text-[10px]">🔥</span>}
+                                                        {row.l10Pct >= 70 && <span className="material-symbols-outlined text-orange-500 text-[10px] align-middle">local_fire_department</span>}
                                                         {row.l10Pct <= 30 && <span className="text-[10px]">❄️</span>}
                                                     </div>
                                                     <span className={`text-[9px] font-bold ${isOver ? 'text-emerald-400' : 'text-accent-purple'}`}>

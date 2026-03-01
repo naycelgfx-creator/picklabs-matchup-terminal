@@ -354,7 +354,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ player, prop, 
                                 style={{ width: `${overPct}%` }}
                             />
                         </div>
-                        <p className="text-[8px] text-text-muted mt-1">{overPct >= 60 ? '🔥 Sharp lean Over' : overPct <= 40 ? '⚠ Public fading Over' : '⚖ Even split'}</p>
+                        <p className="text-[8px] text-text-muted mt-1">{overPct >= 60 ? <><span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span> Sharp lean Over</> : overPct <= 40 ? '⚠ Public fading Over' : '⚖ Even split'}</p>
                     </div>
 
                     {/* Under % */}

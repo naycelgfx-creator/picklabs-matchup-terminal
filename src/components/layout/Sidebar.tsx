@@ -30,6 +30,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
         label: 'Tools',
         items: [
             { view: 'sharp-tools', icon: 'build', label: 'Sharp Tools' },
+            { view: '3d-board', icon: 'view_in_ar', label: '3D Board', isNew: true },
             { view: 'player-props', icon: 'sports_score', label: 'Player Props' },
             { view: 'trends', icon: 'show_chart', label: 'Trends' },
             { view: 'value-finder', icon: 'manage_search', label: 'Value Finder' },
@@ -96,9 +97,9 @@ const NavButton = ({
                 style={{
                     fontSize: 17,
                     color: isActive
-                        ? 'var(--sidebar-primary)'
+                        ? (label === 'Sportsbook' ? '#A3FF00' : 'var(--sidebar-primary)')
                         : hovered
-                            ? 'var(--sidebar-foreground)'
+                            ? (label === 'Sportsbook' ? '#A3FF00' : 'var(--sidebar-foreground)')
                             : 'var(--muted-foreground)',
                     transition: 'color 0.15s',
                 }}
@@ -111,9 +112,9 @@ const NavButton = ({
                 className="text-[12.5px] flex-1 truncate"
                 style={{
                     color: isActive
-                        ? 'var(--sidebar-foreground)'
+                        ? (label === 'Sportsbook' ? '#A3FF00' : 'var(--sidebar-foreground)')
                         : hovered
-                            ? 'var(--sidebar-foreground)'
+                            ? (label === 'Sportsbook' ? '#A3FF00' : 'var(--sidebar-foreground)')
                             : 'var(--muted-foreground)',
                     fontWeight: isActive ? 700 : 500,
                     transition: 'color 0.15s',

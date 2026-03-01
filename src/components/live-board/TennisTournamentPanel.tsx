@@ -254,14 +254,24 @@ export const TennisTournamentPanel: React.FC<TennisTournamentPanelProps> = ({ sp
         try {
             const espnDate = dateToFetch.replace(/-/g, '');
             const url = `${baseUrl}?dates=${espnDate}`;
-            const res = await fetch(url);
+            let res = await fetch(url);
             if (!res.ok) {
                 setError('Unable to reach ESPN.');
                 setMatches([]);
                 return;
             }
-            const data = await res.json() as RawObj;
-            const events: RawObj[] = (data.events as RawObj[]) ?? [];
+            let data = await res.json() as RawObj;
+            let events: RawObj[] = (data.events as RawObj[]) ?? [];
+
+            // Fallback for Tennis: if no events for today, fetch without date to get recent past events
+            if (events.length === 0 && dateToFetch === today) {
+                const fallbackRes = await fetch(baseUrl);
+                if (fallbackRes.ok) {
+                    const fallbackData = await fallbackRes.json() as RawObj;
+                    events = (fallbackData.events as RawObj[]) ?? [];
+                }
+            }
+
             // For tennis, there's typically one event (tournament) per request
             const allMatches: TennisMatch[] = events.flatMap(e => parseTennisEvent(e, sportKey));
             if (events.length > 0) setTournamentName((events[0].name as string) ?? '');

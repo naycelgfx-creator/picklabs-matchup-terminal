@@ -13,10 +13,12 @@ export type SportKey =
     | 'Soccer.LIGAMX'
     | 'Tennis.ATP'
     | 'Tennis.WTA'
-    | 'Golf.PGA';
+    | 'Golf.PGA'
+    | 'WNBA';
 
 export const ESPN_SCOREBOARD_URLS: Record<SportKey, string> = {
     NBA: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
+    WNBA: 'https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard',
     NFL: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
     MLB: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard',
     NHL: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard',
@@ -247,6 +249,7 @@ export const APP_SPORT_TO_ESPN: Record<string, SportKey | null> = {
     'NHL': 'NHL',
     'NCAAB': 'CBB',
     'NCAAW': null,
+    'WNBA': 'WNBA',
     // Soccer: default to EPL; LiveBoard overrides with sub-league selection
     'Soccer': 'Soccer.EPL',
     'Soccer.EPL': 'Soccer.EPL',
@@ -278,9 +281,25 @@ export const fetchESPNScoreboardByDate = async (sport: SportKey, dateStr: string
         const res = await fetch(url);
         if (!res.ok) return [];
         const data = await res.json() as RawObj;
-        const events: ESPNGame[] = ((data.events as RawObj[]) ?? [])
+        let events: ESPNGame[] = ((data.events as RawObj[]) ?? [])
             .map((e: RawObj) => parseCompetition(e, sport))
             .filter((g): g is ESPNGame => g !== null);
+
+        // Fallback: If no events found for today, fetch the most recent final games (for out-of-season sports)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isIntermittentSport = ['NFL', 'WNBA', 'UFC'].includes(sport);
+        if (events.length === 0 && dateStr === todayStr && isIntermittentSport) {
+            const fallbackRes = await fetch(baseUrl);
+            if (fallbackRes.ok) {
+                const fallbackData = await fallbackRes.json() as RawObj;
+                events = ((fallbackData.events as RawObj[]) ?? [])
+                    .map((e: RawObj) => parseCompetition(e, sport))
+                    .filter((g): g is ESPNGame => g !== null)
+                    // Hardcode status to 'post' as these are past games fallback
+                    .map(g => ({ ...g, status: g.status === 'in' ? 'in' : 'post', statusDetail: g.statusDetail || 'Final' }));
+            }
+        }
+
         return events;
     } catch {
         return [];

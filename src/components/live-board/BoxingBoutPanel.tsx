@@ -332,11 +332,11 @@ export const BoxingBoutPanel: React.FC<BoxingBoutPanelProps> = ({ onSelectGame }
                                                 <div className="text-slate-500 font-bold uppercase text-[9px] sm:text-[10px] tracking-wider mb-1 px-1 truncate">{bookName}</div>
 
                                                 <div className={`p-1.5 sm:p-2 rounded-lg border font-black text-xs sm:text-sm transition-colors ${isBestHome ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-neutral-800 border-neutral-700 text-text-main'}`}>
-                                                    {isBestHome && '🔥 '}{hOdds !== undefined ? formatOdds(hOdds) : '-'}
+                                                    {isBestHome && <span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span>}{hOdds !== undefined ? formatOdds(hOdds) : '-'}
                                                 </div>
 
                                                 <div className={`p-1.5 sm:p-2 rounded-lg border font-black text-xs sm:text-sm transition-colors ${isBestAway ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-neutral-800 border-neutral-700 text-text-main'}`}>
-                                                    {isBestAway && '🔥 '}{aOdds !== undefined ? formatOdds(aOdds) : '-'}
+                                                    {isBestAway && <span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span>}{aOdds !== undefined ? formatOdds(aOdds) : '-'}
                                                 </div>
                                             </div>
                                         );

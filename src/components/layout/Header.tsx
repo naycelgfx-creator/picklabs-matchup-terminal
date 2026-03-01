@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRookieMode } from '../../contexts/RookieModeContext';
+import { useLiveBets } from '../../contexts/LiveBetsContext';
 import { useSportsbooks, SPORTSBOOKS } from '../../contexts/SportsbookContext';
 import { PulsingBeacon } from '../ui/PulsingBeacon';
 import { ViewType } from '../../App';
+import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
+import { clearAuth } from '../../utils/auth';
 
 interface HeaderProps {
     currentView: ViewType;
@@ -25,6 +28,7 @@ const GLOSSARY_TERMS = [
 
 export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onAIPick, isAIPickLoading = false }) => {
     const { isRookieModeActive, toggleRookieMode } = useRookieMode();
+    const { isLiveBetsActive, toggleLiveBets } = useLiveBets();
     const { enabledBooks, toggleBook, enableAll, disableAll } = useSportsbooks();
     const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
 
@@ -36,8 +40,12 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
     });
 
     const [isBookieOpen, setIsBookieOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [bookieTab, setBookieTab] = useState<'all' | 'sportsbook' | 'dfs' | 'other'>('all');
     const bookieRef = useRef<HTMLDivElement>(null);
+    const settingsRef = useRef<HTMLDivElement>(null);
+
+    const user = getCurrentUser();
 
     useEffect(() => {
         if (isDark) {
@@ -58,6 +66,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
         const handleClick = (e: MouseEvent) => {
             if (bookieRef.current && !bookieRef.current.contains(e.target as Node)) {
                 setIsBookieOpen(false);
+            }
+            if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+                setIsSettingsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
@@ -87,8 +98,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
             ? 'text-primary border-b-2 border-primary pb-1'
             : `text-text-muted ${hoverColor}`}`;
 
-    const iconBtnBase = 'hidden md:flex h-8 w-8 shrink-0 rounded bg-neutral-800 border border-border-muted items-center justify-center cursor-pointer hover:bg-neutral-700 transition-colors text-text-muted hover:text-text-main';
-
     // Count of enabled books for badge
     const enabledCount = Object.values(enabledBooks).filter(Boolean).length;
 
@@ -105,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                         <img
                             src="/picklabs-logo.svg"
                             alt="PickLabs Logo"
-                            className="h-8 w-auto shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_15px_rgba(34,197,94,0.6)] group-hover:scale-105"
+                            className="h-14 w-auto shrink-0 transition-all duration-300 group-hover:scale-105"
                         />
                     </a>
 
@@ -113,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                     <nav className="hidden lg:flex items-center gap-5">
                         <a className={navLinkClass('live-board')} onClick={(e) => { e.preventDefault(); setCurrentView('live-board'); }}>Live Board</a>
                         <a
-                            className={`flex items-center gap-1 text-xs font-bold uppercase tracking-widest cursor-pointer transition-colors ${currentView === 'sportsbook' ? 'text-green-400 border-b-2 border-green-400 pb-1' : 'text-text-muted hover:text-green-400'}`}
+                            className={`flex items-center gap-1 text-xs font-bold uppercase tracking-widest cursor-pointer transition-colors ${currentView === 'sportsbook' ? 'text-[#A3FF00] border-b-2 border-[#A3FF00] pb-1' : 'text-text-muted hover:text-[#A3FF00]'}`}
                             onClick={(e) => { e.preventDefault(); setCurrentView('sportsbook'); }}
                         >
                             <span className="material-symbols-outlined text-[14px]">casino</span>
@@ -153,49 +162,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                 {/* ── Right Controls ── */}
                 <div className="flex items-center gap-2 shrink-0">
 
-                    {/* Rookie Mode — icon only on < xl, full pill on xl+ */}
-                    <div className="hidden md:flex items-center gap-1.5 relative">
-                        {/* Beacon when mode is OFF — draws attention */}
-                        {!isRookieModeActive && (
-                            <span className="absolute -top-1 -right-1 z-10">
-                                <PulsingBeacon color="yellow" alwaysVisible />
-                            </span>
-                        )}
-                        <button
-                            id="rookie-mode-btn"
-                            onClick={() => {
-                                toggleRookieMode();
-                                if (isRookieModeActive) setIsGlossaryOpen(false);
-                            }}
-                            title={isRookieModeActive ? 'Disable Rookie Mode' : 'Turn on Rookie Mode'}
-                            className={`
-                                flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 border
-                                ${isRookieModeActive
-                                    ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50 shadow-[0_0_15px_rgba(250,204,21,0.3)]'
-                                    : 'bg-neutral-800 text-slate-500 border-border-muted hover:text-white'
-                                }
-                                h-8 w-8 rounded xl:w-auto xl:px-4 xl:py-2 xl:rounded-full xl:gap-2
-                            `}
-                        >
-                            <span className="material-symbols-outlined text-sm">{isRookieModeActive ? 'school' : 'help_center'}</span>
-                            <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Rookie Mode</span>
-                        </button>
-                        {/* Glossary toggle — only shown when mode is on */}
-                        {isRookieModeActive && (
-                            <button
-                                onClick={() => setIsGlossaryOpen(o => !o)}
-                                title="Open Betting Glossary"
-                                className={`hidden xl:flex items-center gap-1 h-8 px-3 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all
-                                    ${isGlossaryOpen
-                                        ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50'
-                                        : 'bg-neutral-800 text-slate-400 border-border-muted hover:border-yellow-400/40 hover:text-yellow-300'
-                                    }`}
-                            >
-                                <span className="material-symbols-outlined text-sm">menu_book</span>
-                                <span>Glossary</span>
-                            </button>
-                        )}
-                    </div>
+
 
                     {/* AI Pick My Bets — icon only on < xl, full pill on xl+ */}
                     <button
@@ -212,15 +179,155 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                         <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">{isAIPickLoading ? 'Analyzing...' : 'AI Pick My Bets'}</span>
                     </button>
 
-                    {/* Theme Toggle — always icon only */}
-                    <button
-                        onClick={() => setIsDark(!isDark)}
-                        className={iconBtnBase}
-                        title="Toggle Theme"
-                        aria-label="Toggle Theme"
-                    >
-                        <span className="material-symbols-outlined text-sm">{isDark ? 'light_mode' : 'dark_mode'}</span>
-                    </button>
+                    {/* ── SETTINGS & PROFILE ── */}
+                    <div className="relative hidden md:block" ref={settingsRef}>
+                        <button
+                            onClick={() => setIsSettingsOpen(prev => !prev)}
+                            title="Settings & Profile"
+                            aria-label="Settings & Profile"
+                            className={`h-8 w-8 shrink-0 rounded border flex items-center justify-center cursor-pointer transition-all ${isSettingsOpen
+                                ? 'bg-accent-blue/20 border-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                                : 'bg-neutral-800 border-border-muted text-text-muted hover:bg-neutral-700 hover:text-text-main'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-sm">settings</span>
+                        </button>
+
+                        {/* Settings Dropdown Panel */}
+                        {isSettingsOpen && user && (
+                            <div className="absolute right-0 top-[calc(100%+8px)] w-72 bg-white dark:bg-neutral-900 border border-border-muted rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] overflow-hidden z-50 animate-in">
+                                {/* Header / User Info */}
+                                <div className="px-4 py-4 border-b border-border-muted bg-neutral-50 dark:bg-neutral-900/80 flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent-blue to-purple-600 flex items-center justify-center shadow-inner">
+                                            <span className="material-symbols-outlined text-white text-xl">person</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-black text-text-main truncate">{user.email}</p>
+                                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">
+                                                {user.isPremium ? 'Premium Plan' : 'Free Tier'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {/* Plan Badge */}
+                                    <div className="flex justify-between items-center mt-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Billing Cycle</span>
+                                            <span className="text-[11px] font-black text-white">{user.isPremium ? 'Yearly ($199/yr)' : 'Monthly ($0/mo)'}</span>
+                                        </div>
+                                        {isAdminEmail(user.email) && (
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                                                Admin
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Menu Items */}
+                                <div className="py-2 flex flex-col">
+                                    {/* App Settings Toggles */}
+                                    <div className="px-4 py-3 border-b border-border-muted flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`material-symbols-outlined text-[16px] ${isRookieModeActive ? 'text-yellow-400' : 'text-slate-400'}`}>school</span>
+                                            <span className="text-xs font-bold text-text-main">Rookie Mode</span>
+                                        </div>
+                                        <button
+                                            aria-label="Toggle Rookie Mode"
+                                            onClick={() => {
+                                                toggleRookieMode();
+                                                if (isRookieModeActive) setIsGlossaryOpen(false);
+                                            }}
+                                            className={`relative h-5 w-9 rounded-full border transition-all duration-300 ${isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}
+                                        >
+                                            <div className={`absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 ${isRookieModeActive ? 'translate-x-4 bg-yellow-400' : 'translate-x-0.5 bg-slate-600'}`} />
+                                            {!isRookieModeActive && (
+                                                <span className="absolute -top-1 -right-1 z-10">
+                                                    <PulsingBeacon color="yellow" alwaysVisible />
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {isRookieModeActive && (
+                                        <button
+                                            onClick={() => {
+                                                setIsGlossaryOpen(o => !o);
+                                                setIsSettingsOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-muted hover:bg-white/5 transition-colors text-left"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px] text-yellow-500">menu_book</span>
+                                            <span className="text-xs font-bold text-yellow-500">Open Betting Glossary</span>
+                                        </button>
+                                    )}
+                                    <div className="px-4 py-3 border-b border-border-muted flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-[16px] text-slate-400">dark_mode</span>
+                                            <span className="text-xs font-bold text-text-main">Dark Mode</span>
+                                        </div>
+                                        <button
+                                            aria-label="Toggle Dark Mode"
+                                            onClick={() => setIsDark(!isDark)}
+                                            className={`relative h-5 w-9 rounded-full border transition-all duration-300 ${isDark ? 'bg-primary/20 border-primary/60' : 'bg-neutral-800 border-border-muted'}`}
+                                        >
+                                            <div className={`absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 ${isDark ? 'translate-x-4 bg-primary' : 'translate-x-0.5 bg-slate-600'}`} />
+                                        </button>
+                                    </div>
+
+                                    <div className="px-4 py-3 border-b border-border-muted flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-[16px] text-slate-400">notifications</span>
+                                            <span className="text-xs font-bold text-text-main">Push Notifications</span>
+                                        </div>
+                                        <button
+                                            aria-label="Toggle Push Notifications"
+                                            className="relative h-5 w-9 rounded-full border transition-all duration-300 bg-primary/20 border-primary/60"
+                                        >
+                                            <div className="absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 translate-x-4 bg-primary" />
+                                        </button>
+                                    </div>
+
+                                    {/* Live Bets Tracker Toggle */}
+                                    <div className="px-4 py-3 border-b border-border-muted flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-[16px] text-slate-400">monitoring</span>
+                                            <span className="text-xs font-bold text-text-main">Live Bets</span>
+                                        </div>
+                                        <button
+                                            aria-label="Toggle Live Bets Tracker"
+                                            onClick={toggleLiveBets}
+                                            className={`relative h-5 w-9 rounded-full border transition-all duration-300 ${isLiveBetsActive ? 'bg-primary/20 border-primary/60' : 'bg-neutral-800 border-border-muted'}`}
+                                        >
+                                            <div className={`absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 ${isLiveBetsActive ? 'translate-x-4 bg-primary' : 'translate-x-0.5 bg-slate-600'}`} />
+                                        </button>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <button
+                                        onClick={() => {
+                                            alert("Bug Reporter opening... (Developer Hook)");
+                                            setIsSettingsOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px] text-orange-400">bug_report</span>
+                                        <span className="text-xs font-bold text-text-main">Report a Bug</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            clearAuth();
+                                            setCurrentView('login-page');
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors text-left text-red-400 group"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">logout</span>
+                                        <span className="text-xs font-bold">Sign Out</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* ── BOOKIE MANAGER — icon + dropdown ── */}
                     <div className="relative hidden md:block" ref={bookieRef}>
@@ -386,18 +493,68 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                     <div className="h-px bg-border-muted w-full" />
 
                     <div className="flex flex-col gap-3">
-                        <button onClick={toggleRookieMode} className={`flex items-center justify-center gap-2 px-4 py-3 border rounded-lg text-xs font-black uppercase tracking-widest transition ${isRookieModeActive ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50' : 'bg-neutral-800 text-slate-500 border-border-muted hover:text-white'}`}>
-                            <span className="material-symbols-outlined text-sm">{isRookieModeActive ? 'school' : 'help_center'}</span>
-                            Rookie Mode {isRookieModeActive ? 'ON' : 'OFF'}
-                        </button>
                         <button onClick={onAIPick} disabled={isAIPickLoading} className={`flex items-center justify-center gap-2 px-4 py-3 bg-accent-purple/20 border border-accent-purple/40 rounded-lg text-accent-purple hover:bg-accent-purple hover:text-white transition text-xs font-black uppercase tracking-widest ${isAIPickLoading ? 'opacity-70 cursor-not-allowed' : ''}`}>
                             <span className={`material-symbols-outlined text-sm ${isAIPickLoading ? 'animate-spin' : ''}`}>smart_toy</span>
                             {isAIPickLoading ? 'Analyzing...' : 'AI Pick My Bets'}
                         </button>
-                        <button onClick={() => setIsDark(!isDark)} className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-800 border border-border-muted hover:text-white transition rounded-lg text-text-muted text-xs font-black uppercase tracking-widest">
-                            <span className="material-symbols-outlined text-sm">{isDark ? 'light_mode' : 'dark_mode'}</span>
-                            {isDark ? 'Light Mode' : 'Dark Mode'}
-                        </button>
+                        {/* Mobile Settings Section */}
+                        <div className="bg-neutral-900 border border-border-muted rounded-xl overflow-hidden mt-2">
+                            <div className="px-4 py-3 border-b border-border-muted flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-accent-blue to-purple-600 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-[16px]">person</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-black text-text-main">{user?.email}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{user?.isPremium ? 'Premium · Yearly' : 'Free Tier'}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => { toggleRookieMode(); if (isRookieModeActive) setIsGlossaryOpen(false); }} className="w-full flex items-center justify-between px-4 py-3 border-b border-border-muted active:bg-white/5">
+                                <div className="flex items-center gap-2 relative">
+                                    <span className={`material-symbols-outlined text-sm ${isRookieModeActive ? 'text-yellow-400' : 'text-slate-400'}`}>school</span>
+                                    <span className="text-[11px] font-bold text-text-main">Rookie Mode</span>
+                                </div>
+                                <div className={`relative h-4 w-8 rounded-full border transition-all duration-300 ${isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}>
+                                    <div className={`absolute top-px h-3 w-3 rounded-full transition-all duration-300 ${isRookieModeActive ? 'translate-x-4 bg-yellow-400' : 'translate-x-px bg-slate-600'}`} />
+                                    {!isRookieModeActive && (
+                                        <span className="absolute -top-1 -right-1 z-10 scale-75">
+                                            <PulsingBeacon color="yellow" alwaysVisible />
+                                        </span>
+                                    )}
+                                </div>
+                            </button>
+                            {isRookieModeActive && (
+                                <button onClick={() => { setIsGlossaryOpen(o => !o); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-3 border-b border-border-muted active:bg-white/5 text-yellow-500">
+                                    <span className="material-symbols-outlined text-sm">menu_book</span>
+                                    <span className="text-[11px] font-bold">Open Glossary</span>
+                                </button>
+                            )}
+                            <button onClick={() => setIsDark(!isDark)} className="w-full flex items-center justify-between px-4 py-3 border-b border-border-muted active:bg-white/5">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-slate-400">{isDark ? 'light_mode' : 'dark_mode'}</span>
+                                    <span className="text-[11px] font-bold text-text-main">Dark Mode</span>
+                                </div>
+                                <div className={`relative h-4 w-8 rounded-full border transition-all duration-300 ${isDark ? 'bg-primary/20 border-primary/60' : 'bg-neutral-800 border-border-muted'}`}>
+                                    <div className={`absolute top-px h-3 w-3 rounded-full transition-all duration-300 ${isDark ? 'translate-x-4 bg-primary' : 'translate-x-px bg-slate-600'}`} />
+                                </div>
+                            </button>
+                            <button onClick={toggleLiveBets} className="w-full flex items-center justify-between px-4 py-3 border-b border-border-muted active:bg-white/5">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-slate-400">monitoring</span>
+                                    <span className="text-[11px] font-bold text-text-main">Live Bets</span>
+                                </div>
+                                <div className={`relative h-4 w-8 rounded-full border transition-all duration-300 ${isLiveBetsActive ? 'bg-primary/20 border-primary/60' : 'bg-neutral-800 border-border-muted'}`}>
+                                    <div className={`absolute top-px h-3 w-3 rounded-full transition-all duration-300 ${isLiveBetsActive ? 'translate-x-4 bg-primary' : 'translate-x-px bg-slate-600'}`} />
+                                </div>
+                            </button>
+                            <button onClick={() => alert("Bug Reporter opening...")} className="w-full flex items-center gap-2 px-4 py-3 border-b border-border-muted active:bg-white/5 text-orange-400">
+                                <span className="material-symbols-outlined text-sm">bug_report</span>
+                                <span className="text-[11px] font-bold">Report Bug</span>
+                            </button>
+                            <button onClick={() => { clearAuth(); setCurrentView('login-page'); }} className="w-full flex items-center gap-2 px-4 py-3 active:bg-red-500/10 text-red-400">
+                                <span className="material-symbols-outlined text-sm">logout</span>
+                                <span className="text-[11px] font-bold">Sign Out</span>
+                            </button>
+                        </div>
 
                         {/* Mobile Bookie Manager */}
                         <div className="bg-neutral-900 border border-border-muted rounded-xl overflow-hidden">
@@ -435,7 +592,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
             )}
             {/* ── Rookie Glossary Drawer ── */}
             {isRookieModeActive && isGlossaryOpen && (
-                <div className="fixed top-[var(--header-h,112px)] left-0 right-0 z-40 bg-[#0a0a0a]/98 border-b border-yellow-500/30 shadow-[0_8px_40px_rgba(250,204,21,0.12)] animate-slide-down">
+                <div className="fixed top-[var(--header-h,112px)] left-0 right-0 z-40 bg-neutral-900 border-b border-yellow-500/30 shadow-[0_8px_40px_rgba(250,204,21,0.12)] animate-slide-down">
                     <div className="max-w-screen-2xl mx-auto px-4 py-5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">

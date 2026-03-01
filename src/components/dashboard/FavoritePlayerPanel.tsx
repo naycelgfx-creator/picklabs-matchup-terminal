@@ -34,7 +34,7 @@ function buildInsight(player: Player, prop: PlayerProp): string {
     const rank = prop.oppRank.rank;
     const hitStr = l5over >= 4 ? 'hit' : l5over <= 1 ? 'missed' : 'covered';
     const roadStr = roadTotal > 0 ? ` In road games L5, ${road}/${roadTotal} over.` : '';
-    const rankStr = rank <= 10 ? `⚠ ${oppName} ranks Top 10 in defense vs ${prop.type}.` : rank >= 21 ? `🔥 ${oppName} ranks Bottom 10 in defending ${prop.type} — exploitable.` : '';
+    const rankStr = rank <= 10 ? `⚠ ${oppName} ranks Top 10 in defense vs ${prop.type}.` : rank >= 21 ? <><span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span> {oppName} ranks Bottom 10 in defending {prop.type} — exploitable.</> : '';
     return `${player.name} has ${hitStr} ${prop.type} ${prop.line}+ in ${l5over}/5 of their last 5 games.${roadStr}${rankStr ? ' ' + rankStr : ''}`;
 }
 

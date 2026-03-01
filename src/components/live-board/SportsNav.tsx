@@ -26,6 +26,10 @@ const SPORT_LOGOS: Record<string, { primary: string; fallback: string }> = {
         primary: 'https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png',
         fallback: 'https://sports.cbsimg.net/fly/images/icon-logos/basketball.svg',
     },
+    CFB: {
+        primary: 'https://a.espncdn.com/i/teamlogos/leagues/500/college-football.png',
+        fallback: 'https://sports.cbsimg.net/fly/images/icon-logos/football.svg',
+    },
     NCAAB: {
         primary: 'https://sports.cbsimg.net/fly/images/icon-logos/basketball.svg',
         fallback: 'https://sports.cbsimg.net/fly/images/icon-logos/basketball.svg',
@@ -71,6 +75,7 @@ const SPORT_ICON_MATERIAL: Record<string, string> = {
     Esports: 'sports_esports',
     NCAAB: 'sports_basketball',
     NCAAW: 'sports_basketball',
+    CFB: 'sports_football',
 };
 
 interface SportsNavProps {
@@ -119,7 +124,9 @@ export const SportsNav: React.FC<SportsNavProps> = ({ activeSport, onSelectSport
                                         {materialIcon}
                                     </span>
                                 </span>
-                                {sport}
+                                {sport === 'NCAAW' ? "Women's College Basketball" :
+                                    sport === 'NCAAB' ? "College Basketball" :
+                                        sport === 'CFB' ? "College Football" : sport}
                             </div>
                         );
                     })}

@@ -104,43 +104,72 @@ export const BaseballField: React.FC<BaseballFieldProps> = ({ game }) => {
                 </div>
             </div>
 
-            <div className="p-4 bg-background-dark flex justify-center">
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl h-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Baseball field">
+            <div className="p-4 bg-[#111827] flex justify-center w-full overflow-hidden">
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[800px] h-auto drop-shadow-2xl" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Baseball field">
                     <defs>
-                        <radialGradient id="bbGrass2" cx="50%" cy="80%" r="80%">
-                            <stop offset="0%" stopColor="#166534" /><stop offset="100%" stopColor="#14432a" />
+                        {/* Outfield Grass Gradient */}
+                        <radialGradient id="bbGrassSubtle" cx="50%" cy="75%" r="75%">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="60%" stopColor="#16a34a" />
+                            <stop offset="100%" stopColor="#15803d" />
                         </radialGradient>
+                        <linearGradient id="dirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#d97706" />
+                            <stop offset="100%" stopColor="#b45309" />
+                        </linearGradient>
                     </defs>
-                    <rect x={0} y={0} width={W} height={H} fill="#0a1a0f" rx={6} />
-                    <path d={`${outfieldPath} L ${HOME_X + RF_R} ${HOME_Y} L ${HOME_X - LF_R} ${HOME_Y} Z`} fill="url(#bbGrass2)" />
-                    <path d={outfieldPath} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={4} />
-                    <path d={`M ${HOME_X - LF_R + 5} ${HOME_Y - 65} Q ${HOME_X - OUTFIELD_R + 28} ${HOME_Y - OUTFIELD_R + 28} ${HOME_X} ${HOME_Y - OUTFIELD_R + 48} Q ${HOME_X + OUTFIELD_R - 28} ${HOME_Y - OUTFIELD_R + 28} ${HOME_X + RF_R - 5} ${HOME_Y - 65}`}
-                        fill="none" stroke="rgba(180,130,50,0.35)" strokeWidth={20} />
-                    <line x1={HOME_X} y1={HOME_Y} x2={HOME_X - LF_R} y2={HOME_Y - LF_R * 1.05} stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
-                    <line x1={HOME_X} y1={HOME_Y} x2={HOME_X + RF_R} y2={HOME_Y - RF_R * 1.05} stroke="rgba(255,255,255,0.45)" strokeWidth={1.5} />
-                    <path d={`${infieldPath} L ${HOME_X} ${HOME_Y} Z`} fill="#92400e" opacity={0.85} />
-                    <polygon points={`${HOME_X},${HOME_Y} ${FIRST_X},${FIRST_Y} ${SECOND_X},${SECOND_Y} ${THIRD_X},${THIRD_Y}`} fill="#a16207" opacity={0.8} />
-                    <polygon points={`${HOME_X},${HOME_Y - 20} ${FIRST_X - 16},${FIRST_Y + 4} ${SECOND_X},${SECOND_Y + 22} ${THIRD_X + 16},${THIRD_Y + 4}`} fill="url(#bbGrass2)" opacity={0.7} />
-                    <ellipse cx={MOUND_X} cy={MOUND_Y} rx={22} ry={14} fill="#92400e" stroke="rgba(255,255,255,0.2)" strokeWidth={1} />
-                    <ellipse cx={MOUND_X} cy={MOUND_Y - 2} rx={6} ry={4} fill="rgba(255,255,255,0.25)" />
-                    {[[HOME_X, HOME_Y, FIRST_X, FIRST_Y], [FIRST_X, FIRST_Y, SECOND_X, SECOND_Y], [SECOND_X, SECOND_Y, THIRD_X, THIRD_Y], [THIRD_X, THIRD_Y, HOME_X, HOME_Y]].map(([x1, y1, x2, y2], i) => (
-                        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={1.5} />
-                    ))}
-                    {[[FIRST_X, FIRST_Y], [SECOND_X, SECOND_Y], [THIRD_X, THIRD_Y]].map(([bx, by], i) => (
-                        <rect key={i} x={bx - 9} y={by - 9} width={18} height={18} fill="white" opacity={0.9} rx={2} transform={`rotate(45, ${bx}, ${by})`} />
-                    ))}
-                    <polygon points={`${HOME_X},${HOME_Y - 10} ${HOME_X + 10},${HOME_Y} ${HOME_X + 10},${HOME_Y + 8} ${HOME_X - 10},${HOME_Y + 8} ${HOME_X - 10},${HOME_Y}`} fill="white" opacity={0.9} />
 
-                    {/* BIGGER HOME LOGO */}
+                    {/* Outer dark background (stands area) */}
+                    <rect x={0} y={0} width={W} height={H} fill="#0f172a" rx={8} />
+
+                    {/* Grass Field */}
+                    <path d={`${outfieldPath} L ${HOME_X + RF_R} ${HOME_Y} L ${HOME_X - LF_R} ${HOME_Y} Z`} fill="url(#bbGrassSubtle)" />
+
+                    {/* Warning Track */}
+                    <path d={outfieldPath} fill="none" stroke="#78350f" strokeWidth={18} strokeOpacity={0.8} />
+                    <path d={outfieldPath} fill="none" stroke="#fcd34d" strokeWidth={2} strokeOpacity={0.6} strokeDasharray="10 6" />
+
+                    {/* Foul Lines */}
+                    <line x1={HOME_X} y1={HOME_Y} x2={HOME_X - LF_R} y2={HOME_Y - LF_R * 1.05} stroke="#ffffff" strokeWidth={3} opacity={0.8} />
+                    <line x1={HOME_X} y1={HOME_Y} x2={HOME_X + RF_R} y2={HOME_Y - RF_R * 1.05} stroke="#ffffff" strokeWidth={3} opacity={0.8} />
+
+                    {/* Infield Dirt */}
+                    <path d={`${infieldPath} L ${HOME_X} ${HOME_Y} Z`} fill="url(#dirtGradient)" stroke="#78350f" strokeWidth={4} />
+
+                    {/* Infield Grass */}
+                    <polygon points={`${HOME_X},${HOME_Y - 24} ${FIRST_X - 18},${FIRST_Y + 6} ${SECOND_X},${SECOND_Y + 28} ${THIRD_X + 18},${THIRD_Y + 6}`} fill="#16a34a" stroke="#15803d" strokeWidth={2} />
+
+                    {/* Base Paths outline */}
+                    <polygon points={`${HOME_X},${HOME_Y} ${FIRST_X},${FIRST_Y} ${SECOND_X},${SECOND_Y} ${THIRD_X},${THIRD_Y}`} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
+
+                    {/* Pitcher's Mound */}
+                    <circle cx={MOUND_X} cy={MOUND_Y} r={28} fill="url(#dirtGradient)" stroke="#78350f" strokeWidth={2} />
+                    {/* Pitcher's Plate */}
+                    <rect x={MOUND_X - 6} y={MOUND_Y - 2} width={12} height={4} fill="#ffffff" rx={1} />
+
+                    {/* Bases (1st, 2nd, 3rd) */}
+                    {[[FIRST_X, FIRST_Y], [SECOND_X, SECOND_Y], [THIRD_X, THIRD_Y]].map(([bx, by], i) => (
+                        <g key={i} transform={`translate(${bx}, ${by}) rotate(45)`}>
+                            <rect x={-10} y={-10} width={20} height={20} fill="#ffffff" rx={2} stroke="#cbd5e1" strokeWidth={2} />
+                        </g>
+                    ))}
+
+                    {/* Home Plate */}
+                    <path d={`M ${HOME_X - 12} ${HOME_Y - 12} L ${HOME_X + 12} ${HOME_Y - 12} L ${HOME_X + 12} ${HOME_Y} L ${HOME_X} ${HOME_Y + 12} L ${HOME_X - 12} ${HOME_Y} Z`} fill="#ffffff" stroke="#cbd5e1" strokeWidth={2} />
+
+                    {/* Home Logo */}
                     {game.homeTeam.logo && (
-                        <image href={game.homeTeam.logo} x={HOME_X - 50} y={HOME_Y - BASE_DIST * Math.SQRT2 * 0.65} width={100} height={100} opacity={0.22} preserveAspectRatio="xMidYMid meet" />
+                        <image href={game.homeTeam.logo} x={HOME_X - 60} y={HOME_Y - BASE_DIST * Math.SQRT2 * 0.65 - 10} width={120} height={120} opacity={0.25} preserveAspectRatio="xMidYMid meet" />
                     )}
 
-                    <text x={HOME_X} y={HOME_Y - OUTFIELD_R + 68} textAnchor="middle" fontSize={11} fill="rgba(255,255,255,0.4)" fontFamily="monospace" fontWeight={900}>CF 400</text>
-                    <text x={HOME_X - LF_R + 40} y={HOME_Y - 80} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.4)" fontFamily="monospace" fontWeight={900}>LF 330</text>
-                    <text x={HOME_X + RF_R - 40} y={HOME_Y - 80} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.4)" fontFamily="monospace" fontWeight={900}>RF 330</text>
-                    <text x={HOME_X - 220} y={80} textAnchor="middle" fontSize={12} fontWeight={900} fill="#93c5fd" opacity={0.85} fontFamily="monospace">{game.awayTeam.name.toUpperCase()}</text>
-                    <text x={HOME_X + 220} y={80} textAnchor="middle" fontSize={12} fontWeight={900} fill="#6ee7b7" opacity={0.85} fontFamily="monospace">{game.homeTeam.name.toUpperCase()}</text>
+                    {/* Distance Markers */}
+                    <text x={HOME_X} y={HOME_Y - OUTFIELD_R + 50} textAnchor="middle" fontSize={14} fill="#fbbf24" fontFamily="monospace" fontWeight={900}>400</text>
+                    <text x={HOME_X - LF_R + 50} y={HOME_Y - 60} textAnchor="middle" fontSize={13} fill="#fbbf24" fontFamily="monospace" fontWeight={900}>330</text>
+                    <text x={HOME_X + RF_R - 50} y={HOME_Y - 60} textAnchor="middle" fontSize={13} fill="#fbbf24" fontFamily="monospace" fontWeight={900}>330</text>
+
+                    {/* Team Names in Outfield */}
+                    <text x={HOME_X - 220} y={90} textAnchor="middle" fontSize={18} fontWeight={900} fill="#93c5fd" opacity={0.7} fontFamily="monospace" letterSpacing="4">{game.awayTeam.name.toUpperCase()}</text>
+                    <text x={HOME_X + 220} y={90} textAnchor="middle" fontSize={18} fontWeight={900} fill="#6ee7b7" opacity={0.7} fontFamily="monospace" letterSpacing="4">{game.homeTeam.name.toUpperCase()}</text>
 
                     {visible.map(p => {
                         const col = playColor[p.type];

@@ -16,6 +16,7 @@ const ESPN_TEAM_ENDPOINTS: Record<string, string> = {
     WNBA: 'https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams?limit=100',
     NCAAB: 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams?limit=50&groups=50',
     NCAAW: 'https://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/teams?limit=50&groups=50',
+    CFB: 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?limit=135&groups=80',
     NFL: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams?limit=100',
     MLB: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams?limit=100',
     NHL: 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams?limit=100',
@@ -221,6 +222,7 @@ const EXTRA_SPORT_LOGOS: Record<string, string> = {
     WNBA: 'https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png',
     NCAAB: 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
     NCAAW: 'https://upload.wikimedia.org/wikipedia/commons/d/dd/NCAA_logo.svg',
+    CFB: 'https://a.espncdn.com/i/teamlogos/leagues/500/college-football.png',
     Soccer: 'https://sports.cbsimg.net/fly/images/icon-logos/soccer.svg',
 };
 

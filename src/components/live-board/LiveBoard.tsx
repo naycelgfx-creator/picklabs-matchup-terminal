@@ -12,12 +12,16 @@ import { BetPick } from '../../App';
 import { ESPNScoreboardPanel } from './ESPNScoreboardPanel';
 import { APP_SPORT_TO_ESPN, SOCCER_LEAGUES, fetchESPNScoreboardByDate, ESPNGame, SportKey } from '../../data/espnScoreboard';
 import { generateAIPrediction, fetchTeamLastFive } from '../../data/espnTeams';
+import { RookieGuideBanner } from '../shared/RookieGuideBanner';
+import { LiveTicketPanel } from '../shared/LiveTicketPanel';
 
 interface LiveBoardProps {
     setCurrentView: (view: 'live-board' | 'matchup-terminal') => void;
     onSelectGame: (game: Game) => void;
     betSlip: BetPick[];
     setBetSlip: React.Dispatch<React.SetStateAction<BetPick[]>>;
+    activeTickets: BetPick[][];
+    setActiveTickets: React.Dispatch<React.SetStateAction<BetPick[][]>>;
     onAddBet: (bet: Omit<BetPick, 'id'>) => void;
 }
 
@@ -111,11 +115,12 @@ const enrichWithLastFive = async (games: ESPNGame[], sport: string): Promise<Gam
     );
 };
 
-export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGame, betSlip, setBetSlip, onAddBet }) => {
+export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGame, betSlip, setBetSlip, activeTickets, setActiveTickets, onAddBet }) => {
     const [activeSport, setActiveSport] = useState<string>(SPORTS[0]);
     const [activeTab, setActiveTab] = useState<'espn' | 'simulated'>('espn');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
     const [showPublicBets, setShowPublicBets] = useState<boolean>(true);
+    const [showLiveTickets, setShowLiveTickets] = useState<boolean>(true);
     const [showBetSlip, setShowBetSlip] = useState<boolean>(true);
     const today = (() => { const d = new Date(); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; })();
     const [selectedDate, setSelectedDate] = useState<string>(today);
@@ -147,33 +152,73 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
 
     const hasESPN = effectiveEspnKey !== null;
 
-    const fetchSimulatedGames = useCallback(async () => {
+    const loadGamesData = useCallback(async () => {
         if (!effectiveEspnKey) {
-            // Sport has no ESPN scoreboard support — show no games (no mock fallback)
+            // Sport has no ESPN scoreboard support — show no games
             setEspnGames([]);
             return;
         }
         setLoadingEspn(true);
         try {
             const raw = await fetchESPNScoreboardByDate(effectiveEspnKey, selectedDate);
+            let games = raw.length > 0 ? raw.map(eg => espnGameToGame(eg)) : [];
             // First pass: fast render with record-based prediction
-            setEspnGames(raw.length > 0 ? raw.map(eg => espnGameToGame(eg)) : []);
+            setEspnGames(games);
+
             if (raw.length > 0) {
-                // Second pass: enrich with real last-5 W/L from ESPN schedule (async)
-                const enriched = await enrichWithLastFive(raw, activeSport);
-                setEspnGames(enriched);
+                if (activeTab === 'simulated') {
+                    // Second pass: enrich with Python AI Edge API
+                    try {
+                        const payload = {
+                            games: games.map(g => {
+                                let decOdds = 1.90; // Default -110 odds manually parse
+                                if (g.odds.moneyline && g.odds.moneyline !== 'N/A') {
+                                    const ml = parseInt(g.odds.moneyline.replace(/[^0-9-]/g, ''));
+                                    if (!isNaN(ml)) {
+                                        decOdds = ml < 0 ? (100 / Math.abs(ml)) + 1 : (ml / 100) + 1;
+                                    }
+                                }
+                                return { id: g.id, odds: decOdds };
+                            })
+                        };
+                        const res = await fetch('http://localhost:8005/api/predict', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success' && data.predictions) {
+                            games = games.map(g => {
+                                if (data.predictions[g.id]) {
+                                    return {
+                                        ...g,
+                                        aiData: data.predictions[g.id],
+                                        streakLabel: <><span className="material-symbols-outlined text-orange-500 text-[10px] align-middle mr-1">local_fire_department</span> AI STRATEGY ACTIVE</>
+                                    };
+                                }
+                                return g;
+                            });
+                            setEspnGames(games);
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch AI predictions from Python API', e);
+                    }
+                } else {
+                    // Second pass: enrich with real last-5 W/L from ESPN schedule (async)
+                    const enriched = await enrichWithLastFive(raw, activeSport);
+                    setEspnGames(enriched);
+                }
             }
         } catch {
-            // On error, show no games — never fall back to mock data
             setEspnGames([]);
         } finally {
             setLoadingEspn(false);
         }
-    }, [effectiveEspnKey, selectedDate, activeSport]);
+    }, [effectiveEspnKey, selectedDate, activeSport, activeTab]);
 
     useEffect(() => {
-        fetchSimulatedGames();
-    }, [fetchSimulatedGames]);
+        loadGamesData();
+    }, [loadGamesData]);
 
     // Split games into three status buckets
     const liveGames = espnGames.filter(g => g.status === 'LIVE');
@@ -221,6 +266,8 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
             <DateFilter selectedDate={selectedDate} onSelectDate={setSelectedDate} activeSport={activeSport} />
             <main className="max-w-[1536px] mx-auto px-3 sm:px-6 py-2 grid grid-cols-12 gap-3 sm:gap-6 relative">
                 <div className="col-span-12 lg:col-span-9 space-y-6">
+                    <RookieGuideBanner />
+                    {showLiveTickets && <LiveTicketPanel activeTickets={activeTickets} onRemoveTicket={(idx) => setActiveTickets(prev => prev.filter((_, i) => i !== idx))} />}
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -260,6 +307,18 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                             >
                                 <span className="material-symbols-outlined text-sm">group</span>
                                 <span className="hidden sm:inline">Public</span>
+                            </button>
+                            {/* Live Tickets toggle */}
+                            <button
+                                onClick={() => setShowLiveTickets(p => !p)}
+                                title={showLiveTickets ? 'Hide Tickets' : 'Show Tickets'}
+                                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-sm border text-[10px] font-black uppercase tracking-wider transition-all ${showLiveTickets
+                                    ? 'bg-[#A3FF00]/10 border-[#A3FF00]/40 text-[#A3FF00]'
+                                    : 'border-border-muted text-text-muted hover:text-text-main hover:bg-neutral-800'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined text-sm">confirmation_number</span>
+                                <span className="hidden sm:inline">Tickets</span>
                             </button>
                             {/* Bet Slip toggle */}
                             <button
@@ -447,7 +506,7 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                         </div>
                     )}
                 </div>
-                {showBetSlip && <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} />}
+                {showBetSlip && <BetSlip betSlip={betSlip} setBetSlip={setBetSlip} activeTickets={activeTickets} setActiveTickets={setActiveTickets} />}
             </main>
         </>
     );

@@ -32,23 +32,27 @@ export const RosterAndStats: React.FC<RosterAndStatsProps> = ({ teamName, sport 
     const { players, loading } = useESPNRoster(teamName, sport);
     const statLabels = getSportStatLabels(sport);
 
+    const isBasketball = ['NBA', 'WNBA', 'NCAAB', 'NCAAW'].includes(sport);
+    const isFootball = ['NFL', 'CFB'].includes(sport);
+    const isHockey = sport === 'NHL';
+
     // Map ESPN players to stat rows (deterministic from player id)
     const rosterWithStats = useMemo(() => players.map(p => ({
         ...p,
-        stat1: statFromId(p.id, 1, sport === 'NBA' ? 6 : sport === 'NHL' ? 0.1 : 5, sport === 'NBA' ? 30 : sport === 'NHL' ? 0.8 : 25),
-        stat2: statFromId(p.id, 2, 2, 12),
-        stat3: statFromId(p.id, 3, 1, 10),
-        stat4: statFromId(p.id, 4, 0.5, 2.5),
+        stat1: statFromId(p.id, 1, isBasketball ? 6 : isHockey ? 0.1 : isFootball ? 150 : 5, isBasketball ? 30 : isHockey ? 0.8 : isFootball ? 300 : 25),
+        stat2: statFromId(p.id, 2, 2, isFootball ? 80 : 12),
+        stat3: statFromId(p.id, 3, 1, isFootball ? 60 : 10),
+        stat4: statFromId(p.id, 4, 0.5, isFootball ? 8 : 2.5),
         efg: statFromId(p.id, 5, 42, 62),
         ts: statFromId(p.id, 6, 48, 68),
         astPct: statFromId(p.id, 7, 5, 35),
-    })), [players, sport]);
+    })), [players, isBasketball, isHockey, isFootball]);
 
     const categories = [
-        { key: 'stat1' as const, title: sport === 'NBA' ? 'Points' : statLabels.stat1 },
-        { key: 'stat2' as const, title: sport === 'NBA' ? 'Rebounds' : statLabels.stat2 },
-        { key: 'stat3' as const, title: sport === 'NBA' ? 'Assists' : statLabels.stat3 },
-        { key: 'stat4' as const, title: sport === 'NBA' ? 'Steals' : statLabels.stat4 },
+        { key: 'stat1' as const, title: isBasketball ? 'Points' : isFootball ? 'Passing' : statLabels.stat1 },
+        { key: 'stat2' as const, title: isBasketball ? 'Rebounds' : isFootball ? 'Rushing' : statLabels.stat2 },
+        { key: 'stat3' as const, title: isBasketball ? 'Assists' : isFootball ? 'Receiving' : statLabels.stat3 },
+        { key: 'stat4' as const, title: isBasketball ? 'Steals' : isFootball ? 'Tackles' : statLabels.stat4 },
     ];
 
     const getLeader = (key: 'stat1' | 'stat2' | 'stat3' | 'stat4') =>

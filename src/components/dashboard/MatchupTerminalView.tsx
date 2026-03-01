@@ -8,6 +8,7 @@ import { BasketballCourt } from './BasketballCourt';
 import { SoccerField } from './SoccerField';
 import { NFLField } from './NFLField';
 import { BaseballField } from './BaseballField';
+import { BaseballAtBatSimulator } from './baseball/BaseballAtBatSimulator';
 import { HockeyRink } from './HockeyRink';
 import { TennisCourt } from './tennis/TennisCourt';
 import { GolfCourse } from './golf/GolfCourse';
@@ -107,7 +108,14 @@ export const MatchupTerminalView: React.FC<MatchupTerminalViewProps> = ({
                     if (s === 'NBA' || s === 'NCAAB' || s === 'CBB' || s === 'WNBA') return <BasketballCourt game={game} />;
                     if (s.startsWith('Soccer')) return <SoccerField game={game} />;
                     if (s === 'NFL' || s === 'CFB') return <NFLField game={game} />;
-                    if (s === 'MLB') return <BaseballField game={game} />;
+                    if (s === 'MLB') {
+                        return (
+                            <div className="flex flex-col gap-6 w-full">
+                                <BaseballField game={game} />
+                                <BaseballAtBatSimulator game={game} />
+                            </div>
+                        );
+                    }
                     if (s === 'NHL') return <HockeyRink game={game} />;
                     if (s.startsWith('Tennis') || s === 'tennis-atp' || s === 'tennis-wta') return <TennisCourt game={game} />;
                     if (s.startsWith('Golf') || s === 'golf-pga') return <GolfCourse game={game} />;

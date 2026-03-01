@@ -89,7 +89,7 @@ export class PickLabsDFSEvEngine {
             true_win_probability: `${(winChance * 100).toFixed(1)}%`,
             trueProb: winChance,
             dfs_edge: isProfitable ? `+${edgePercentage.toFixed(2)}%` : "Negative EV",
-            action: isProfitable && edgePercentage >= 1.5 ? "🔥 LOCK IT IN" : "Pass",
+            action: isProfitable && edgePercentage >= 1.5 ? "<span class=\"material-symbols-outlined text-orange-500 text-[10px] align-middle\">local_fire_department</span> LOCK IT IN" : "Pass",
             isProfitable: isProfitable,
             sharpOver: sharpOver,
             sharpUnder: sharpUnder

@@ -119,14 +119,27 @@ export const GolfLeaderboardPanel: React.FC<GolfLeaderboardPanelProps> = ({ spor
             // Golf PGA endpoint returns the active/next event (dates= param passed but usually ignored by API)
             const dateParam = selectedDate ? `?dates=${selectedDate.replace(/-/g, '')}` : '';
             const url = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard${dateParam}`;
-            const res = await fetch(url);
+            let res = await fetch(url);
             if (!res.ok) {
                 setError(`ESPN returned ${res.status}.`);
                 setTournament(null);
                 return;
             }
-            const data = await res.json() as RawObj;
-            const events: RawObj[] = (data.events as RawObj[]) ?? [];
+            let data = await res.json() as RawObj;
+            let events: RawObj[] = (data.events as RawObj[]) ?? [];
+
+            // Fallback: If no events found for today's date, try without date filter to get the most recent tournament
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isToday = !selectedDate || selectedDate === todayStr;
+            if (events.length === 0 && isToday) {
+                const fallbackUrl = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard`;
+                const fallbackRes = await fetch(fallbackUrl);
+                if (fallbackRes.ok) {
+                    const fallbackData = await fallbackRes.json() as RawObj;
+                    events = (fallbackData.events as RawObj[]) ?? [];
+                }
+            }
+
             if (events.length === 0) {
                 setTournament(null);
                 setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
