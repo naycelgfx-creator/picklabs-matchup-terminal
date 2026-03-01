@@ -91,74 +91,71 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
     const payoutAmount = riskAmount + toWin(riskAmount, combinedOddsStr);
 
     return (
-        <div className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-700 rounded-none shadow-2xl font-sans mb-2 flex flex-col transition-all duration-300 relative group mt-3">
+        <div className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-800 rounded shadow-2xl font-sans mb-4 flex flex-col transition-all duration-300 relative group mt-3">
 
-            {/* Floating Status Badge — Only display if the ticket is strictly WON or strictly LOST */}
+            {/* Floating Status Badge — Top right overlap */}
             {ticketStatus !== 'PENDING' && (
-                <div className="absolute top-0 right-4 -translate-y-1/2 z-20 flex bg-[#0a0a0c] p-1 rounded-full items-center justify-center pointer-events-none">
-                    <div
-                        className={`px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] ${ticketStatus === 'WON' ? 'bg-[#A3FF00] text-black' : 'bg-red-500 text-white'}`}
-                    >
+                <div className="absolute -top-3.5 right-4 z-20 flex px-4 py-1.5 rounded-full items-center justify-center pointer-events-none shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                    style={{ backgroundColor: ticketStatus === 'WON' ? '#A3FF00' : '#ef4444' }}>
+                    <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${ticketStatus === 'WON' ? 'text-black' : 'text-white'}`}>
                         {ticketStatus}
-                    </div>
+                    </span>
                 </div>
             )}
+
             {/* Remove Button */}
             {onRemove && (
                 <button
                     onClick={onRemove}
-                    className="absolute top-2 right-2 p-1.5 bg-black/40 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
+                    className="absolute -top-3 -left-3 w-6 h-6 flex items-center justify-center bg-black hover:bg-red-500 border border-neutral-700 hover:border-red-500 text-slate-400 hover:text-white rounded-full transition-colors z-30 opacity-0 group-hover:opacity-100"
                     title="Remove Ticket"
                 >
-                    <span className="material-symbols-outlined text-[14px]">close</span>
+                    <span className="material-symbols-outlined text-[12px]">close</span>
                 </button>
             )}
+
             {/* PickLabs Logo Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-black border-b border-neutral-800 relative z-0">
-                <div className="flex items-center gap-1">
-                    <span className="text-[#A3FF00] font-black tracking-tighter italic text-xl leading-none">PICKLABS</span>
-                </div>
-                <div className="text-[10px] font-black text-white tracking-widest uppercase mt-1">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800 relative z-0">
+                <span className="text-[#A3FF00] font-black tracking-tighter italic text-2xl leading-none">
+                    PICKLABS
+                </span>
+                <span className="text-[10px] font-black text-white tracking-widest uppercase pt-1">
                     SPORTSBOOK
-                </div>
+                </span>
             </div>
 
             {/* Header (Pick Hitting / Bullish-Bearish) */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800 bg-[#111111]">
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className={`w-2 h-2 rounded-full ${hitPercent >= 50 ? 'bg-[#A3FF00] shadow-[0_0_8px_rgba(163,255,0,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'} animate-pulse`} />
-                        <span className="text-sm font-black text-white tracking-widest uppercase">
-                            PICKS HITTING
+            <div className="flex flex-col px-5 py-4 border-b border-neutral-800">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${hitPercent >= 50 ? 'bg-[#A3FF00] shadow-[0_0_8px_rgba(163,255,0,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'} animate-pulse`} />
+                        <span className="text-base font-black text-white tracking-widest uppercase">
+                            PICKS HITTING <span className={`${hitPercent >= 50 ? 'text-[#A3FF00]' : 'text-red-500'} ml-1`}>{hitPercent}%</span>
                         </span>
-                        <span className={`text-sm font-black ${hitPercent >= 50 ? 'text-[#A3FF00]' : 'text-red-500'}`}>{hitPercent}%</span>
                     </div>
-                    {/* Full Width Gradient Bar */}
-                    <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden mt-2">
-                        <div
-                            className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-yellow-500 via-orange-500 to-[#A3FF00]"
-                            style={{ width: `${hitPercent}%` }}
-                        />
+                    <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                        {totalLegs} PICKS
                     </div>
                 </div>
-                <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-                    {totalLegs} PICKS
+                {/* Full Width Gradient Bar */}
+                <div className="h-1.5 w-[65%] max-w-[200px] bg-neutral-800 rounded-full overflow-hidden">
+                    <div
+                        className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-orange-500 to-[#A3FF00]"
+                        style={{ width: `${hitPercent}%` }}
+                    />
                 </div>
             </div>
 
             {/* Pick List */}
-            <div className="flex-1 overflow-y-auto max-h-[200px] custom-[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-neutral-800 bg-[#0a0a0c]">
+            <div className="flex-1 overflow-y-auto max-h-[300px] custom-[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-neutral-800">
                 {ticket.map((bet, i) => {
                     const isHitting = i < winningLegs;
-                    // Provide a nice target mock depending on overall status
                     let pickProgress = 0;
                     if (ticketStatus === 'WON') pickProgress = 100;
-                    else if (ticketStatus === 'LOST' && i >= winningLegs) pickProgress = 20; // It lost heavily
-                    else pickProgress = isHitting ? 100 : 30 + (i * 25) % 65; // Pending or some progression
+                    else if (ticketStatus === 'LOST' && i >= winningLegs) pickProgress = 20;
+                    else pickProgress = isHitting ? 100 : 30 + (i * 25) % 65;
 
                     const logoUrl = getLogoForPick(bet);
-
-                    // Extract the numerical target from either bet.type or bet.team
                     const targetStringMatch = (bet.team + " " + bet.type).match(/[0-9.]+/);
                     const targetNum = targetStringMatch ? parseFloat(targetStringMatch[0]) : null;
 
@@ -169,16 +166,13 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                     }
 
                     const getColor = (prog: number) => {
-                        if (prog < 33) return '#ef4444'; // red
-                        if (prog < 66) return '#f97316'; // orange
-                        return '#A3FF00'; // lime green
+                        if (prog < 33) return '#ef4444';
+                        if (prog < 66) return '#f97316';
+                        return '#A3FF00';
                     };
                     const barColor = getColor(pickProgress);
-
-                    // Clean the team/player name for display and avatar fallback
                     const cleanTeamName = bet.team.replace(/(Over|Under|Prop|ML|Spread|PK|\+|-|[0-9.]+|Pts|Rebs|Asts|Threes|Points|Rebounds|Assists|Steals|Blocks|Turnovers|O\/U).*$/i, '').trim();
 
-                    // Display Logic
                     const isMoneyline = bet.type === 'ML' || bet.type.toLowerCase().includes('moneyline');
                     let topText: string = bet.team;
                     let bottomText: string = bet.type;
@@ -191,124 +185,102 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                         const isOver = bet.type.toLowerCase().includes('over');
                         const valMatch = bet.type.match(/[0-9.]+/);
                         const val = valMatch ? valMatch[0] : '';
-
                         topText = `${bet.team} ${isUnder ? 'Under' : isOver ? 'Over' : ''} ${val}`.trim();
-                        // Assume standard player prop if not moneyline/spread but let's mock the category
-                        bottomText = `${bet.team.toUpperCase()} - ${(bet.type.split(' ')[0] || 'PROP').toUpperCase()}`;
+                        // For display like "UTAH JAZZ -2.9 - SPREAD" or "PROP"
+                        if (bet.type.toLowerCase().includes('spread')) {
+                            bottomText = `${bet.team.toUpperCase()} ${val} - SPREAD`;
+                        } else {
+                            bottomText = "PROP";
+                        }
                     } else if (bet.type.toLowerCase().includes('+')) {
-                        // e.g. "To Score 25+ Points"
                         topText = bet.team;
                         bottomText = bet.type.toUpperCase();
                     }
 
-                    // Status Logic Mock
                     let statusNode = null;
                     if (ticketStatus === 'WON' || isHitting) {
                         statusNode = (
-                            <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-[#A3FF00] relative z-20">
-                                <span className="material-symbols-outlined text-[#A3FF00] text-[10px] font-bold">check</span>
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#0c0c0e] border-[1.5px] border-[#A3FF00] relative z-20">
+                                <span className="material-symbols-outlined text-[#A3FF00] text-[12px] font-bold">check</span>
                             </div>
                         );
                     } else if (ticketStatus === 'LOST' && i >= winningLegs) {
                         statusNode = (
-                            <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-red-500 relative z-20">
-                                <span className="material-symbols-outlined text-red-500 text-[10px] font-bold">close</span>
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#0c0c0e] border-[1.5px] border-red-500 relative z-20">
+                                <span className="material-symbols-outlined text-red-500 text-[12px] font-bold">close</span>
                             </div>
                         );
                     } else {
                         statusNode = (
-                            <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-neutral-600 relative z-20">
-                                {/* Empty Pending Circle */}
-                            </div>
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#0c0c0e] border-[1.5px] border-neutral-700 relative z-20" />
                         );
                     }
 
                     return (
-                        <div key={bet.id} className="relative flex px-4 pt-4 hover:bg-white/[0.02] transition-colors group">
+                        <div key={bet.id} className="relative flex px-5 pt-6 hover:bg-white/[0.01] transition-colors group">
                             {/* Timeline Track & Node */}
-                            <div className="flex flex-col items-center mr-3 relative z-10 w-4 pb-2">
-                                {/* Top connecting line (hide on first item) */}
+                            <div className="flex flex-col items-center mr-5 relative z-10 w-5">
                                 {i !== 0 && (
-                                    <div className="absolute top-0 bottom-[calc(100%-1rem)] w-px bg-neutral-800" />
+                                    <div className="absolute top-0 bottom-[calc(100%-1rem)] w-[1px] bg-neutral-800" />
                                 )}
-                                {/* Bottom connecting line (hide on last item) */}
                                 {i !== ticket.length - 1 && (
-                                    <div className="absolute top-5 -bottom-4 w-px bg-neutral-800" />
+                                    <div className="absolute top-6 -bottom-6 w-[1px] bg-neutral-800" />
                                 )}
-
-                                {/* Status Icon Node */}
-                                {statusNode}
+                                <div className="mt-0.5">{statusNode}</div>
                             </div>
 
                             {/* Main Content */}
-                            <div className="flex-1 min-w-0 pb-4 border-b border-neutral-800/60 group-last:border-b-0">
-                                {/* Logo & Core Info Row */}
-                                <div className="flex items-start justify-between mb-1">
-                                    <div className="flex items-start gap-2 min-w-0 pr-2 pt-0.5">
-                                        {/* Avatar */}
+                            <div className="flex-1 min-w-0 pb-6 border-b border-neutral-800/80 group-last:border-b-0">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3 min-w-0 pr-2">
                                         {logoUrl.includes('ui-avatars') ? (
-                                            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
-                                                <span className="text-white text-[8px] font-bold">{cleanTeamName.substring(0, 2).toUpperCase()}</span>
+                                            <div className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center shrink-0 shadow-inner">
+                                                <span className="text-white text-[11px] font-bold">{cleanTeamName.substring(0, 2).toUpperCase()}</span>
                                             </div>
                                         ) : (
-                                            <img src={logoUrl} alt={cleanTeamName} className="w-6 h-6 rounded-full bg-neutral-900 border border-neutral-800 object-cover shrink-0" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanTeamName)}&background=1d1d1d&color=fff&rounded=true&bold=true`; }} />
+                                            <img src={logoUrl} alt={cleanTeamName} className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 object-cover shrink-0" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanTeamName)}&background=111&color=fff&rounded=true&bold=true`; }} />
                                         )}
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-bold text-white truncate leading-tight">{topText}</span>
-                                            <span className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-widest mt-0.5">{bottomText}</span>
+                                        <div className="flex flex-col min-w-0 justify-center">
+                                            <span className="text-base font-bold text-white truncate leading-tight mb-1">{topText}</span>
+                                            <span className="text-[10px] text-slate-500 font-black truncate uppercase tracking-widest">{bottomText}</span>
                                         </div>
                                     </div>
-                                    {/* Odds */}
-                                    <span className="text-sm text-white font-black shrink-0">{bet.odds}</span>
+                                    <span className="text-base text-white font-black shrink-0 tracking-tight">{bet.odds}</span>
                                 </div>
 
-                                {/* Progress Bar (Only if NOT Moneyline AND has targetNum) */}
+                                {/* Progress Bar aligned with text */}
                                 {!isMoneyline && targetNum !== null && (
-                                    <div className="mt-4 mb-3 w-full relative px-2">
-                                        <div className="h-0.5 bg-neutral-800 w-full relative flex items-center rounded-full">
-                                            {/* Filled Bar */}
+                                    <div className="pl-12 pr-4 w-full relative">
+                                        <div className="h-[2px] bg-neutral-800 w-full relative flex items-center rounded-full">
                                             <div className="h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${(currentNum / targetNum) * 100}%`, backgroundColor: barColor }} />
-                                            {/* Badge positioned absolutely along the bar */}
-                                            <div className="absolute w-5 h-5 flex items-center justify-center bg-[#111111] border border-neutral-700 text-[8px] font-bold text-white rounded-full transition-all duration-500 ease-out z-10 shadow-sm" style={{ left: `calc(${(currentNum / targetNum) * 100}% - 10px)` }}>
-                                                {currentNum}
+                                            <div className="absolute right-0 w-6 h-6 flex items-center justify-center bg-[#0c0c0e] border border-neutral-600 text-[9px] font-black text-white rounded-full transition-all duration-500 ease-out z-10 translate-x-1/2 shadow-[0_0_10px_rgba(0,0,0,0.8)]">
+                                                {targetNum}
                                             </div>
-                                        </div>
-                                        {/* Target value text right under the line */}
-                                        <div className="absolute -right-1 -top-1.5 text-[10px] font-bold text-white">
-                                            {targetNum}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* MoneyLine Box Score Mockup */}
+                                {/* MoneyLine Score Mockup */}
                                 {isMoneyline && (() => {
                                     const matchParts = bet.matchupStr ? bet.matchupStr.split(' vs ') : [];
                                     let opponentName = 'Opponent';
                                     if (matchParts.length === 2) {
                                         opponentName = matchParts[0].trim() === cleanTeamName ? matchParts[1].trim() : matchParts[0].trim();
                                     }
-
-                                    // Generate a deterministic random score based on the bet ID/index
                                     const betSeed = Array.from(bet.id || "").reduce((acc, char) => acc + char.charCodeAt(0), i * 123);
-
-                                    // Generate 4 quarters
                                     const q1A = 15 + (betSeed % 12);
                                     const q2A = 15 + ((betSeed * 2) % 15);
                                     const q3A = 15 + ((betSeed * 3) % 14);
                                     const q4A = 15 + ((betSeed * 5) % 18);
                                     const totalA = q1A + q2A + q3A + q4A;
-
                                     const q1B = 15 + ((betSeed * 7) % 13);
                                     const q2B = 15 + ((betSeed * 11) % 16);
                                     const q3B = 15 + ((betSeed * 13) % 12);
                                     const q4B = 15 + ((betSeed * 17) % 15);
                                     const totalB = q1B + q2B + q3B + q4B;
 
-                                    // Make sure the chosen team matches the state if the game is finished
                                     let isTeamSelectedWinning = isHitting || ticketStatus === 'WON';
                                     if (ticketStatus === 'LOST' && i >= winningLegs) isTeamSelectedWinning = false;
-
-                                    // Adjust totals if we need to force a win/loss state for the mockup
                                     let finalScoreOpp = totalA;
                                     let finalScoreTeam = totalB;
 
@@ -319,7 +291,7 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                                     }
 
                                     return (
-                                        <div className="flex flex-col text-[10px] text-slate-400 font-mono mt-3 w-full pl-8 pr-1">
+                                        <div className="flex flex-col text-[10px] text-slate-400 font-mono mt-3 pl-12 pr-4 w-full">
                                             <div className="flex justify-between items-center py-1">
                                                 <span className="truncate pr-2">{opponentName}</span>
                                                 <div className="flex items-center gap-2 shrink-0">
@@ -341,24 +313,24 @@ const TicketCard: React.FC<{ ticket: BetPick[]; onRemove?: () => void }> = ({ ti
                 })}
             </div>
 
-            {/* Odds / Risk / To Win Box (Moved below picks) */}
-            <div className="px-4 py-3 border-t border-neutral-800 bg-[#111111] flex justify-between items-center text-center shadow-[0_-4px_10px_rgba(0,0,0,0.3)] z-10 shrink-0">
+            {/* Odds / Risk / To Win Box */}
+            <div className="px-5 py-6 border-t border-neutral-800 flex justify-between items-center text-center z-10 shrink-0">
                 <div className="flex flex-col items-start min-w-[30%]">
-                    <span className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 uppercase">ODDS</span>
-                    <span className="text-sm font-black text-white">{combinedOddsStr}</span>
+                    <span className="text-[10px] font-black text-slate-500 tracking-widest mb-1.5 uppercase">ODDS</span>
+                    <span className="text-lg font-black text-white">{combinedOddsStr}</span>
                 </div>
-                <div className="flex flex-col items-center flex-1 border-x border-neutral-800/60 px-2 my-1">
-                    <span className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 uppercase">RISK</span>
-                    <span className="text-sm font-black text-white">${riskAmount.toFixed(2)}</span>
+                <div className="flex flex-col items-center flex-1 border-x border-neutral-800 px-4 py-1">
+                    <span className="text-[10px] font-black text-slate-500 tracking-widest mb-1.5 uppercase">RISK</span>
+                    <span className="text-lg font-black text-white">${riskAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex flex-col items-end min-w-[30%]">
-                    <span className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 uppercase">TO WIN</span>
-                    <span className="text-sm font-black text-[#A3FF00]">${payoutAmount.toFixed(2)}</span>
+                    <span className="text-[10px] font-black text-slate-500 tracking-widest mb-1.5 uppercase">TO WIN</span>
+                    <span className="text-lg font-black text-[#A3FF00]">${payoutAmount.toFixed(2)}</span>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2.5 bg-[#0a0a0c] border-t border-neutral-900 flex justify-between items-center text-[9px] text-neutral-500 font-mono tracking-widest uppercase shrink-0">
+            <div className="px-5 py-4 border-t border-neutral-800 flex justify-between items-center text-[10px] text-neutral-500 font-mono tracking-widest uppercase shrink-0">
                 <span>BET ID: {ticketId}</span>
                 <span>{ticketDate.toUpperCase()}</span>
             </div>

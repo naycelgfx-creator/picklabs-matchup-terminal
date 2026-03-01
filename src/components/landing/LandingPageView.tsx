@@ -59,11 +59,11 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
 
     const PICKLABS_TIERS = [
         {
-            name: 'Free',
+            name: '7-Day Free Trial',
             price: { monthly: '0', yearly: '0' },
-            description: 'No credit card required · Forever free',
+            description: 'Full access for 7 days · No commitment',
             accentColor: 'default' as const,
-            ctaLabel: 'Get Started Free',
+            ctaLabel: 'Start Free Trial',
             onCta: () => onNavigate('login-page'),
             icon: <Zap className="w-5 h-5" />,
             features: [
@@ -206,6 +206,17 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                                 className="w-full md:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] italic text-black text-sm hover:scale-105 transition-transform"
                             >
                                 Start 7-Day Free Trial
+                            </ShimmerButton>
+                            <ShimmerButton
+                                onClick={() => onNavigate('login-page')}
+                                shimmerColor="#ffffff"
+                                shimmerDuration="2.5s"
+                                shimmerSize="0.08em"
+                                borderRadius="12px"
+                                background="#000000"
+                                className="w-full md:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] italic text-white text-sm hover:scale-105 transition-transform border border-border-muted"
+                            >
+                                Enter
                             </ShimmerButton>
                         </div>
                     </div>
