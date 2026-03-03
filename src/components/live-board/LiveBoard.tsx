@@ -324,12 +324,12 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
             )}
 
             <DateFilter selectedDate={selectedDate} onSelectDate={setSelectedDate} activeSport={activeSport} />
-            <main className="max-w-[1536px] mx-auto px-3 sm:px-6 py-2 grid grid-cols-12 gap-3 sm:gap-6 relative">
-                <div className="col-span-12 lg:col-span-9 space-y-6">
+            <main className="max-w-[1536px] mx-auto px-2 sm:px-6 py-2 grid grid-cols-12 gap-2 sm:gap-6 relative w-full overflow-hidden">
+                <div className="col-span-12 lg:col-span-9 space-y-4 sm:space-y-6">
                     <RookieGuideBanner />
                     {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                             {/* Title: show league/tour name for soccer/tennis/golf, else sport name */}
                             {isSoccer ? (
                                 <div className="flex items-center gap-3">
@@ -354,7 +354,7 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
                             )}
                         </div>
 
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap sm:flex-nowrap gap-1 w-full sm:w-auto overflow-x-auto scrollbar-hide">
                             {/* Public Bets toggle */}
                             <button
                                 onClick={() => setShowPublicBets(p => !p)}

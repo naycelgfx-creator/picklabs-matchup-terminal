@@ -115,11 +115,11 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
     const enabledCount = Object.values(enabledBooks).filter(Boolean).length;
 
     return (
-        <header className={`fixed top-0 left-0 right-0 z-50 border-b border-border-muted bg-background-dark/90 backdrop-blur-md px-4 md:px-6 py-3 transition-transform duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-            <div className="max-w-[1536px] mx-auto flex items-center justify-between gap-4">
+        <header className={`fixed top-0 left-0 right-0 z-50 border-b border-border-muted bg-background-dark/90 backdrop-blur-md px-3 md:px-6 py-2 md:py-3 transition-transform duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'} max-w-[100vw]`}>
+            <div className="max-w-[1536px] mx-auto flex items-center justify-between gap-3 md:gap-4">
 
                 {/* ── Logo ── */}
-                <div className="flex items-center gap-6 xl:gap-10 min-w-0">
+                <div className="flex items-center gap-3 sm:gap-6 xl:gap-10 min-w-0">
                     <a
                         className="flex items-center gap-3 text-primary cursor-pointer group shrink-0"
                         onClick={(e) => { e.preventDefault(); setCurrentView('landing-page' as ViewType); }}
@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                         <img
                             src="/picklabs-logo.svg"
                             alt="PickLabs Logo"
-                            className="h-14 w-auto shrink-0 transition-all duration-300 group-hover:scale-105"
+                            className="h-10 md:h-14 w-auto shrink-0 transition-all duration-300 group-hover:scale-105"
                         />
                     </a>
 
@@ -176,7 +176,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                 {/* ── Right Controls ── */}
                 <div className="flex items-center gap-2 shrink-0">
 
-                    {!isPremiumUser && <FreeModeQuotaMeter />}
+                    <div className="hidden sm:block">
+                        {!isPremiumUser && <FreeModeQuotaMeter />}
+                    </div>
 
                     {/* AI Pick My Bets — icon only on < xl, full pill on xl+ */}
                     <button
@@ -541,6 +543,13 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                             <span className={`material-symbols-outlined text-sm ${isAIPickLoading ? 'animate-spin' : ''}`}>smart_toy</span>
                             {isAIPickLoading ? 'Analyzing...' : 'AI Pick My Bets'}
                         </button>
+
+                        {!isPremiumUser && (
+                            <div className="flex justify-center my-2 sm:hidden">
+                                <FreeModeQuotaMeter />
+                            </div>
+                        )}
+
                         {/* Mobile Settings Section */}
                         <div className="bg-neutral-900 border border-border-muted rounded-xl overflow-hidden mt-2">
                             <div className="px-4 py-3 border-b border-border-muted flex items-center gap-3">

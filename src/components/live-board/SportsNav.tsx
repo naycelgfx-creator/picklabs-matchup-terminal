@@ -89,9 +89,9 @@ interface SportsNavProps {
 
 export const SportsNav: React.FC<SportsNavProps> = ({ activeSport, onSelectSport }) => {
     return (
-        <div className="bg-white dark:bg-neutral-900/40 border-b border-border-muted z-40 w-full">
-            <div className="max-w-[1536px] mx-auto px-2 sm:px-6 py-4">
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:flex lg:flex-wrap items-center justify-center gap-2 sm:gap-3 xl:gap-8 pb-2">
+        <div className="bg-white dark:bg-neutral-900/40 border-b border-border-muted z-40 w-full overflow-hidden">
+            <div className="max-w-[1536px] mx-auto px-2 sm:px-6 py-3 sm:py-4">
+                <div className="flex overflow-x-auto scrollbar-hide lg:flex-wrap items-center lg:justify-center gap-2 sm:gap-3 xl:gap-8 pb-3 sm:pb-2 w-full snap-x">
                     {SPORTS.map(sport => {
                         const entry = SPORT_LOGOS[sport];
                         const primarySrc = entry?.primary;
@@ -100,7 +100,7 @@ export const SportsNav: React.FC<SportsNavProps> = ({ activeSport, onSelectSport
                         return (
                             <div
                                 key={sport}
-                                className={`sport-chip flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-1 sm:gap-2 px-2 py-2 rounded-lg transition-all cursor-pointer ${activeSport === sport ? 'bg-primary/20 text-primary border border-primary/40' : 'text-slate-400 hover:text-white border border-transparent'}`}
+                                className={`sport-chip shrink-0 snap-start flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-1 sm:gap-2 px-3 sm:px-2 py-2 rounded-lg transition-all cursor-pointer ${activeSport === sport ? 'bg-primary/20 text-primary border border-primary/40' : 'text-slate-400 hover:text-white border border-transparent'} min-w-[70px] sm:min-w-0`}
                                 onClick={() => onSelectSport(sport)}
                             >
                                 <span className="relative flex items-center justify-center w-4 h-4 shrink-0">
