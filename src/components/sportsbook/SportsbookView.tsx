@@ -721,7 +721,7 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
     const [aiMode, setAiMode] = useState(false);
     const [rookieMode, setRookieMode] = useState(isRookieModeActive);
     const [showLiveTickets, setShowLiveTickets] = useState(true);
-    const [showBetSlip, setShowBetSlip] = useState(true);
+    const [showBetSlip, setShowBetSlip] = useState(() => window.innerWidth >= 1280);
     const [activePanel, setActivePanel] = useState<'teams' | 'players'>('teams');
     const [shakeAIPicks, setShakeAIPicks] = useState(false);
     const [shakeRookieModeBtn, setShakeRookieModeBtn] = useState(false);

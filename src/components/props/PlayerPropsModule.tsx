@@ -776,6 +776,7 @@ const PlayerHero: React.FC<PlayerHeroProps> = ({ prop, onClose, sport }) => {
                     {/* 💡 Insights button */}
                     <div className="relative mr-1">
                         <button onClick={() => setInsightsOpen(o => !o)}
+                            onMouseDown={e => e.stopPropagation()}
                             className={`w-7 h-7 flex items-center justify-center rounded border transition-all cursor-pointer
                             ${insightsOpen ? 'bg-yellow-400/20 border-yellow-400/40 text-yellow-400' : 'border-border-muted text-slate-500 hover:text-yellow-400 hover:border-yellow-400/30'}`}
                             title="Choose Insights">

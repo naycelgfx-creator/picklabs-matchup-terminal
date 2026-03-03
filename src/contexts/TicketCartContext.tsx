@@ -53,8 +53,8 @@ export const TicketCartProvider: React.FC<{ children: ReactNode }> = ({ children
             }
             return [...prev, item];
         });
-        // Auto-open cart to show visual confirmation
-        setIsCartOpen(true);
+        // User requested: the ticket option to be untoggled when completing one, manual toggle only
+        // setIsCartOpen(true);
     };
 
     const removeFromCart = (playerId: string) => {
