@@ -150,15 +150,23 @@ export const TicketCard: React.FC<{
         else progress = 0; // Upcoming game
 
         // Under strict live logic:
-        if (isUnder && isLive && targetNum !== null) {
+        if (isUnder && isLive && targetNum !== null && !isFinished) {
             let mockedCurrentNum = parseFloat(((targetNum * progress) / 100).toFixed(1));
-            // Randomly spike it over the under to simulate losing live
+            // Randomly spike it over the under to simulate losing live (but we won't officially mark it LOST until final)
             if (betSeed % 5 === 0) {
                 mockedCurrentNum = targetNum + (betSeed % 5) + 1;
             }
             if (mockedCurrentNum > targetNum) {
-                isLost = true; // Busted the under!
+                // Technically busted, but we don't mark official loss until game is over
+                isLost = false;
             }
+        }
+
+        // *** USER FIX: Enforce STRICT PENDING while LIVE ***
+        if (isLive && !isFinished && !forceStatus) {
+            isWon = false;
+            isLost = false;
+            isVoid = false;
         }
 
         let status = 'PENDING';

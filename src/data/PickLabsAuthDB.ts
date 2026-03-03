@@ -38,7 +38,8 @@ export interface DBUser {
     email: string;             // mirrors: email TEXT UNIQUE NOT NULL
     passwordHash: string;      // mirrors: password TEXT NOT NULL (hashed)
     isPremium: boolean;        // mirrors: is_premium BOOLEAN NOT NULL DEFAULT 0
-    premiumExpiresAt?: number; // epoch ms when 30-day VIP expires
+    tier?: '3_DAY' | '7_DAY' | '30_DAY' | 'LIFETIME'; // Added for Tier System
+    premiumExpiresAt?: number; // epoch ms when VIP expires
     createdAt: number;         // epoch ms
     referralCode?: string;     // Added for referral loop
     referralsCount?: number;   // Added for referral loop
@@ -476,8 +477,11 @@ export function isAdminEmail(email: string): boolean {
 
 // ─── /upgrade equivalent (VIP code) ─────────────────────────────────────────
 
-export function applyVIPCode(email: string, code: string): { ok: boolean; message: string } {
-    if (!VALID_UPGRADE_CODES.includes(code.trim().toUpperCase())) {
+export function applyVIPCode(email: string, code: string, daysOverride?: number): { ok: boolean; message: string } {
+    // Admin Override Check (No longer requires VALID_UPGRADE_CODES if days provided directly by admin)
+    const isAdminOverride = daysOverride !== undefined && daysOverride > 0;
+
+    if (!isAdminOverride && !VALID_UPGRADE_CODES.includes(code.trim().toUpperCase())) {
         return { ok: false, message: '❌ Invalid VIP Code. Did you CashApp the admin?' };
     }
     const users = getAllUsers();
@@ -485,13 +489,23 @@ export function applyVIPCode(email: string, code: string): { ok: boolean; messag
     if (idx === -1) return { ok: false, message: '❌ No account found for that email.' };
 
     users[idx].isPremium = true;
+
+    // Default to 30 days if no override is provided
+    const daysToAdd = daysOverride || 30;
+
+    // Set Tier Label
+    if (daysToAdd === 3) users[idx].tier = '3_DAY';
+    else if (daysToAdd === 7) users[idx].tier = '7_DAY';
+    else if (daysToAdd === 30) users[idx].tier = '30_DAY';
+    else users[idx].tier = 'LIFETIME';
+
     const now = Date.now();
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const msToAdd = daysToAdd * 24 * 60 * 60 * 1000;
 
     if (users[idx].premiumExpiresAt && users[idx].premiumExpiresAt! > now) {
-        users[idx].premiumExpiresAt = users[idx].premiumExpiresAt! + thirtyDays;
+        users[idx].premiumExpiresAt = users[idx].premiumExpiresAt! + msToAdd;
     } else {
-        users[idx].premiumExpiresAt = now + thirtyDays;
+        users[idx].premiumExpiresAt = now + msToAdd;
     }
 
     saveAllUsers(users);
@@ -502,7 +516,12 @@ export function applyVIPCode(email: string, code: string): { ok: boolean; messag
         localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     }
 
-    return { ok: true, message: `🎉 SUCCESS! ${email} has been upgraded to Premium for 30 Days!` };
+    return { ok: true, message: `🎉 SUCCESS! ${email} has been upgraded to Premium for ${daysToAdd} Days!` };
+}
+
+// ─── Admin manual CashApp Upgrade ────────────────────────────────────────────
+export function applyCashAppUpgrade(userEmail: string, tierDays: 3 | 7 | 30): { ok: boolean; message: string } {
+    return applyVIPCode(userEmail, 'CASHAPP_MANUAL', tierDays);
 }
 
 // ─── Admin actions (/admin_action) ───────────────────────────────────────────
