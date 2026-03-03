@@ -1,5 +1,5 @@
 import React from 'react';
-import { SportKey, TENNIS_TOURS } from '../../data/espnScoreboard';
+import { SportKey, TENNIS_TOURS } from '../../data/apiClient';
 
 interface TennisSubNavProps {
     activeTour: SportKey;

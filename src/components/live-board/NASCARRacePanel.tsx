@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ESPN_SCOREBOARD_URLS } from '../../data/espnScoreboard';
+import { fetchFromBackend } from '../../data/apiClient';
 import { Game } from '../../data/mockGames';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,16 +37,14 @@ export interface NASCARRace {
 
 // Walk back up to 30 days to find a recent NASCAR race
 async function fetchMostRecentNASCARRace(daysBack = 30): Promise<NASCARRace | null> {
-    const base = (ESPN_SCOREBOARD_URLS as any)['NASCAR'] || 'https://site.api.espn.com/apis/site/v2/sports/racing/nascar/scoreboard';
     for (let d = 0; d <= daysBack; d++) {
         const dt = new Date();
         dt.setDate(dt.getDate() - d);
         const dateStr = dt.toISOString().split('T')[0].replace(/-/g, '');
         try {
-            const res = await fetch(`${base}?dates=${dateStr}`, { cache: 'no-store' });
-            if (!res.ok) continue;
-            const json: RawObj = await res.json();
-            const events: RawObj[] = json?.events ?? [];
+            // We use fetchFromBackend to the local Picklabs engine
+            const proxyResponse = await fetchFromBackend(`/racing/nascar/scoreboard?dates=${dateStr}`);
+            const events: RawObj[] = proxyResponse?.events ?? [];
             if (events.length === 0) continue;
 
             const ev = events[0];

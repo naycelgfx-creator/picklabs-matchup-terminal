@@ -17,11 +17,14 @@ import { LoginPageView } from './components/auth/LoginPageView';
 import { SportsbookView } from './components/sportsbook/SportsbookView';
 import { HolographicBoardView } from './components/holographic-board/HolographicBoardView';
 import { AdminAnalyticsView } from './components/admin/AdminAnalyticsView';
-import { RookieTour } from './components/ui/RookieTour';
-import { APP_SPORT_TO_ESPN, fetchESPNScoreboardByDate, ESPNGame, SportKey } from './data/espnScoreboard';
-import { generateAIPrediction } from './data/espnTeams';
+import { APP_SPORT_TO_ESPN, fetchScoreboard } from './data/apiClient';
+import type { SportKey } from './data/apiClient';
+import { generateAIPrediction } from './utils/aiPredictions';
+import { espnGameToGame } from './utils/espnMapper';
 import { getCurrentUser, isAdminEmail } from './data/PickLabsAuthDB';
 import { useRookieMode } from './contexts/RookieModeContext';
+
+import { RookieTour } from './components/ui/RookieTour';
 
 export interface BetPick {
   id: string;
@@ -110,7 +113,7 @@ function App() {
     }
 
     const historyItem: ResolvedTicket = {
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
       picks: ticket,
       status,
       stake,
@@ -174,7 +177,8 @@ function App() {
         alert("You cannot add more than 20 picks to your bet slip.");
         return filtered;
       }
-      return [...filtered, { ...bet, id: crypto.randomUUID() }];
+      const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+      return [...filtered, { ...bet, id: newId }];
     });
   };
 
@@ -197,20 +201,20 @@ function App() {
     const today = new Date().toISOString().split('T')[0];
 
     // All sports we can fetch from ESPN today
-    const sportKeys = Object.entries(APP_SPORT_TO_ESPN).filter(([, v]) => v != null) as [string, SportKey][];
+    const sportKeys = Object.entries(APP_SPORT_TO_ESPN) as [SportKey, { sport: string, league: string }][];
 
     // Candidate picks with scored confidence
     type Candidate = BetPick & { score: number };
     const candidates: Candidate[] = [];
 
-    const allGames: { game: ESPNGame, sportLabel: string }[] = [];
+    const allGames: { game: Game, sportLabel: string }[] = [];
 
     await Promise.allSettled(
-      sportKeys.map(async ([sportLabel, espnKey]) => {
+      sportKeys.map(async ([sportLabel]) => {
         try {
-          const games = await fetchESPNScoreboardByDate(espnKey, today);
-          for (const game of games) {
-            allGames.push({ game, sportLabel });
+          const games = await fetchScoreboard(sportLabel, today);
+          for (const rawGame of games) {
+            allGames.push({ game: espnGameToGame(rawGame), sportLabel });
           }
         } catch { /* skip */ }
       })
@@ -233,7 +237,8 @@ function App() {
             const ml = parseInt(pred.moneylineHome.replace(/[^0-9-]/g, ''));
             if (!isNaN(ml)) decOdds = ml < 0 ? (100 / Math.abs(ml)) + 1 : (ml / 100) + 1;
           }
-          return { id: g.game.id, odds: decOdds };
+          // Trim 'espn-' prefix for the AI python backend compat
+          return { id: g.game.id.replace('espn-', ''), odds: decOdds };
         });
 
         const res = await fetch('http://localhost:8005/api/predict', {
@@ -245,7 +250,8 @@ function App() {
 
         if (data.status === 'success' && data.predictions) {
           for (const { game, sportLabel } of allGames) {
-            const aiData = data.predictions[game.id];
+            const rawId = game.id.replace('espn-', '');
+            const aiData = data.predictions[rawId];
             if (!aiData) continue;
 
             // Generate fallback odds strings locally
@@ -257,33 +263,33 @@ function App() {
               []
             );
 
-            const matchupStr = `${game.awayTeam.displayName} vs ${game.homeTeam.displayName}`;
-            const gameId = `espn-${game.id}`;
+            const matchupStr = `${game.awayTeam.name} vs ${game.homeTeam.name}`;
+            const gameId = game.id;
             const edge = aiData.edge;
 
             // Pick 1: Kelly ML
             if (aiData.suggestions.kelly > 0) {
               const aiFavoredHome = aiData.ai_probability >= 50;
-              const mlTeam = aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName;
-              const mlOdds = aiFavoredHome ? pred.moneylineHome : pred.moneylineAway;
+              const mlTeam = aiFavoredHome ? game.homeTeam.name : game.awayTeam.name;
+              const mlOdds = aiFavoredHome ? (pred.homeWinProb >= 50 ? pred.moneylineHome : pred.moneylineAway) : (pred.awayWinProb >= 50 ? pred.moneylineAway : pred.moneylineHome);
               candidates.push({
                 id: `ai-ml-${game.id}`,
                 gameId,
                 type: 'ML',
                 team: `${mlTeam} ML`,
-                odds: mlOdds,
+                odds: mlOdds || '-110',
                 matchupStr,
                 stake: aiData.suggestions.kelly,
                 score: aiData.ai_probability + edge * 2,
                 gameStatus: game.status,
-                gameStatusName: game.statusName,
+                gameStatusName: game.timeLabel,
                 gameDate: game.date,
               });
             }
 
             // Pick 2: Target O/U
             if (aiData.suggestions.target > 0) {
-              const ouPick = pred.overUnderPick;
+              const ouPick = pred.overUnderPick === 'OVER' ? 'Over' : (pred.overUnderPick === 'UNDER' ? 'Under' : pred.overUnderPick);
               candidates.push({
                 id: `ai-ou-${game.id}`,
                 gameId,
@@ -294,7 +300,7 @@ function App() {
                 stake: aiData.suggestions.target,
                 score: 50 + edge,
                 gameStatus: game.status,
-                gameStatusName: game.statusName,
+                gameStatusName: game.timeLabel,
                 gameDate: game.date,
               });
             }
@@ -302,7 +308,7 @@ function App() {
             // Pick 3: Fixed Spread
             if (aiData.suggestions.fixed > 0) {
               const aiFavoredHome = aiData.ai_probability >= 50;
-              const spreadTeam = aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName;
+              const spreadTeam = aiFavoredHome ? game.homeTeam.name : game.awayTeam.name;
               // Format spread relative to the favored team
               let spreadDisplay = pred.spread;
               if (!aiFavoredHome && spreadDisplay.startsWith('-')) {
@@ -320,7 +326,7 @@ function App() {
                 stake: aiData.suggestions.fixed,
                 score: aiData.ai_probability + edge * 1.5,
                 gameStatus: game.status,
-                gameStatusName: game.statusName,
+                gameStatusName: game.timeLabel,
                 gameDate: game.date,
               });
             }
@@ -338,7 +344,7 @@ function App() {
             []
           );
 
-          const matchupStr = `${game.awayTeam.displayName} vs ${game.homeTeam.displayName}`;
+          const matchupStr = `${game.awayTeam.name} vs ${game.homeTeam.name}`;
           const gameId = `espn-${game.id}`;
           const aiFavoredHome = pred.homeWinProb >= 50;
 
@@ -347,13 +353,13 @@ function App() {
             id: `ai-ml-${game.id}-fallback`,
             gameId,
             type: 'ML',
-            team: `${aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName} ML`,
+            team: `${aiFavoredHome ? game.homeTeam.name : game.awayTeam.name} ML`,
             odds: aiFavoredHome ? pred.moneylineHome : pred.moneylineAway,
             matchupStr,
             stake: 10, // Recommended default flat stake
             score: Math.max(pred.homeWinProb, pred.awayWinProb), // Score by win probability
             gameStatus: game.status,
-            gameStatusName: game.statusName,
+            gameStatusName: game.timeLabel,
             gameDate: game.date,
           });
         }
@@ -371,7 +377,7 @@ function App() {
       })
       .slice(0, 5)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ score, ...pick }) => ({ ...pick, id: crypto.randomUUID() }));
+      .map(({ score, ...pick }) => ({ ...pick, id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) }));
 
     if (top.length === 0) {
       // No ESPN games today — show an alert

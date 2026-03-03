@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { fetchGameCountsByDate, APP_SPORT_TO_ESPN, SportKey } from '../../data/espnScoreboard';
+import { fetchGameCountsByDate, APP_SPORT_TO_ESPN, SportKey } from '../../data/apiClient';
 
 // Generate array of dates: 2 past days → today → 12 future days
 const generateDates = (): string[] => {
@@ -34,7 +34,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({ selectedDate, onSelectDa
     const [gameCounts, setGameCounts] = useState<Record<string, number>>({});
     const [loadingCounts, setLoadingCounts] = useState(false);
 
-    const espnSport = activeSport ? APP_SPORT_TO_ESPN[activeSport] : null;
+    const espnSport = activeSport ? APP_SPORT_TO_ESPN[activeSport.toLowerCase() as SportKey] : null;
 
     const fetchCounts = useCallback(async () => {
         if (!espnSport) {
@@ -43,7 +43,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({ selectedDate, onSelectDa
         }
         setLoadingCounts(true);
         try {
-            const counts = await fetchGameCountsByDate(espnSport as SportKey, dates);
+            const counts = await fetchGameCountsByDate(activeSport as SportKey, dates);
             setGameCounts(counts);
         } catch {
             setGameCounts({});

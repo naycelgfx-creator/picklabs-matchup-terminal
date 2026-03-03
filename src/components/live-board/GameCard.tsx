@@ -4,10 +4,8 @@ import { PublicBetting } from './PublicBetting';
 import { BetPick } from '../../App';
 import { useRookieMode } from '../../contexts/RookieModeContext';
 import { GlossaryTooltip } from '../ui/GlossaryTooltip';
-import { RiskMeter } from '../ui/RiskMeter';
 import { PulsingBeacon } from '../ui/PulsingBeacon';
 import { useLiveOddsShift, applyOddsShift } from '../../hooks/useLiveOddsShift';
-import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
 
 interface GameCardProps {
     game: Game;
@@ -56,9 +54,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
     const { isRookieModeActive } = useRookieMode();
     const shifts = useLiveOddsShift(game.status, game.id);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const isPremiumUser = getCurrentUser()?.isPremium || isAdminEmail(getCurrentUser()?.email || '');
-
     // Which bet types are already in slip for this game?
     const selectedTypes = new Set(betSlip.filter(b => b.gameId === game.id).map(b => b.type));
     const isSel = (t: BetPick['type']) => selectedTypes.has(t);
@@ -70,21 +65,48 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
     const spreadShift = game.homeTeam.name === game.awayTeam.name ? shifts.spreadShift : -shifts.spreadShift; // Just use negative for away to be consistent 
     const spreadNum = baseSpreadNum + spreadShift;
 
-    const awaySpreadText = isNaN(spreadNum)
-        ? `${game.awayTeam.name} must cover the spread.`
-        : spreadNum < 0
-            ? `${game.awayTeam.name} must win by more than ${Math.abs(spreadNum).toFixed(1)} points.`
-            : `${game.awayTeam.name} can lose by up to ${spreadNum.toFixed(1)} points and still win your bet.`;
-
+    // ML Rookie translation
     const mlOdds = applyOddsShift(game.odds.moneyline, -shifts.mlShift);
-    const mlNum = parseInt(mlOdds.replace('+', ''));
-    const mlText = !isNaN(mlNum) && mlNum < 0
-        ? `${game.awayTeam.name} is the favorite — they must win outright.`
-        : `${game.awayTeam.name} is the underdog — an upset wins your bet.`;
+    const mlText = "To Win the Game";
 
+    // Spread Rookie translation
+    const spreadVal = spreadNum; // the numeric value
+    let awaySpreadText = 'N/A';
+    if (!isNaN(spreadVal)) {
+        if (spreadVal < 0) {
+            awaySpreadText = `To Win by ${Math.abs(spreadVal) + 0.5} or more`;
+        } else {
+            awaySpreadText = `To Win, or lose by ${spreadVal - 0.5} or less`;
+        }
+    } else {
+        awaySpreadText = `${game.awayTeam.name} must cover the spread.`;
+    }
+
+    // O/U Rookie translation
     const ouVal = applyOddsShift(game.odds.overUnder.value.toString(), shifts.totalShift);
     const ouPick = game.odds.overUnder.pick;
-    const ouText = `Combined score must be ${ouPick === 'Over' ? 'above' : 'below'} ${ouVal} total points.`;
+    const parsedOuVal = parseFloat(ouVal);
+    let ouText = `Combined score must be ${ouPick === 'Over' ? 'above' : 'below'} ${ouVal} total points.`;
+    if (!isNaN(parsedOuVal)) {
+        if (ouPick === 'Over') {
+            ouText = `Total score ${parsedOuVal + 0.5} or higher`;
+        } else {
+            ouText = `Total score ${parsedOuVal - 0.5} or lower`;
+        }
+    }
+
+    // Profit calculation for Rookie Odds
+    const getRookieOdds = (americanOddsStr: string) => {
+        const americanOdds = parseInt(americanOddsStr.replace('+', ''));
+        if (isNaN(americanOdds)) return americanOddsStr;
+        let profit = 0;
+        if (americanOdds > 0) {
+            profit = (10 / 100) * americanOdds;
+        } else {
+            profit = (10 / Math.abs(americanOdds)) * 100;
+        }
+        return `Bet $10, Profit $${profit.toFixed(2)}`;
+    };
 
     // Dynamic Win Probs
     const awayWinProb = isLive ? Math.min(99, Math.max(1, (game.aiData ? (100 - game.aiData.ai_probability) : game.awayTeam.winProb) - shifts.confidenceShift)) : (game.aiData ? (100 - game.aiData.ai_probability) : game.awayTeam.winProb);
@@ -356,7 +378,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 <div id="rookie-odds-row" className="grid grid-cols-3 gap-2 border-t border-border-muted pt-4">
                     {/* ML */}
                     <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
                         style={isSel('ML') ? selStyle : undefined}
                         onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 10)}
                     >
@@ -364,12 +386,14 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             {isSel('ML') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
                             <GlossaryTooltip term="Moneyline" definition="Pick which team wins outright." example={`If ${game.awayTeam.name} win, you win.`} />
                         </div>
-                        <p className="text-[10px] text-slate-300 leading-snug mb-2">{mlText}</p>
-                        <RiskMeter odds={mlOdds} />
+                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{mlText}</p>
+                        <div className="mt-auto">
+                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds(mlOdds)}</span>
+                        </div>
                     </div>
                     {/* Spread */}
                     <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
                         style={isSel('Spread') ? selStyle : undefined}
                         onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 10)}
                     >
@@ -377,12 +401,14 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             {isSel('Spread') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
                             <GlossaryTooltip term="Point Spread" definition="The predicted score gap." example={awaySpreadText} />
                         </div>
-                        <p className="text-[10px] text-slate-300 leading-snug mb-2">{awaySpreadText}</p>
-                        <RiskMeter odds="-110" />
+                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{awaySpreadText}</p>
+                        <div className="mt-auto">
+                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span>
+                        </div>
                     </div>
                     {/* O/U */}
                     <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
                         style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : undefined}
                         onClick={(e) => handleBetClick(e, ouPick === 'Over' ? 'Over' : 'Under', `${ouPick} ${ouVal}`, '-110', 10)}
                     >
@@ -390,8 +416,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                             {isSel(ouPick === 'Over' ? 'Over' : 'Under') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
                             <GlossaryTooltip term="Over/Under" definition="Bet on combined total score." example={ouText} />
                         </div>
-                        <p className="text-[10px] text-slate-300 leading-snug mb-2">{ouText}</p>
-                        <RiskMeter odds="-110" />
+                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{ouText}</p>
+                        <div className="mt-auto">
+                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span>
+                        </div>
                     </div>
                 </div>
             ) : (

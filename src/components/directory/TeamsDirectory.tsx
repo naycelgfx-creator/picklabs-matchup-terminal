@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SPORT_LOGOS } from '../../data/mockGames';
 import { TeamDetails } from './TeamDetails';
-import { getWBCTeams } from '../../data/mlbStatsService';
+
 
 // ── ESPN Teams API response types ─────────────────────────────────────────────
 interface EspnLogoEntry { href: string; width?: number; height?: number; }
@@ -418,21 +418,7 @@ export const TeamsDirectory: React.FC = () => {
         setError(null);
         try {
             if (sport === 'WBC') {
-                const wbcTeams = await getWBCTeams();
-                // map WBC team structure to ESPNTeam structure
-                const mappedWbc = wbcTeams.map(t => ({
-                    id: String(t.id),
-                    name: t.name,
-                    abbreviation: t.abbreviation,
-                    displayName: t.name,
-                    shortDisplayName: t.name,
-                    logo: t.logo,
-                    color: t.color || '121a12',
-                    alternateColor: t.alternateColor || '0df20d',
-                    location: t.location || 'International'
-                }));
-                mappedWbc.sort((a, b) => a.displayName.localeCompare(b.displayName));
-                setTeams(mappedWbc);
+                setTeams([]);
             } else if (sport === 'UFC') {
                 setTeams([{
                     id: 'ufc',

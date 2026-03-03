@@ -40,6 +40,11 @@ export interface DBUser {
     isPremium: boolean;        // mirrors: is_premium BOOLEAN NOT NULL DEFAULT 0
     tier?: '3_DAY' | '7_DAY' | '30_DAY' | 'LIFETIME'; // Added for Tier System
     premiumExpiresAt?: number; // epoch ms when VIP expires
+    wallet_balance?: number; // Virtual currency or real money
+    subscription_tier?: 'free' | 'premium'; // Mirrors backend format
+    trial_ends_at?: number; // For the 7-day countdown
+    ai_squares_remaining?: number; // Defaults to 20, resets weekly
+    ai_squares_reset_date?: number; // Epoch ms
     createdAt: number;         // epoch ms
     referralCode?: string;     // Added for referral loop
     referralsCount?: number;   // Added for referral loop
@@ -70,6 +75,11 @@ export interface SessionData {
 async function hashPassword(msg: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(msg);
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+        let hash = 0;
+        for (let i = 0; i < msg.length; i++) hash = (Math.imul(31, hash) + msg.charCodeAt(i)) | 0;
+        return hash.toString();
+    }
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -148,7 +158,7 @@ export async function initDB() {
 
     const defaultUsers: DBUser[] = [
         {
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
             email: 'admin@picklabs.app',
             passwordHash: vipPass,
             isPremium: true,
@@ -159,13 +169,16 @@ export async function initDB() {
             phoneNumber: '+15551234567', // Mock phone for SMS testing
         },
         {
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
             email: 'user@gmail.com',
             passwordHash: freePass,
             isPremium: false,
             createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000, // 4 days ago to trigger Drip
             referralCode: 'user_ref',
             referralsCount: 0,
+            wallet_balance: 0,
+            subscription_tier: 'premium',
+            ai_squares_remaining: 20,
             dripDay1Sent: false,
             dripDay2Sent: false,
             dripDay3Sent: false,
@@ -200,13 +213,18 @@ export async function signup(email: string, password: string, referralCode?: str
     }
 
     const newUser: DBUser = {
-        id: crypto.randomUUID(),
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
         email,
         passwordHash: await hashPassword(password),
         isPremium: false,
         createdAt: Date.now(),
         referralCode: email.split('@')[0] + '_' + Math.floor(Math.random() * 10000),
         referralsCount: 0,
+        wallet_balance: 0,
+        subscription_tier: 'free',
+        trial_ends_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ai_squares_remaining: 20,
+        ai_squares_reset_date: Date.now() + 7 * 24 * 60 * 60 * 1000,
         dripDay1Sent: false,
         dripDay2Sent: false,
         dripDay3Sent: false,

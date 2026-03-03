@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { fetchESPNTeamSchedule, ESPNScheduleGame } from '../../data/espnTeams';
+import { fetchESPNTeamSchedule, ESPNScheduleGame } from '../../utils/aiPredictions';
 
 interface TeamScheduleProps {
     teamName: string;

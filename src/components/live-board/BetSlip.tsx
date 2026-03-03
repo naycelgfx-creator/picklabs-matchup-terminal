@@ -16,31 +16,7 @@ export interface BetSlipProps {
 type SlipMode = 'singles' | 'parlay';
 
 /* ── Odds math ── */
-const americanToDecimal = (oddsStr: string): number => {
-    if (!oddsStr || oddsStr === 'N/A') return 1.909; // -110 default
-    const odds = parseInt(oddsStr.replace('+', ''));
-    if (isNaN(odds)) return 1.909; // -110 default
-    return odds > 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
-};
-
-const decimalToAmerican = (decimal: number): string => {
-    if (!decimal || isNaN(decimal) || decimal <= 1) return 'N/A';
-    if (decimal >= 2) return `+${Math.round((decimal - 1) * 100)}`;
-    return `${Math.round(-100 / (decimal - 1))}`;
-};
-
-const calculateParlayOdds = (picks: BetPick[]): string => {
-    if (picks.length < 2) return picks.length === 1 ? picks[0].odds : 'N/A';
-    const combined = picks.reduce((acc, pick) => acc * americanToDecimal(pick.odds), 1);
-    return decimalToAmerican(combined);
-};
-
-const toWin = (stake: number, oddsStr: string): number => {
-    if (!oddsStr || oddsStr === 'N/A' || stake <= 0) return 0;
-    const odds = parseInt(oddsStr.replace('+', ''));
-    if (isNaN(odds)) return 0;
-    return odds > 0 ? stake * (odds / 100) : stake / (Math.abs(odds) / 100);
-};
+import { calculateParlayOdds, toWin } from '../../utils/bettingMath';
 
 export const BetSlip: React.FC<BetSlipProps & { onClose?: () => void }> = ({ betSlip, setBetSlip, activeTickets, setActiveTickets, onPlaceTicket, onClose }) => {
     const { isBookEnabled } = useSportsbooks();

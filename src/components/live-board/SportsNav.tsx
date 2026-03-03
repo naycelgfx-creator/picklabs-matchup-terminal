@@ -80,6 +80,8 @@ const SPORT_ICON_MATERIAL: Record<string, string> = {
     NCAAB: 'sports_basketball',
     NCAAW: 'sports_basketball',
     CFB: 'sports_football',
+    NASCAR: 'sports_motorsports',
+    F1: 'sports_motorsports',
 };
 
 interface SportsNavProps {

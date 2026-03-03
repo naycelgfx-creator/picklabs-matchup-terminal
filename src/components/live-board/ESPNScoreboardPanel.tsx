@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { fetchESPNScoreboardByDate, ESPNGame, APP_SPORT_TO_ESPN, SportKey } from '../../data/espnScoreboard';
+import { fetchScoreboard, ESPNGame, APP_SPORT_TO_ESPN, SportKey } from '../../data/apiClient';
 
 interface ESPNScoreboardPanelProps {
     sport: string; // app sport name e.g. "NBA"
@@ -10,15 +10,17 @@ interface ESPNScoreboardPanelProps {
 }
 
 const StatusBadge: React.FC<{ game: ESPNGame }> = ({ game }) => {
-    if (game.status === 'in') {
+    const state = game.status?.type?.state;
+    const detail = (game.status?.type as any)?.shortDetail || game.status?.type?.detail || game.status?.type?.description;
+    if (state === 'in') {
         return (
             <span className="flex items-center gap-1 bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
-                LIVE · {game.statusDetail}
+                LIVE · {detail}
             </span>
         );
     }
-    if (game.status === 'post') {
+    if (state === 'post') {
         return (
             <span className="bg-neutral-700 text-slate-400 text-[10px] font-bold uppercase px-2 py-0.5 rounded tracking-wider">
                 Final
@@ -27,14 +29,45 @@ const StatusBadge: React.FC<{ game: ESPNGame }> = ({ game }) => {
     }
     return (
         <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase px-2 py-0.5 rounded tracking-wider">
-            {game.statusDetail}
+            {detail}
         </span>
     );
 };
 
 const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) => void }> = ({ game, onSelectGame }) => {
-    const isLive = game.status === 'in';
-    const isFinal = game.status === 'post';
+    const state = game.status?.type?.state;
+    const isLive = state === 'in';
+    const isFinal = state === 'post';
+    const comp = game.competitions?.[0];
+    const venueName = comp?.venue?.fullName || 'TBD';
+    const cityName = comp?.venue?.address?.city || '';
+    const broadcast = comp?.broadcasts?.[0]?.names?.[0] || '';
+
+    const awayObj = comp?.competitors?.find(c => c.homeAway === 'away');
+    const homeObj = comp?.competitors?.find(c => c.homeAway === 'home');
+
+    const awayTeam = {
+        abbreviation: awayObj?.team?.abbreviation || 'AWAY',
+        displayName: awayObj?.team?.displayName || 'Away Team',
+        logo: awayObj?.team?.logos?.[0]?.href || '',
+        record: awayObj?.records?.[0]?.summary || '',
+        winner: awayObj?.winner,
+        score: awayObj?.score || '',
+        linescores: awayObj?.linescores || [],
+    };
+
+    const homeTeam = {
+        abbreviation: homeObj?.team?.abbreviation || 'HOME',
+        displayName: homeObj?.team?.displayName || 'Home Team',
+        logo: homeObj?.team?.logos?.[0]?.href || '',
+        record: homeObj?.records?.[0]?.summary || '',
+        winner: homeObj?.winner,
+        score: homeObj?.score || '',
+        linescores: homeObj?.linescores || [],
+    };
+
+    const leaders = (comp as any)?.leaders || [];
+    const headline = (game as any)?.headline || (comp as any)?.notes?.[0]?.headline || '';
 
     return (
         <div
@@ -46,12 +79,12 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
             <div className="bg-neutral-800/60 px-4 py-2 flex items-center justify-between border-b border-neutral-700/50">
                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium truncate">
                     <span className="material-symbols-outlined text-[12px]">location_on</span>
-                    <span className="truncate">{game.venue}{game.city ? ` · ${game.city}` : ''}</span>
+                    <span className="truncate">{venueName}{cityName ? ` · ${cityName}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                    {game.broadcast && (
+                    {broadcast && (
                         <span className="text-[10px] text-slate-400 font-bold bg-neutral-700 px-2 py-0.5 rounded">
-                            {game.broadcast}
+                            {broadcast}
                         </span>
                     )}
                     <StatusBadge game={game} />
@@ -61,72 +94,72 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
             {/* Scoreboard */}
             <div className="px-4 py-4">
                 {/* Away Team */}
-                <div className={`flex items-center gap-3 mb-3 ${!isFinal ? '' : game.awayTeam.winner ? '' : 'opacity-60'}`}>
+                <div className={`flex items-center gap-3 mb-3 ${!isFinal ? '' : awayTeam.winner ? '' : 'opacity-60'}`}>
                     <div className="w-9 h-9 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
                         <img
-                            src={game.awayTeam.logo}
-                            alt={game.awayTeam.abbreviation}
+                            src={awayTeam.logo}
+                            alt={awayTeam.abbreviation}
                             className="w-full h-full object-contain p-1"
-                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${game.awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
+                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
                         />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-black text-text-main truncate">{game.awayTeam.displayName}</span>
-                            {game.awayTeam.record && (
-                                <span className="text-[10px] text-slate-600 font-medium shrink-0">{game.awayTeam.record}</span>
+                            <span className="text-sm font-black text-text-main truncate">{awayTeam.displayName}</span>
+                            {awayTeam.record && (
+                                <span className="text-[10px] text-slate-600 font-medium shrink-0">{awayTeam.record}</span>
                             )}
                         </div>
                         {/* Quarter scores */}
-                        {game.awayTeam.linescores.length > 0 && (
+                        {awayTeam.linescores.length > 0 && (
                             <div className="flex gap-1 mt-0.5">
-                                {game.awayTeam.linescores.map((ls) => (
-                                    <span key={ls.period} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue}</span>
+                                {awayTeam.linescores.map((ls: any, i: number) => (
+                                    <span key={i} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue || ls.value}</span>
                                 ))}
                             </div>
                         )}
                     </div>
-                    <span className={`text-2xl font-black tabular-nums ${game.awayTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>
-                        {game.awayTeam.score || '—'}
+                    <span className={`text-2xl font-black tabular-nums ${awayTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>
+                        {awayTeam.score || '—'}
                     </span>
                 </div>
 
                 {/* Home Team */}
-                <div className={`flex items-center gap-3 ${!isFinal ? '' : game.homeTeam.winner ? '' : 'opacity-60'}`}>
+                <div className={`flex items-center gap-3 ${!isFinal ? '' : homeTeam.winner ? '' : 'opacity-60'}`}>
                     <div className="w-9 h-9 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
                         <img
-                            src={game.homeTeam.logo}
-                            alt={game.homeTeam.abbreviation}
+                            src={homeTeam.logo}
+                            alt={homeTeam.abbreviation}
                             className="w-full h-full object-contain p-1"
-                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${game.homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
+                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
                         />
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-black text-text-main truncate">{game.homeTeam.displayName}</span>
-                            {game.homeTeam.record && (
-                                <span className="text-[10px] text-slate-600 font-medium shrink-0">{game.homeTeam.record}</span>
+                            <span className="text-sm font-black text-text-main truncate">{homeTeam.displayName}</span>
+                            {homeTeam.record && (
+                                <span className="text-[10px] text-slate-600 font-medium shrink-0">{homeTeam.record}</span>
                             )}
                         </div>
-                        {game.homeTeam.linescores.length > 0 && (
+                        {homeTeam.linescores.length > 0 && (
                             <div className="flex gap-1 mt-0.5">
-                                {game.homeTeam.linescores.map((ls) => (
-                                    <span key={ls.period} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue}</span>
+                                {homeTeam.linescores.map((ls: any, i: number) => (
+                                    <span key={i} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue || ls.value}</span>
                                 ))}
                             </div>
                         )}
                     </div>
-                    <span className={`text-2xl font-black tabular-nums ${game.homeTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>
-                        {game.homeTeam.score || '—'}
+                    <span className={`text-2xl font-black tabular-nums ${homeTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>
+                        {homeTeam.score || '—'}
                     </span>
                 </div>
             </div>
 
             {/* Leaders */}
-            {game.leaders.length > 0 && (
+            {leaders.length > 0 && (
                 <div className="px-4 pb-3 border-t border-neutral-800/60 pt-3">
                     <div className="flex gap-3 overflow-x-auto">
-                        {game.leaders.slice(0, 3).map((leader, i) => (
+                        {leaders.slice(0, 3).map((leader: any, i: number) => (
                             <div key={i} className="flex items-center gap-2 shrink-0">
                                 {leader.headshot && (
                                     <div className="w-7 h-7 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700">
@@ -143,7 +176,7 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
                                     <div className="text-xs font-bold text-text-muted leading-tight">{leader.shortName}</div>
                                     <div className="text-[11px] font-black text-primary leading-none">{leader.displayValue}</div>
                                 </div>
-                                {i < game.leaders.length - 1 && i < 2 && (
+                                {i < leaders.length - 1 && i < 2 && (
                                     <div className="w-px h-8 bg-neutral-800 ml-1"></div>
                                 )}
                             </div>
@@ -153,9 +186,9 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
             )}
 
             {/* Headline */}
-            {game.headline && game.status === 'post' && (
+            {headline && isFinal && (
                 <div className="px-4 pb-3">
-                    <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">{game.headline}</p>
+                    <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2">{headline}</p>
                 </div>
             )}
         </div>
@@ -164,8 +197,30 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
 
 // ── Compact list-view row ──────────────────────────────────────────
 const ESPNGameRow: React.FC<{ game: ESPNGame; onSelectGame?: (g: ESPNGame) => void }> = ({ game, onSelectGame }) => {
-    const isLive = game.status === 'in';
-    const isFinal = game.status === 'post';
+    const state = game.status?.type?.state;
+    const isLive = state === 'in';
+    const isFinal = state === 'post';
+    const comp = game.competitions?.[0];
+    const detail = (game.status?.type as any)?.shortDetail || game.status?.type?.detail || '';
+
+    const awayObj = comp?.competitors?.find(c => c.homeAway === 'away');
+    const homeObj = comp?.competitors?.find(c => c.homeAway === 'home');
+    const broadcast = comp?.broadcasts?.[0]?.names?.[0] || '';
+
+    const awayTeam = {
+        abbreviation: awayObj?.team?.abbreviation || 'AWAY',
+        logo: awayObj?.team?.logos?.[0]?.href || '',
+        winner: awayObj?.winner,
+        score: awayObj?.score || '',
+    };
+
+    const homeTeam = {
+        abbreviation: homeObj?.team?.abbreviation || 'HOME',
+        logo: homeObj?.team?.logos?.[0]?.href || '',
+        winner: homeObj?.winner,
+        score: homeObj?.score || '',
+    };
+
     return (
         <div
             onClick={() => onSelectGame?.(game)}
@@ -181,29 +236,29 @@ const ESPNGameRow: React.FC<{ game: ESPNGame; onSelectGame?: (g: ESPNGame) => vo
                 ) : isFinal ? (
                     <span className="text-[10px] text-slate-500 font-bold">Final</span>
                 ) : (
-                    <span className="text-[10px] text-primary font-bold">{game.statusDetail}</span>
+                    <span className="text-[10px] text-primary font-bold">{detail}</span>
                 )}
             </div>
 
             {/* Away team */}
             <div className="flex items-center gap-2 flex-1 min-w-0">
-                <img src={game.awayTeam.logo} alt={game.awayTeam.abbreviation} className="w-7 h-7 object-contain rounded-full bg-neutral-800 p-0.5 border border-neutral-700" onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${game.awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }} />
-                <span className={`text-sm font-bold truncate ${isFinal && !game.awayTeam.winner ? 'text-text-muted' : 'text-text-main'}`}>{game.awayTeam.abbreviation}</span>
-                <span className={`text-lg font-black tabular-nums ml-auto ${game.awayTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>{game.awayTeam.score || '–'}</span>
+                <img src={awayTeam.logo} alt={awayTeam.abbreviation} className="w-7 h-7 object-contain rounded-full bg-neutral-800 p-0.5 border border-neutral-700" onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }} />
+                <span className={`text-sm font-bold truncate ${isFinal && !awayTeam.winner ? 'text-text-muted' : 'text-text-main'}`}>{awayTeam.abbreviation}</span>
+                <span className={`text-lg font-black tabular-nums ml-auto ${awayTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>{awayTeam.score || '–'}</span>
             </div>
 
             <span className="text-slate-700 font-bold px-2">vs</span>
 
             {/* Home team */}
             <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className={`text-lg font-black tabular-nums mr-auto ${game.homeTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>{game.homeTeam.score || '–'}</span>
-                <span className={`text-sm font-bold truncate ${isFinal && !game.homeTeam.winner ? 'text-text-muted' : 'text-text-main'}`}>{game.homeTeam.abbreviation}</span>
-                <img src={game.homeTeam.logo} alt={game.homeTeam.abbreviation} className="w-7 h-7 object-contain rounded-full bg-neutral-800 p-0.5 border border-neutral-700" onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${game.homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }} />
+                <span className={`text-lg font-black tabular-nums mr-auto ${homeTeam.winner ? 'text-text-main' : 'text-text-muted'}`}>{homeTeam.score || '–'}</span>
+                <span className={`text-sm font-bold truncate ${isFinal && !homeTeam.winner ? 'text-text-muted' : 'text-text-main'}`}>{homeTeam.abbreviation}</span>
+                <img src={homeTeam.logo} alt={homeTeam.abbreviation} className="w-7 h-7 object-contain rounded-full bg-neutral-800 p-0.5 border border-neutral-700" onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }} />
             </div>
 
             {/* Broadcast */}
-            {game.broadcast && (
-                <span className="text-[10px] text-slate-500 font-bold bg-neutral-800 px-2 py-0.5 rounded shrink-0 hidden sm:block">{game.broadcast}</span>
+            {broadcast && (
+                <span className="text-[10px] text-slate-500 font-bold bg-neutral-800 px-2 py-0.5 rounded shrink-0 hidden sm:block">{broadcast}</span>
             )}
         </div>
     );
@@ -221,7 +276,7 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
     };
 
     // Use overrideSportKey when provided (soccer league sub-selection), otherwise look up from sport name
-    const espnSport = overrideSportKey ?? APP_SPORT_TO_ESPN[sport];
+    const espnSport = overrideSportKey ?? APP_SPORT_TO_ESPN[sport.toLowerCase() as SportKey];
     const todayStr = new Date().toISOString().split('T')[0];
     const dateToFetch = selectedDate || todayStr;
 
@@ -230,7 +285,7 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
         setLoading(true);
         setError(null);
         try {
-            const data = await fetchESPNScoreboardByDate(espnSport, dateToFetch);
+            const data = await fetchScoreboard(espnSport, dateToFetch);
             setGames(data);
             setLastUpdated(new Date().toLocaleTimeString());
         } catch {
@@ -251,13 +306,13 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
 
     if (!espnSport) return null; // No ESPN endpoint for this sport
 
-    const liveCount = games.filter(g => g.status === 'in').length;
+    const liveCount = games.filter(g => g.status?.type?.state === 'in').length;
 
     // Build status-grouped sections for rendering
     const statusSections = [
-        { label: 'LIVE NOW', games: games.filter(g => g.status === 'in'), dot: 'green' as const },
-        { label: 'UPCOMING', games: games.filter(g => g.status === 'pre'), dot: 'yellow' as const },
-        { label: 'FINAL', games: games.filter(g => g.status === 'post'), dot: 'grey' as const },
+        { label: 'LIVE NOW', games: games.filter(g => g.status?.type?.state === 'in'), dot: 'green' as const },
+        { label: 'UPCOMING', games: games.filter(g => g.status?.type?.state === 'pre'), dot: 'yellow' as const },
+        { label: 'FINAL', games: games.filter(g => g.status?.type?.state === 'post'), dot: 'grey' as const },
     ].filter(s => s.games.length > 0);
 
     return (

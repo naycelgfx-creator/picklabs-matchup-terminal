@@ -57,7 +57,9 @@ export const SPORT_LOGOS: Record<string, string> = {
     NCAAB: '/NCAAB_logo.png',
     WNBA: 'https://a.espncdn.com/i/teamlogos/leagues/500/wnba.png',
     NCAAW: '/NCAAW_logo.png',
-    WBC: '/wbc-logo.png'
+    WBC: '/wbc-logo.png',
+    NASCAR: 'https://a.espncdn.com/i/teamlogos/leagues/500/nascar.png',
+    F1: 'https://a.espncdn.com/i/teamlogos/leagues/500/f1.png'
 };
 
 export const REAL_TEAMS: Record<string, { name: string, abbr: string, type?: 'team' | 'player', url?: string, league?: string }[]> = {
@@ -382,7 +384,7 @@ const generateDummyGames = (sport: string, count: number): Game[] => {
     });
 };
 
-export const SPORTS = ['NBA', 'WNBA', 'NCAAB', 'NCAAW', 'CFB', 'NFL', 'MLB', 'NHL', 'Soccer', 'Tennis', 'Golf', 'UFC'];
+export const SPORTS = ['NBA', 'WNBA', 'NCAAB', 'NCAAW', 'CFB', 'NFL', 'MLB', 'NHL', 'Soccer', 'Tennis', 'Golf', 'UFC', 'NASCAR', 'F1'];
 
 export const mockGamesBySport: Record<string, Game[]> = SPORTS.reduce((acc, sport) => {
     const games = generateDummyGames(sport, 6);

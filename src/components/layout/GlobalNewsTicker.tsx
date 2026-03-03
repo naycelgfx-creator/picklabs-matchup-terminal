@@ -36,8 +36,8 @@ export const GlobalNewsTicker: React.FC = () => {
     }, []);
 
     const tickerItems: { sport: string; category: string; text: string }[] = items.slice(0, 30).map(item => ({
-        sport: item.sport,
-        category: item.category,
+        sport: item.sport || 'Unknown Sport',
+        category: item.category || 'general',
         text: item.headline,
     }));
 

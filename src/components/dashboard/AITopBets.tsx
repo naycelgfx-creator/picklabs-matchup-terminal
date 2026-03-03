@@ -19,7 +19,6 @@ const buildAnalysis = (
 ): string => {
     // Look for injury/trade news mentioning this team
     const relevant = news.filter(n =>
-        n.teams?.some(t => t.toLowerCase().includes(teamName.toLowerCase().split(' ').pop()?.toLowerCase() ?? '')) ||
         n.headline.toLowerCase().includes(teamName.toLowerCase().split(' ').pop()?.toLowerCase() ?? '')
     );
     if (relevant.length > 0) {

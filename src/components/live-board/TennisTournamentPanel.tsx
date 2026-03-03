@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { SportKey, ESPN_SCOREBOARD_URLS } from '../../data/espnScoreboard';
+import { SportKey, ESPN_SCOREBOARD_URLS } from '../../data/apiClient';
 import { Game } from '../../data/mockGames';
 
 // ---------- Raw ESPN shape (tennis/golf) ----------

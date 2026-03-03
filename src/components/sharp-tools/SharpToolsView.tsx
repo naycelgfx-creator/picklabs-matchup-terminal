@@ -5,7 +5,7 @@ import { SharpFlow } from './SharpFlow';
 import { ActiveSharpMatchups } from './ActiveSharpMatchups';
 import { SharpIntelligenceFeed } from './SharpIntelligenceFeed';
 import { Game } from '../../data/mockGames';
-import { fetchESPNScoreboardByDate, SportKey } from '../../data/espnScoreboard';
+import { fetchScoreboard, SportKey } from '../../data/apiClient';
 import { espnGameToGame } from '../live-board/LiveBoard';
 
 export const SharpToolsView: React.FC<{ selectedGame?: Game | null }> = ({ selectedGame }) => {
@@ -20,7 +20,7 @@ export const SharpToolsView: React.FC<{ selectedGame?: Game | null }> = ({ selec
             const today = new Date().toISOString().split('T')[0];
             const espnKey: SportKey = 'NBA'; // Default to NBA if no game selected
             try {
-                const raw = await fetchESPNScoreboardByDate(espnKey, today);
+                const raw = await fetchScoreboard(espnKey, today);
                 if (raw.length > 0) {
                     const games = raw.map(eg => espnGameToGame(eg));
                     setLiveGames(games);

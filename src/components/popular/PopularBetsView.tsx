@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchMultiSportScoreboard, ESPNGame } from '../../data/espnScoreboard';
-import { generateAIPrediction } from '../../data/espnTeams';
+import { fetchScoreboard, ESPNGame } from '../../data/apiClient';
+import { generateAIPrediction } from '../../utils/aiPredictions';
 import { BetPick } from '../../App';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -32,11 +32,27 @@ interface SGPBet {
 
 // ── Build a popular SGP from a real ESPN game ─────────────────────────────
 const generateSGP = (game: ESPNGame, idx: number): SGPBet => {
-    const pred = generateAIPrediction(game.homeTeam.record, game.awayTeam.record, game.sport, [], []);
-    const sport = game.sport;
-    const home = game.homeTeam.displayName;
-    const away = game.awayTeam.displayName;
-    const isLive = game.status === 'in';
+    const competition = game.competitions?.[0];
+    const homeCompetitor = competition?.competitors?.find(c => c.homeAway === 'home');
+    const awayCompetitor = competition?.competitors?.find(c => c.homeAway === 'away');
+
+    const home = homeCompetitor?.team?.displayName || 'TBD';
+    const away = awayCompetitor?.team?.displayName || 'TBD';
+    const homeRecord = homeCompetitor?.records?.[0]?.summary || '0-0';
+    const awayRecord = awayCompetitor?.records?.[0]?.summary || '0-0';
+
+    // PickLabs sport mapping relies on abbreviations sometimes, let's map back from the API slug
+    const sportSlugMap: Record<string, string> = {
+        'baseball': 'MLB',
+        'football': 'NFL', // Simplified for popular bets mock
+        'basketball': 'NBA',
+        'hockey': 'NHL',
+        'soccer': 'Soccer'
+    };
+    const sport = sportSlugMap[game.sport || 'basketball'] || 'NBA';
+
+    const pred = generateAIPrediction(homeRecord, awayRecord, sport, [], []);
+    const isLive = game.status?.type?.state === 'in';
 
     // Sport-specific prop templates
     const propTemplates: Record<string, SGPLeg[]> = {
@@ -93,8 +109,8 @@ const generateSGP = (game: ESPNGame, idx: number): SGPBet => {
         sport,
         homeTeam: home,
         awayTeam: away,
-        homeLogo: game.homeTeam.logo,
-        awayLogo: game.awayTeam.logo,
+        homeLogo: homeCompetitor?.team?.logos?.[0]?.href || '',
+        awayLogo: awayCompetitor?.team?.logos?.[0]?.href || '',
         isLive,
         aiProbability,
         aiEdge,
@@ -121,14 +137,14 @@ export const PopularBetsView: React.FC<PopularBetsViewProps> = ({ onAddBet }) =>
         const load = async () => {
             setLoading(true);
             try {
-                const data = await fetchMultiSportScoreboard(['NBA', 'NFL', 'MLB', 'NHL']);
+                const data = await fetchScoreboard(['NBA', 'NFL', 'MLB', 'NHL']);
                 const allGames: ESPNGame[] = Object.values(data).flat();
 
                 // Prioritise live games, then upcoming
                 const sorted = [
-                    ...allGames.filter(g => g.status === 'in'),
-                    ...allGames.filter(g => g.status === 'pre'),
-                    ...allGames.filter(g => g.status === 'post'),
+                    ...allGames.filter(g => g.status?.type?.state === 'in'),
+                    ...allGames.filter(g => g.status?.type?.state === 'pre'),
+                    ...allGames.filter(g => g.status?.type?.state === 'post'),
                 ];
 
                 const top6 = sorted.slice(0, 6);
@@ -295,8 +311,8 @@ export const PopularBetsView: React.FC<PopularBetsViewProps> = ({ onAddBet }) =>
                                         disabled={addedBets.has(bet.id)}
                                         onClick={() => handleAddSGP(bet)}
                                         className={`transition-colors px-4 py-2 rounded font-black text-xs uppercase tracking-widest filter active:brightness-75 ${addedBets.has(bet.id)
-                                                ? 'bg-green-500/20 text-green-400 border border-green-500/50 cursor-not-allowed'
-                                                : 'bg-primary/20 text-primary border border-primary/50 hover:bg-primary hover:text-black'
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/50 cursor-not-allowed'
+                                            : 'bg-primary/20 text-primary border border-primary/50 hover:bg-primary hover:text-black'
                                             }`}
                                     >
                                         {addedBets.has(bet.id) ? (

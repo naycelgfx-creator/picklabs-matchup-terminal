@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { BetPick } from '../../App';
-import { fetchESPNScoreboardByDate, ESPNGame, APP_SPORT_TO_ESPN, SportKey } from '../../data/espnScoreboard';
-import { generateAIPrediction } from '../../data/espnTeams';
+import { fetchScoreboard, SportKey } from '../../data/apiClient';
+import { Game } from '../../data/mockGames';
+import { espnGameToGame } from '../../utils/espnMapper';
+import { generateAIPrediction } from '../../utils/aiPredictions';
 import { RookieGuideBanner } from '../shared/RookieGuideBanner';
 import { useRookieMode } from '../../contexts/RookieModeContext';
 import { BetSlip } from '../live-board/BetSlip';
 import { LiveTicketPanel } from '../shared/LiveTicketPanel';
 import { useLiveOddsShift, applyOddsShift } from '../../hooks/useLiveOddsShift';
-import { getWBCSchedule } from '../../data/mlbStatsService';
+
 import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
 
 // Replace with real APIs eventually
@@ -241,7 +243,7 @@ const OddsBtn: React.FC<{
 
 // ── Team Odds Card ─────────────────────────────────────────────────────────────
 interface TeamOddsCardProps {
-    game: ESPNGame;
+    game: Game;
     aiMode: boolean;
     rookieMode: boolean;
     betSlip: BetPick[];
@@ -260,11 +262,11 @@ const TeamOddsCard: React.FC<TeamOddsCardProps> = ({ game, aiMode, rookieMode, b
         game.homeTeam.record, game.awayTeam.record, sport, [], []
     ), [game.homeTeam.record, game.awayTeam.record, sport]);
 
-    const isFinal = game.status === 'post';
-    const isLive = game.status === 'in';
-    const isUpcoming = game.status === 'pre';
-    const matchupStr = `${game.awayTeam.displayName} vs ${game.homeTeam.displayName}`;
-    const gameId = `espn-${game.id}`;
+    const isFinal = game.status === 'FINAL';
+    const isLive = game.status === 'LIVE';
+    const isUpcoming = game.status === 'UPCOMING';
+    const matchupStr = `${game.awayTeam.name} vs ${game.homeTeam.name}`;
+    const gameId = game.id;
 
     const isSel = (type: BetPick['type'], team: string) =>
         betSlip.some(b => b.gameId === gameId && b.type === type && b.team === team);
@@ -275,7 +277,7 @@ const TeamOddsCard: React.FC<TeamOddsCardProps> = ({ game, aiMode, rookieMode, b
 
     const addBet = (type: BetPick['type'], team: string, odds?: string) => {
         if (!odds || odds === 'N/A') return;
-        onAddBet({ gameId, type, team, odds, matchupStr, stake: 50, gameStatus: game.status, gameStatusName: game.statusName, gameDate: game.date });
+        onAddBet({ gameId, type, team, odds, matchupStr, stake: 50, gameStatus: game.status, gameStatusName: game.timeLabel, gameDate: game.date });
     };
 
     // Apply shifting odds if the game is live
@@ -325,7 +327,7 @@ const TeamOddsCard: React.FC<TeamOddsCardProps> = ({ game, aiMode, rookieMode, b
                 {/* Name + Record */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-black text-text-main truncate">{team.displayName}</span>
+                        <span className="text-sm font-black text-text-main truncate">{team.name}</span>
                         {aiHighlight && isFavoredContext && (
                             <span className="text-[8px] font-black bg-green-500/20 text-green-400 border border-green-500/30 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">
                                 AI Fav · {winPct.toFixed(0)}%
@@ -348,20 +350,20 @@ const TeamOddsCard: React.FC<TeamOddsCardProps> = ({ game, aiMode, rookieMode, b
                     <OddsBtn
                         label="ML"
                         odds={ml}
-                        isSelected={isSel('ML', `${team.displayName} ML`)}
+                        isSelected={isSel('ML', `${team.name} ML`)}
                         isAI={aiHighlight && isFavoredContext}
                         rookieMode={rookieMode}
                         rookieTip={ROOKIE_TIPS['ML']}
-                        onClick={() => addBet('ML', `${team.displayName} ML`, ml || 'N/A')}
+                        onClick={() => addBet('ML', `${team.name} ML`, ml || 'N/A')}
                     />
                     <OddsBtn
                         label="Spread"
                         odds={spreadVal}
-                        isSelected={isSel('Spread', `${team.displayName} ${spreadVal}`)}
+                        isSelected={isSel('Spread', `${team.name} ${spreadVal}`)}
                         isAI={aiHighlight && isFavoredContext}
                         rookieMode={rookieMode}
                         rookieTip={ROOKIE_TIPS['Spread'] + ` (${spreadVal})`}
-                        onClick={() => addBet('Spread', `${team.displayName} ${spreadVal}`, '-110')}
+                        onClick={() => addBet('Spread', `${team.name} ${spreadVal}`, '-110')}
                     />
                 </div>
             </div>
@@ -380,15 +382,15 @@ const TeamOddsCard: React.FC<TeamOddsCardProps> = ({ game, aiMode, rookieMode, b
                     {isLive ? (
                         <span className="flex items-center gap-1.5 text-[9px] font-black text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
-                            LIVE · {game.statusDetail}
+                            LIVE · {game.timeLabel}
                         </span>
                     ) : isFinal ? (
                         <span className="flex items-center gap-1 text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
                             <span className="w-1.5 h-1.5 rounded-full bg-neutral-600 inline-block" />
-                            FINAL · {game.statusDetail}
+                            FINAL · {game.timeLabel}
                         </span>
                     ) : (
-                        <span className="text-[10px] text-slate-400 font-medium">{game.statusDetail}</span>
+                        <span className="text-[10px] text-slate-400 font-medium">{game.timeLabel}</span>
                     )}
                     {game.broadcast && (
                         <span className="text-[9px] text-slate-600 bg-neutral-700/60 px-1.5 py-0.5 rounded">{game.broadcast}</span>
@@ -641,17 +643,17 @@ const RosterPanel: React.FC<{
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#1c2037] bg-black/20 rounded-t-xl">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5">
-                        <img src={game.awayTeam.logo} alt={game.awayTeam.abbreviation} className="w-6 h-6 object-contain"
+                        <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-6 h-6 object-contain"
                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        <span className="text-xs font-black text-text-main font-mono uppercase tracking-wider">{game.awayTeam.abbreviation}</span>
+                        <span className="text-xs font-black text-text-main font-mono uppercase tracking-wider">{game.awayTeam.name}</span>
                     </div>
                     <span className="text-text-muted text-xs">@</span>
                     <div className="flex items-center gap-1.5">
-                        <img src={game.homeTeam.logo} alt={game.homeTeam.abbreviation} className="w-6 h-6 object-contain"
+                        <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-6 h-6 object-contain"
                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        <span className="text-xs font-black text-text-main font-mono uppercase tracking-wider">{game.homeTeam.abbreviation}</span>
+                        <span className="text-xs font-black text-text-main font-mono uppercase tracking-wider">{game.homeTeam.name}</span>
                     </div>
-                    {game.status === 'in' && (
+                    {game.status === 'LIVE' && (
                         <span className="text-[8px] font-black text-red-400 bg-red-500/10 px-1.5 rounded-full border border-red-500/15 ml-1">LIVE</span>
                     )}
                 </div>
@@ -662,14 +664,14 @@ const RosterPanel: React.FC<{
                         className={`flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${activeTeam === 'away' ? 'bg-primary text-black' : 'text-text-muted hover:text-text-main'}`}
                     >
                         <img src={game.awayTeam.logo} alt="" className="w-3.5 h-3.5 object-contain" />
-                        {game.awayTeam.abbreviation}
+                        {game.awayTeam.name}
                     </button>
                     <button
                         onClick={() => setActiveTeam('home')}
                         className={`flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${activeTeam === 'home' ? 'bg-primary text-black' : 'text-text-muted hover:text-text-main'}`}
                     >
                         <img src={game.homeTeam.logo} alt="" className="w-3.5 h-3.5 object-contain" />
-                        {game.homeTeam.abbreviation}
+                        {game.homeTeam.name}
                     </button>
                 </div>
             </div>
@@ -715,7 +717,7 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
     const { isRookieModeActive, toggleRookieMode, hasExceededQuota, incrementQuota } = useRookieMode();
 
     const [activeSport, setActiveSport] = useState<string>('NBA');
-    const [games, setGames] = useState<ESPNGame[]>([]);
+    const [games, setGames] = useState<Game[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [aiMode, setAiMode] = useState(false);
@@ -749,30 +751,7 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
         setLoading(true);
         try {
             if (sportEntry.key === 'WBC') {
-                const tomorrowD = new Date();
-                tomorrowD.setDate(tomorrowD.getDate() + 1);
-                const tmrwYear = tomorrowD.getFullYear();
-                const tmrwMonth = String(tomorrowD.getMonth() + 1).padStart(2, '0');
-                const tmrwDay = String(tomorrowD.getDate()).padStart(2, '0');
-                const tomorrow = `${tmrwYear}-${tmrwMonth}-${tmrwDay}`;
-
-                const [todayData, tomorrowData] = await Promise.all([
-                    getWBCSchedule(today),
-                    getWBCSchedule(tomorrow)
-                ]);
-
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let combined: any[] = [...todayData, ...tomorrowData];
-                const seen = new Set();
-                combined = combined.filter(g => {
-                    if (seen.has(g.id)) return false;
-                    seen.add(g.id);
-                    return true;
-                });
-
-                // Hack to fix any errors without extensive refactoring mapping WBCGame.
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                setGames(combined as any[]);
+                setGames([]);
             } else {
                 const espnKey = APP_SPORT_TO_ESPN[sportEntry.key] as SportKey || sportEntry.espn;
 
@@ -784,8 +763,8 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
                 const tomorrow = `${tmrwYear}-${tmrwMonth}-${tmrwDay}`;
 
                 const [todayData, tomorrowData] = await Promise.all([
-                    fetchESPNScoreboardByDate(espnKey, today),
-                    fetchESPNScoreboardByDate(espnKey, tomorrow)
+                    fetchScoreboard(espnKey, today),
+                    fetchScoreboard(espnKey, tomorrow)
                 ]);
 
                 let combined = [...todayData, ...tomorrowData];
@@ -842,18 +821,16 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
         if (!searchQuery.trim()) return games;
         const q = searchQuery.toLowerCase();
         return games.filter(g =>
-            g.homeTeam.displayName.toLowerCase().includes(q) ||
-            g.awayTeam.displayName.toLowerCase().includes(q) ||
-            g.homeTeam.abbreviation.toLowerCase().includes(q) ||
-            g.awayTeam.abbreviation.toLowerCase().includes(q)
+            g.homeTeam.name.toLowerCase().includes(q) ||
+            g.awayTeam.name.toLowerCase().includes(q)
         );
     }, [games, searchQuery]);
 
     // Status order: LIVE first, then upcoming, then final
-    const statusOrder = (s: string) => s === 'in' ? 0 : s === 'pre' ? 1 : 2;
+    const statusOrder = (s: string) => s === 'LIVE' ? 0 : s === 'UPCOMING' ? 1 : 2;
     const sortedGames = [...filteredGames].sort((a, b) => statusOrder(a.status) - statusOrder(b.status));
 
-    const liveCount = games.filter(g => g.status === 'in').length;
+    const liveCount = games.filter(g => g.status === 'LIVE').length;
 
     return (
         <div className="flex flex-col min-h-screen bg-background-dark">
@@ -1051,13 +1028,13 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
                                     </div>
                                 ) : sortedGames.length > 0 ? (
                                     <>
-                                        {(['in', 'pre', 'post'] as const).map(status => {
+                                        {(['LIVE', 'UPCOMING', 'FINAL'] as const).map(status => {
                                             const sectionGames = sortedGames.filter(g => g.status === status);
                                             if (sectionGames.length === 0) return null;
                                             const cfg = {
-                                                in: { label: 'LIVE NOW — Bets Still Open', dot: 'green', color: 'text-green-400' },
-                                                pre: { label: 'UPCOMING', dot: 'yellow', color: 'text-yellow-400' },
-                                                post: { label: 'FINAL — Team Lines Closed', dot: 'grey', color: 'text-neutral-500' },
+                                                LIVE: { label: 'LIVE NOW — Bets Still Open', dot: 'green', color: 'text-green-400' },
+                                                UPCOMING: { label: 'UPCOMING', dot: 'yellow', color: 'text-yellow-400' },
+                                                FINAL: { label: 'FINAL — Team Lines Closed', dot: 'grey', color: 'text-neutral-500' },
                                             }[status];
                                             return (
                                                 <div key={status} className="mb-6 space-y-3">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SOCCER_LEAGUES, SportKey } from '../../data/espnScoreboard';
+import { SOCCER_LEAGUES, SportKey } from '../../data/apiClient';
 
 interface SoccerLeagueNavProps {
     activeLeague: SportKey;

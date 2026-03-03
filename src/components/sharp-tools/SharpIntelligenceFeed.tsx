@@ -53,7 +53,7 @@ export const SharpIntelligenceFeed: React.FC = () => {
                         <div className="text-center py-6 text-slate-600 text-xs">No news available</div>
                     ) : (
                         news.map((item, i) => {
-                            const cfg = CATEGORY_CONFIG[item.category];
+                            const cfg = CATEGORY_CONFIG[item.category || 'general'] || CATEGORY_CONFIG['general'];
                             const borderColor = item.category === 'injury' ? 'border-red-500' :
                                 item.category === 'trade' ? 'border-blue-500' :
                                     item.category === 'game-preview' ? 'border-primary' : 'border-slate-600';

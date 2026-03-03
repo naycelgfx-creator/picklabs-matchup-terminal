@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { SportKey } from '../../data/espnScoreboard';
+import { SportKey } from '../../data/apiClient';
 import { Game } from '../../data/mockGames';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

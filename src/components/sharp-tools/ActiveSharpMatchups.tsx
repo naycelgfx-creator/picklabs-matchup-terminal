@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Game, mockGamesBySport } from '../../data/mockGames';
-import { generateAIPrediction } from '../../data/espnTeams';
+import { generateAIPrediction } from '../../utils/aiPredictions';
 
 interface ActiveSharpMatchupsProps {
     game?: Game | null;

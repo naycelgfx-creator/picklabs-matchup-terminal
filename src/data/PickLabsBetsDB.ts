@@ -14,6 +14,52 @@ export interface BetTracker {
     matchup: string;        // Added to match TransactionHistory UI needs
 }
 
+// -----------------------------------------------------
+// NEW TABULAR SCHEMA (Migrating to relational)
+// -----------------------------------------------------
+export interface DBTicket {
+    id: string; // Primary Key
+    user_id: string; // Foreign Key -> Users (Using email or UUID)
+    total_risk: number;
+    total_to_win: number;
+    total_odds: number | string; // e.g. +345
+    status: 'pending' | 'won' | 'lost' | 'voided';
+    created_at: number; // Timestamp
+    used_ai_prediction: boolean;
+}
+
+export interface DBTicketLeg {
+    id: string; // Primary Key
+    ticket_id: string; // Foreign Key -> Tickets
+    game_id: string; // ESPN game ID
+    bet_type: 'ML' | 'SPREAD' | 'OVER' | 'UNDER' | 'PROP';
+    selection: string; // e.g., 'Milwaukee Bucks ML'
+    odds: number | string; // e.g., -110
+    status: 'pending' | 'won' | 'lost' | 'voided';
+}
+
+const DB_TICKETS_KEY = 'picklabs_relational_tickets_db';
+const DB_LEGS_KEY = 'picklabs_relational_legs_db';
+
+export function getDBTickets(): DBTicket[] {
+    const data = localStorage.getItem(DB_TICKETS_KEY);
+    return data ? JSON.parse(data) : [];
+}
+
+export function saveDBTickets(tickets: DBTicket[]): void {
+    localStorage.setItem(DB_TICKETS_KEY, JSON.stringify(tickets));
+}
+
+export function getDBTicketLegs(): DBTicketLeg[] {
+    const data = localStorage.getItem(DB_LEGS_KEY);
+    return data ? JSON.parse(data) : [];
+}
+
+export function saveDBTicketLegs(legs: DBTicketLeg[]): void {
+    localStorage.setItem(DB_LEGS_KEY, JSON.stringify(legs));
+}
+// -----------------------------------------------------
+
 const DB_KEY = 'picklabs_bets_db';
 
 /** Initialize the DB with an empty array if it doesn't exist */
@@ -72,7 +118,7 @@ export function logBet(email: string, betPick: BetPick): BetTracker {
     const payout = calculatePayout(betPick.stake, numOdds);
 
     const newBet: BetTracker = {
-        id: crypto.randomUUID(),
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
         userEmail: email,
         gameType: betPick.type === 'Prop' ? 'Player Prop' : (betPick.type as any) === 'Value' ? 'Value Pick' : betPick.type,
         propType: betPick.team,
@@ -95,7 +141,7 @@ export function logManualBet(email: string, matchup: string, wager: number, odds
     const payout = calculatePayout(wager, odds);
 
     const newBet: BetTracker = {
-        id: crypto.randomUUID(),
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
         userEmail: email,
         gameType: 'Manual Entry',
         propType: 'Manual',

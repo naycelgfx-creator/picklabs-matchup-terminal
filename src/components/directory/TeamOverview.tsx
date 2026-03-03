@@ -397,7 +397,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                             <div className="text-xs text-slate-500 italic p-2 bg-neutral-800/50 rounded-md border border-neutral-800">No major injuries reported.</div>
                         ) : (
                             <div className="space-y-2">
-                                {(info?.injuries ?? []).slice(0, 4).map((inj, i) => (
+                                {(info?.injuries ?? []).slice(0, 4).map((inj: any, i: number) => (
                                     <div key={i} className="flex justify-between items-center p-2 bg-neutral-800/50 rounded-md border border-neutral-800">
                                         <div className="flex flex-col">
                                             <span className="text-sm text-slate-300 font-medium truncate pr-2">{inj.player}</span>
@@ -483,7 +483,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                                             <div key={i} className="w-6 h-6 rounded bg-neutral-800 animate-pulse" />
                                         ))
                                     ) : info?.recentForm && info.recentForm.length > 0 ? (
-                                        info.recentForm.map((res, i) => (
+                                        info.recentForm.map((res: any, i: number) => (
                                             <div key={i} className={`w-7 h-7 rounded flex items-center justify-center font-black text-xs shadow ${getFormColor(res)}`}>{res}</div>
                                         ))
                                     ) : (

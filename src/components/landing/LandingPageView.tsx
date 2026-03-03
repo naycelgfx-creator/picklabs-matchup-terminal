@@ -1,6 +1,5 @@
 import React from 'react';
 import { Footer } from '../layout/Footer';
-import { isAuthValid } from '../../utils/auth';
 import { GlowingEffect } from '../ui/glowing-effect';
 import { PricingSection } from '../ui/pricing-section';
 import { LogoCloud } from '../ui/logo-cloud-3';
@@ -61,6 +60,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
         {
             name: '7-Day Free Trial',
             price: { monthly: '0', yearly: '0' },
+            description: 'Start with 7 free days',
             ctaLabel: 'Start Free Trial',
             onCta: () => onNavigate('login-page'),
             icon: <Zap className="w-5 h-5" />,

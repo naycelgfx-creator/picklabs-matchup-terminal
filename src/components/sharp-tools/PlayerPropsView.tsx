@@ -64,7 +64,7 @@ export interface PlayerProp {
 
 
 import { useSportContext } from '../../contexts/SportContext';
-import { APP_SPORT_TO_ESPN, SportKey, fetchESPNScoreboardByDate } from '../../data/espnScoreboard';
+import { APP_SPORT_TO_ESPN, SportKey, fetchScoreboard } from '../../data/apiClient';
 import { OutlierPropChart } from './OutlierPropChart';
 
 const SPORT_CATEGORIES: Record<string, string[]> = {
@@ -102,11 +102,11 @@ export const PlayerPropsView = () => {
                 const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
 
                 // Need to use the correct ESPN mapping
-                let espnSport = APP_SPORT_TO_ESPN[activeSport] as SportKey;
-                if (!espnSport) espnSport = 'NBA'; // Fallback
+                let espnSport = (APP_SPORT_TO_ESPN as any)[activeSport.toLowerCase()] as SportKey;
+                if (!espnSport) espnSport = 'nba'; // Fallback
 
-                const gamesResponse = await fetchESPNScoreboardByDate(espnSport, todayStr);
-                const activeGames = gamesResponse.filter(g => g.status !== 'post'); // Only pre/in games
+                const gamesResponse = await fetchScoreboard(espnSport, todayStr);
+                const activeGames = gamesResponse.filter(g => g.status?.type?.state !== 'post'); // Only pre/in games
 
                 if (!activeGames || activeGames.length === 0) {
                     if (isMounted) {
@@ -139,8 +139,16 @@ export const PlayerPropsView = () => {
 
                 // 2. Loop games and build props
                 await Promise.all(activeGames.map(async (game) => {
-                    const homeRoster = await getRoster(game.homeTeam.id, espnSport);
-                    const awayRoster = await getRoster(game.awayTeam.id, espnSport);
+                    const comp = game.competitions?.[0];
+                    const homeObj = comp?.competitors?.find(c => c.homeAway === 'home');
+                    const awayObj = comp?.competitors?.find(c => c.homeAway === 'away');
+                    const homeTeamId = homeObj?.team?.id || '';
+                    const awayTeamId = awayObj?.team?.id || '';
+                    const homeAbbr = homeObj?.team?.abbreviation || 'HOME';
+                    const awayAbbr = awayObj?.team?.abbreviation || 'AWAY';
+
+                    const homeRoster = await getRoster(homeTeamId, espnSport);
+                    const awayRoster = await getRoster(awayTeamId, espnSport);
 
                     // Select a few notable players from each roster
                     const homeSelects = homeRoster.slice(0, 3);
@@ -197,8 +205,8 @@ export const PlayerPropsView = () => {
                         });
                     };
 
-                    homeSelects.forEach(p => processPlayer(p, game.homeTeam.abbreviation, game.awayTeam.abbreviation));
-                    awaySelects.forEach(p => processPlayer(p, game.awayTeam.abbreviation, game.homeTeam.abbreviation));
+                    homeSelects.forEach(p => processPlayer(p, homeAbbr, awayAbbr));
+                    awaySelects.forEach(p => processPlayer(p, awayAbbr, homeAbbr));
                 }));
 
                 if (isMounted) {

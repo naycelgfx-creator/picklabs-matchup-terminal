@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { getSportStatLabels } from '../../data/mockPlayers';
 import { useESPNRoster } from '../../data/useESPNRoster';
-import { ESPNRosterAthlete } from '../../data/espnService';
+import { ESPNRosterAthlete } from '../../data/apiClient';
 
 interface RosterAndStatsProps {
     teamName: string;

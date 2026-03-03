@@ -64,12 +64,12 @@ const PlayerExpandedCard: React.FC<{ player: BoxScorePlayer }> = ({ player }) =>
             }`}>
             {/* Stat bars — major stats */}
             <div className="grid grid-cols-1 gap-1.5">
-                <StatBar label="PTS" value={s.pts} max={40} color={isHot ? 'bg-orange-400' : 'bg-primary'} />
-                <StatBar label="REB" value={s.reb} max={20} color="bg-accent-purple" />
-                <StatBar label="AST" value={s.ast} max={15} color="bg-blue-400" />
-                <StatBar label="STL" value={s.stl} max={5} color="bg-teal-400" />
-                <StatBar label="BLK" value={s.blk} max={5} color="bg-red-400" />
-                <StatBar label="TO" value={s.to} max={8} color="bg-yellow-500" />
+                <StatBar label="PTS" value={Number(s.pts)} max={40} color={isHot ? 'bg-orange-400' : 'bg-primary'} />
+                <StatBar label="REB" value={Number(s.reb)} max={20} color="bg-accent-purple" />
+                <StatBar label="AST" value={Number(s.ast)} max={15} color="bg-blue-400" />
+                <StatBar label="STL" value={Number(s.stl)} max={5} color="bg-teal-400" />
+                <StatBar label="BLK" value={Number(s.blk)} max={5} color="bg-red-400" />
+                <StatBar label="TO" value={Number(s.to)} max={8} color="bg-yellow-500" />
             </div>
 
             {/* Shooting donuts */}

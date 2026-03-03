@@ -1,6 +1,6 @@
 import React from 'react';
 import { useESPNRoster } from '../../data/useESPNRoster';
-import { ESPNRosterAthlete } from '../../data/espnService';
+import { ESPNRosterAthlete } from '../../data/apiClient';
 
 interface DepthChartProps {
     teamName: string;

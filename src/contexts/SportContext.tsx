@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { SPORTS } from '../data/mockGames';
-import { SportKey } from '../data/espnScoreboard';
+import { SportKey } from '../data/apiClient';
 
 interface SportContextType {
     activeSport: string;

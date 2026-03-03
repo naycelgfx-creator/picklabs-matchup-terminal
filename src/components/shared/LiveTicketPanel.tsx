@@ -10,31 +10,7 @@ interface LiveTicketPanelProps {
     onRemoveTicket?: (index: number) => void;
 }
 
-const americanToDecimal = (oddsStr: string): number => {
-    if (!oddsStr || oddsStr === 'N/A') return 1.909;
-    const odds = parseInt(oddsStr.replace('+', ''));
-    if (isNaN(odds)) return 1.909;
-    return odds > 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
-};
-
-const decimalToAmerican = (decimal: number): string => {
-    if (!decimal || isNaN(decimal) || decimal <= 1) return 'N/A';
-    if (decimal >= 2) return `+${Math.round((decimal - 1) * 100)}`;
-    return `${Math.round(-100 / (decimal - 1))}`;
-};
-
-const calculateParlayOdds = (picks: BetPick[]): string => {
-    if (picks.length < 2) return picks.length === 1 ? picks[0].odds : 'N/A';
-    const combined = picks.reduce((acc, pick) => acc * americanToDecimal(pick.odds), 1);
-    return decimalToAmerican(combined);
-};
-
-const toWin = (stake: number, oddsStr: string): number => {
-    if (!oddsStr || oddsStr === 'N/A' || stake <= 0) return 0;
-    const odds = parseInt(oddsStr.replace('+', ''));
-    if (isNaN(odds)) return 0;
-    return odds > 0 ? stake * (odds / 100) : stake / (Math.abs(odds) / 100);
-};
+import { recalculateTicket } from '../../utils/bettingMath';
 
 const getLogoForPick = (bet: BetPick) => {
     const isPlayerProp = ['Over', 'Under', 'Prop'].includes(bet.type);
@@ -205,18 +181,20 @@ export const TicketCard: React.FC<{
     const winningOrPendingGood = legResults.filter(l => l.status === 'WON' || (l.status === 'PENDING' && l.progress >= 50)).length;
     const hitPercent = totalLegs > 0 ? Math.round((winningOrPendingGood / totalLegs) * 100) : 0;
 
-    // Filter out voided legs for odds calculation
-    const activeTicketLegs = ticket.filter((_, i) => legResults[i].status !== 'VOID');
-    const isParlay = activeTicketLegs.length > 1;
-
-    // If all legs voided, odds are effectively 1.0 (push)
-    const combinedOddsStr = activeTicketLegs.length > 0 ? (isParlay ? calculateParlayOdds(activeTicketLegs) : (activeTicketLegs[0]?.odds || 'N/A')) : '+100';
+    // Use the mathematical recalculation logic provided
+    const legsData = ticket.map((bet, i) => ({
+        odds: bet.odds,
+        status: legResults[i].status
+    }));
 
     const sumStakes = ticket.reduce((acc, b) => acc + (b.stake || 0), 0);
-    const riskAmount = isParlay ? (sumStakes > 0 ? sumStakes : 50) : (sumStakes || 10);
+    const riskAmount = totalLegs > 1 ? (sumStakes > 0 ? sumStakes : 50) : (sumStakes || 10);
 
-    // If ticket is entirely VOID, payout is exact risk amount (refund). Otherwise do math.
-    const payoutAmount = ticketStatus === 'VOID' || activeTicketLegs.length === 0 ? riskAmount : riskAmount + toWin(riskAmount, combinedOddsStr);
+    const recalculated = recalculateTicket(legsData, riskAmount);
+
+    const combinedOddsStr = ticketStatus === 'VOID' ? 'VOID' : recalculated.newAmericanOdds;
+    const isRefunded = ticketStatus === 'VOID' || recalculated.status === 'refunded';
+    const payoutAmount = isRefunded ? riskAmount : riskAmount + parseFloat(recalculated.newPayout);
 
     return (
         <div

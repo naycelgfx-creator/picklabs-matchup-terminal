@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser, applyVIPCode, logout, SessionData, recordUserSessionLogout } from '../../data/PickLabsAuthDB';
+import { getCurrentUser, applyVIPCode, SessionData, recordUserSessionLogout } from '../../data/PickLabsAuthDB';
 import { clearAuth } from '../../utils/auth';
 
 interface AccountSettingsViewProps {
@@ -60,7 +60,7 @@ export const AccountSettingsView: React.FC<AccountSettingsViewProps> = ({ onLogo
     const handleLogout = () => {
         const currentUser = getCurrentUser();
         if (currentUser) {
-            recordUserSessionLogout(currentUser.id);
+            recordUserSessionLogout(currentUser.userId);
         }
         clearAuth();
         onLogout();
@@ -125,7 +125,7 @@ export const AccountSettingsView: React.FC<AccountSettingsViewProps> = ({ onLogo
                 )}
 
                 <div className="mt-10 flex items-center justify-center gap-6">
-                    <button onClick={confirmLogout} className="text-text-muted hover:text-white transition-colors text-sm font-bold">
+                    <button onClick={handleLogout} className="text-text-muted hover:text-white transition-colors text-sm font-bold">
                         Log Out
                     </button>
                     <a href="mailto:support@picklabs.app" className="text-red-400/80 hover:text-red-400 transition-colors text-sm font-bold">
