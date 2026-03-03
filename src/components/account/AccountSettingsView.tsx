@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser, applyVIPCode, logout, SessionData } from '../../data/PickLabsAuthDB';
+import { getCurrentUser, applyVIPCode, logout, SessionData, recordUserSessionLogout } from '../../data/PickLabsAuthDB';
+import { clearAuth } from '../../utils/auth';
 
 interface AccountSettingsViewProps {
     onNavigate: (view: string) => void;
@@ -56,9 +57,14 @@ export const AccountSettingsView: React.FC<AccountSettingsViewProps> = ({ onLogo
         }
     };
 
-    const confirmLogout = () => {
-        logout();
+    const handleLogout = () => {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            recordUserSessionLogout(currentUser.id);
+        }
+        clearAuth();
         onLogout();
+        window.location.reload();
     };
 
     if (loading || !user) {

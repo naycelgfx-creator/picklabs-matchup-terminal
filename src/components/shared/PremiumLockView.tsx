@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page' | 'sportsbook' | 'ai-dashboard' | 'social-dashboard' | 'player-props' | 'trends' | 'live-odds' | 'leaderboard' | 'referrals' | 'account' | 'settings' | '3d-board';
+export type ViewType = 'live-board' | 'matchup-terminal' | 'sharp-tools' | 'bankroll' | 'teams-directory' | 'popular-bets' | 'saved-picks' | 'value-finder' | 'landing-page' | 'login-page' | 'sportsbook' | 'ai-dashboard' | 'social-dashboard' | 'player-props' | 'trends' | 'live-odds' | 'leaderboard' | 'referrals' | 'account' | 'settings' | '3d-board' | 'admin-analytics';
 
 export const PremiumLockView: React.FC<{ featureName: string; onNavigate: (v: ViewType) => void }> = ({ featureName, onNavigate }) => {
+    const [isShaking, setIsShaking] = useState(false);
+
+    const handleUpgradeClick = () => {
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 500);
+        // Delay navigation slightly so they see the shake
+        setTimeout(() => onNavigate('landing-page'), 600);
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
             <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
@@ -15,8 +24,8 @@ export const PremiumLockView: React.FC<{ featureName: string; onNavigate: (v: Vi
                 <span className="text-amber-500 font-bold">{featureName}</span> is exclusive to PickLabs Premium members. Upgrade your account to unlock advanced analytics and AI-driven insights.
             </p>
             <button
-                onClick={() => onNavigate('landing-page')}
-                className="px-8 py-4 bg-amber-500 text-neutral-900 font-black uppercase tracking-[0.2em] italic rounded-xl hover:bg-amber-400 hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2"
+                onClick={handleUpgradeClick}
+                className={`px-8 py-4 bg-amber-500 text-neutral-900 font-black uppercase tracking-[0.2em] italic rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2 transition-all ${isShaking ? 'animate-shake' : 'hover:bg-amber-400 hover:scale-105'}`}
             >
                 <span className="material-symbols-outlined">workspace_premium</span>
                 Upgrade to Premium

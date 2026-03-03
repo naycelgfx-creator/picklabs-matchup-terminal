@@ -8,6 +8,7 @@ import { BetSlip } from '../live-board/BetSlip';
 import { LiveTicketPanel } from '../shared/LiveTicketPanel';
 import { useLiveOddsShift, applyOddsShift } from '../../hooks/useLiveOddsShift';
 import { getWBCSchedule } from '../../data/mlbStatsService';
+import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
 
 // Replace with real APIs eventually
 interface SportsbookViewProps {
@@ -17,7 +18,7 @@ interface SportsbookViewProps {
     setActiveTickets: React.Dispatch<React.SetStateAction<BetPick[][]>>;
     onAddBet: (bet: Omit<BetPick, 'id'>) => void;
     onPlaceTicket?: (ticket: BetPick[], stake: number) => void;
-    onResolveTicket?: (ticketIndex: number, status: 'WON' | 'LOST', stake: number, payout: number) => void;
+    onResolveTicket?: (ticketIndex: number, status: 'WON' | 'LOST' | 'VOID', stake: number, payout: number) => void;
 }
 
 // ── Sport list ──────────────────────────────────────────────────────────────
@@ -711,7 +712,7 @@ const RosterPanel: React.FC<{
 
 // ── Main SportsbookView ────────────────────────────────────────────────────────
 export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetSlip, activeTickets, setActiveTickets, onAddBet, onPlaceTicket, onResolveTicket }) => {
-    const { isRookieModeActive, toggleRookieMode } = useRookieMode();
+    const { isRookieModeActive, toggleRookieMode, hasExceededQuota, incrementQuota } = useRookieMode();
 
     const [activeSport, setActiveSport] = useState<string>('NBA');
     const [games, setGames] = useState<ESPNGame[]>([]);
@@ -722,6 +723,10 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
     const [showLiveTickets, setShowLiveTickets] = useState(true);
     const [showBetSlip, setShowBetSlip] = useState(true);
     const [activePanel, setActivePanel] = useState<'teams' | 'players'>('teams');
+    const [shakeAIPicks, setShakeAIPicks] = useState(false);
+    const [shakeRookieModeBtn, setShakeRookieModeBtn] = useState(false);
+    const user = getCurrentUser();
+    const isPremiumUser = user?.isPremium || isAdminEmail(user?.email || '');
     interface AIPredictionData {
         ai_probability: number;
         edge: number;
@@ -872,23 +877,45 @@ export const SportsbookView: React.FC<SportsbookViewProps> = ({ betSlip, setBetS
                         <div className="flex items-center gap-2 flex-wrap">
                             {/* AI Mode */}
                             <button
-                                onClick={() => setAiMode(p => !p)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all ${aiMode
-                                    ? 'bg-green-500/15 border-green-500/40 text-green-400 shadow-[0_0_14px_rgba(34,197,94,0.3)]'
-                                    : 'border-neutral-700 text-slate-400 hover:border-green-500/30 hover:text-green-300'
+                                onClick={() => {
+                                    if (!aiMode && !isPremiumUser) {
+                                        if (hasExceededQuota) {
+                                            setShakeAIPicks(true);
+                                            setTimeout(() => setShakeAIPicks(false), 500);
+                                            return;
+                                        }
+                                        incrementQuota();
+                                    }
+                                    setAiMode(p => !p);
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all ${shakeAIPicks
+                                    ? 'animate-shake border-red-500 text-red-500 bg-red-500/10'
+                                    : aiMode
+                                        ? 'bg-green-500/15 border-green-500/40 text-green-400 shadow-[0_0_14px_rgba(34,197,94,0.3)]'
+                                        : 'border-neutral-700 text-slate-400 hover:border-green-500/30 hover:text-green-300'
                                     }`}
                             >
                                 <span className="material-symbols-outlined text-sm">psychology</span>
                                 AI Picks
-                                {aiMode && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />}
+                                {aiMode && !shakeAIPicks && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />}
                             </button>
 
                             {/* Rookie Mode */}
                             <button
-                                onClick={() => { setRookieMode(p => !p); toggleRookieMode(); }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all ${rookieMode
-                                    ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.2)]'
-                                    : 'border-neutral-700 text-slate-400 hover:border-yellow-400/30 hover:text-yellow-300'
+                                onClick={() => {
+                                    if (!isPremiumUser && hasExceededQuota && !rookieMode) {
+                                        setShakeRookieModeBtn(true);
+                                        setTimeout(() => setShakeRookieModeBtn(false), 500);
+                                        return;
+                                    }
+                                    setRookieMode(p => !p);
+                                    toggleRookieMode();
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all ${shakeRookieModeBtn
+                                    ? 'animate-shake border-red-500 text-red-500 bg-red-500/10'
+                                    : rookieMode
+                                        ? 'bg-yellow-400/15 border-yellow-400/40 text-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.2)]'
+                                        : 'border-neutral-700 text-slate-400 hover:border-yellow-400/30 hover:text-yellow-300'
                                     }`}
                             >
                                 <span className="material-symbols-outlined text-sm">school</span>

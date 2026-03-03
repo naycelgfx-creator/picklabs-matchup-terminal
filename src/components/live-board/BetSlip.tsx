@@ -3,6 +3,7 @@ import { BetPick } from '../../App';
 import { useSportsbooks, SPORTSBOOKS } from '../../contexts/SportsbookContext';
 import { useRookieMode } from '../../contexts/RookieModeContext';
 import { WhatIfCalculator } from '../ui/WhatIfCalculator';
+import { getCurrentUser, incrementUserDailyBets } from '../../data/PickLabsAuthDB';
 
 export interface BetSlipProps {
     betSlip: BetPick[];
@@ -351,6 +352,28 @@ export const BetSlip: React.FC<BetSlipProps & { onClose?: () => void }> = ({ bet
                             onClick={() => {
                                 if (betSlip.length > 0) {
                                     const stakeToDeduct = mode === 'parlay' && betSlip.length >= 2 ? parlayStake : totalStake;
+
+                                    const user = getCurrentUser();
+                                    if (user) {
+                                        incrementUserDailyBets(user.userId);
+                                    }
+
+                                    // Automatic ticket saving to the private saved list
+                                    try {
+                                        const raw = localStorage.getItem('picklabs_saved_tickets') || '[]';
+                                        const savedTickets = JSON.parse(raw);
+                                        const ticketId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+                                        savedTickets.push({
+                                            id: ticketId,
+                                            dateStr: new Date().toISOString(),
+                                            picks: [...betSlip],
+                                            status: 'PENDING'
+                                        });
+                                        localStorage.setItem('picklabs_saved_tickets', JSON.stringify(savedTickets));
+                                    } catch (e) {
+                                        console.error('Error auto-saving ticket', e);
+                                    }
+
                                     if (onPlaceTicket) {
                                         onPlaceTicket([...betSlip], stakeToDeduct);
                                     } else if (setActiveTickets && activeTickets) {

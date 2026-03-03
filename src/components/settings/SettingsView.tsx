@@ -1,4 +1,6 @@
 import { useSettings, AIRiskMode } from '../../contexts/SettingsContext';
+import { getCurrentUser, getAllUsers } from '../../data/PickLabsAuthDB';
+import { useState, useEffect } from 'react';
 
 const AVAILABLE_SPORTS = ['NBA', 'NFL', 'MLB', 'NHL', 'NCAAB', 'NCAAF', 'Tennis', 'PGA'];
 
@@ -16,6 +18,24 @@ export const SettingsView = () => {
     const handleRiskModeChange = (mode: AIRiskMode) => {
         updateSettings({ aiRiskMode: mode });
     };
+
+    const session = getCurrentUser();
+    const isPremium = session?.isPremium;
+    const dbUser = session ? getAllUsers().find(u => u.id === session.userId) : null;
+
+    // Calculate days remaining in 7-day trial
+    const [trialDaysRemaining, setTrialDaysRemaining] = useState<number>(0);
+
+    useEffect(() => {
+        if (dbUser && !isPremium) {
+            const createdAt = dbUser.createdAt;
+            const now = Date.now();
+            const elapsed = now - createdAt;
+            const daysElapsed = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+            const remaining = Math.max(0, 7 - daysElapsed);
+            setTrialDaysRemaining(remaining);
+        }
+    }, [dbUser, isPremium]);
 
     return (
         <div className="max-w-[1440px] mx-auto p-6 animate-fade-in pb-24">
@@ -39,6 +59,34 @@ export const SettingsView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column - Core Settings */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
+
+                    {/* 7-Day Trial Countdown (Only for Free Users) */}
+                    {!isPremium && (
+                        <div className="lab-card p-6 border-t-[3px] border-t-orange-500 bg-gradient-to-r from-neutral-900 to-orange-900/10">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-black italic uppercase text-white tracking-widest flex items-center gap-2 mb-1">
+                                        <span className="material-symbols-outlined text-orange-500">timer</span>
+                                        Free Trial Period
+                                    </h2>
+                                    <p className="text-xs text-text-muted">Your PickLabs premium trial automatically counts down.</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-4xl font-black text-orange-500 font-mono leading-none">
+                                        {trialDaysRemaining} <span className="text-sm text-orange-500/50 uppercase tracking-widest">Days</span>
+                                    </div>
+                                    <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest mt-1">
+                                        Remaining
+                                    </div>
+                                </div>
+                            </div>
+                            {trialDaysRemaining <= 0 && (
+                                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+                                    <span className="text-xs font-bold text-red-400 uppercase tracking-widest">Trial Expired. Upgrade to access premium features.</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* AI Risk Mode */}
                     <div className="lab-card p-6 border-t-[3px] border-t-accent-purple">
@@ -79,6 +127,7 @@ export const SettingsView = () => {
 
                             {/* Aggressive Mode */}
                             <button
+                                title="Aggressive Risk Mode"
                                 onClick={() => handleRiskModeChange('aggressive')}
                                 className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden group
                   ${settings.aiRiskMode === 'aggressive' ? 'bg-red-900/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-neutral-800/50 border-white/5 hover:border-red-500/50'}

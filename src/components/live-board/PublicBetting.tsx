@@ -7,10 +7,12 @@ interface PublicBettingProps {
     onMatchDetailsClick?: () => void;
     isOpen: boolean;
     onToggle: () => void;
+    isUnlocked?: boolean;
 }
 
-export const PublicBetting: React.FC<PublicBettingProps> = ({ game, onMatchDetailsClick, isOpen, onToggle }) => {
+export const PublicBetting: React.FC<PublicBettingProps> = ({ game, onMatchDetailsClick, isOpen, onToggle, isUnlocked = false }) => {
     const isPremiumUser = getCurrentUser()?.isPremium || isAdminEmail(getCurrentUser()?.email || '');
+    const hasAccess = isPremiumUser || isUnlocked;
 
     // Simple deterministic PRNG based on string hash for stable random numbers per game
     const pseudoRandom = (seedStr: string) => {
@@ -59,23 +61,21 @@ export const PublicBetting: React.FC<PublicBettingProps> = ({ game, onMatchDetai
             </div>
             <div>
                 <div className="flex justify-between text-[10px] font-bold">
-                    <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${away.bets}%` : '88%'}</span>
+                    <span className="text-white">{away.bets}%</span>
                     <span className="text-slate-600 flex items-center gap-0.5">
-                        {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>}
                         Bets
                     </span>
-                    <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${home.bets}%` : '88%'}</span>
+                    <span className="text-white">{home.bets}%</span>
                 </div>
                 {renderBar(away.bets, home.bets, leftColor, rightColor)}
             </div>
             <div>
                 <div className="flex justify-between text-[10px] font-bold">
-                    <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${away.money}%` : '88%'}</span>
+                    <span className="text-white">{away.money}%</span>
                     <span className="text-slate-600 flex items-center gap-0.5">
-                        {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>}
                         Money
                     </span>
-                    <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${home.money}%` : '88%'}</span>
+                    <span className="text-white">{home.money}%</span>
                 </div>
                 {renderBar(away.money, home.money, leftColor, rightColor)}
             </div>
@@ -137,23 +137,23 @@ export const PublicBetting: React.FC<PublicBettingProps> = ({ game, onMatchDetai
                         </div>
                         <div>
                             <div className="flex justify-between text-[10px] font-bold">
-                                <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${ouStats.awayBets}%` : '88%'}</span>
+                                <span className={`text-white ${!hasAccess ? 'blur-sm select-none pointer-events-none' : ''}`}>{hasAccess ? `${ouStats.awayBets}%` : '88%'}</span>
                                 <span className="text-slate-600 flex items-center gap-0.5">
-                                    {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>}
+                                    {!hasAccess && <span className="material-symbols-outlined text-[8px]">lock</span>}
                                     Bets
                                 </span>
-                                <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${ouStats.homeBets}%` : '88%'}</span>
+                                <span className={`text-white ${!hasAccess ? 'blur-sm select-none pointer-events-none' : ''}`}>{hasAccess ? `${ouStats.homeBets}%` : '88%'}</span>
                             </div>
                             {renderBar(ouStats.awayBets, ouStats.homeBets, 'bg-emerald-500', 'bg-blue-600')}
                         </div>
                         <div>
                             <div className="flex justify-between text-[10px] font-bold">
-                                <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${ouStats.awayMoney}%` : '88%'}</span>
+                                <span className={`text-white ${!hasAccess ? 'blur-sm select-none pointer-events-none' : ''}`}>{hasAccess ? `${ouStats.awayMoney}%` : '88%'}</span>
                                 <span className="text-slate-600 flex items-center gap-0.5">
-                                    {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>}
+                                    {!hasAccess && <span className="material-symbols-outlined text-[8px]">lock</span>}
                                     Money
                                 </span>
-                                <span className={`text-white ${!isPremiumUser ? 'blur-sm select-none pointer-events-none' : ''}`}>{isPremiumUser ? `${ouStats.homeMoney}%` : '88%'}</span>
+                                <span className={`text-white ${!hasAccess ? 'blur-sm select-none pointer-events-none' : ''}`}>{hasAccess ? `${ouStats.homeMoney}%` : '88%'}</span>
                             </div>
                             {renderBar(ouStats.awayMoney, ouStats.homeMoney, 'bg-emerald-500', 'bg-blue-600')}
                         </div>

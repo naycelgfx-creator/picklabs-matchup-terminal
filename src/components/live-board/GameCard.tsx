@@ -16,12 +16,47 @@ interface GameCardProps {
     betSlip: BetPick[];
     publicBettingOpen?: boolean;
     onPublicBettingToggle?: () => void;
+    isUnlocked?: boolean;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, betSlip, publicBettingOpen = false, onPublicBettingToggle }) => {
-    const isLive = game.status === 'LIVE' || game.status === 'in' as any;
+export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, betSlip, publicBettingOpen = false, onPublicBettingToggle, isUnlocked = false }) => {
+    const isLive = game.status === 'LIVE' || (game.status as string) === 'in';
+    const isFinished = game.status === 'FINAL' || (game.status as string) === 'post';
+
+    // Check if game has less than 15 seconds left (e.g., "00:05", "00:12")
+    const isLateGame = React.useMemo(() => {
+        if (!isLive || !game.timeLabel) return false;
+        const match = game.timeLabel.match(/00:([0-1][0-9])/);
+        if (match && parseInt(match[1]) <= 15) return true;
+        return false;
+    }, [game.timeLabel, isLive]);
+
+    const isLocked = isFinished || isLateGame;
+    const [shakeOdds, setShakeOdds] = React.useState(false);
+
+    const handleBetClick = (e: React.MouseEvent, type: BetPick['type'], team: string, oddsVal: string, stakeAmt: number) => {
+        e.stopPropagation();
+        if (isLocked) {
+            setShakeOdds(true);
+            setTimeout(() => setShakeOdds(false), 500); // Reset shake after animation
+            return;
+        }
+        onAddBet({
+            gameId: game.id,
+            type,
+            team,
+            odds: oddsVal,
+            matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
+            stake: stakeAmt,
+            gameStatus: game.status,
+            gameDate: game.date
+        });
+    };
+
     const { isRookieModeActive } = useRookieMode();
     const shifts = useLiveOddsShift(game.status, game.id);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const isPremiumUser = getCurrentUser()?.isPremium || isAdminEmail(getCurrentUser()?.email || '');
 
     // Which bet types are already in slip for this game?
@@ -69,12 +104,21 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2">
                         <img src={game.sportLogo} alt={game.sport} className="h-3.5 object-contain mr-1 opacity-80" />
-                        {isLive ? (
+                        {isFinished ? (
+                            <span className="text-[9px] font-black bg-neutral-800 text-slate-400 px-2 py-0.5 rounded italic">FINAL</span>
+                        ) : isLive ? (
                             <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded italic">LIVE</span>
                         ) : (
                             <span className="text-[9px] font-black bg-neutral-800 text-text-muted px-2 py-0.5 rounded">UPCOMING</span>
                         )}
-                        <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{game.timeLabel}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isLateGame ? 'text-red-500 animate-pulse' : 'text-text-muted'}`}>
+                            {isLocked && !isFinished ? (
+                                <>
+                                    <span className="material-symbols-outlined text-[10px] mr-1 align-middle">lock</span>
+                                    {game.timeLabel} (LOCKED)
+                                </>
+                            ) : game.timeLabel}
+                        </span>
                     </div>
                     <div className="text-right">
                         <p className="text-[9px] text-text-muted font-black uppercase tracking-tighter">Matchup ID</p>
@@ -158,12 +202,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                                     strokeLinecap="round" strokeWidth="4"
                                 ></circle>
                             </svg>
-                            <span className={`absolute text-[9px] sm:text-[10px] font-black italic ${!isPremiumUser ? 'text-white blur-sm select-none pointer-events-none' : 'text-text-main'}`}>
-                                {isPremiumUser ? `${awayWinProb.toFixed(1)}%` : '88.8%'}
+                            <span className="absolute text-[9px] sm:text-[10px] font-black italic text-text-main">
+                                {awayWinProb.toFixed(1)}%
                             </span>
                         </div>
                         <p className={`text-[7px] sm:text-[8px] font-bold ${game.awayTeam.color} uppercase flex items-center justify-center gap-0.5`}>
-                            {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>} Win Prob
+                            Win Prob
                         </p>
                     </div>
 
@@ -188,12 +232,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                                     strokeLinecap="round" strokeWidth="4"
                                 ></circle>
                             </svg>
-                            <span className={`absolute text-[9px] sm:text-[10px] font-black italic ${!isPremiumUser ? 'text-white blur-sm select-none pointer-events-none' : 'text-text-main'}`}>
-                                {isPremiumUser ? `${homeWinProb.toFixed(1)}%` : '88.8%'}
+                            <span className="absolute text-[9px] sm:text-[10px] font-black italic text-text-main">
+                                {homeWinProb.toFixed(1)}%
                             </span>
                         </div>
                         <p className={`text-[7px] sm:text-[8px] font-bold ${game.homeTeam.color} uppercase flex items-center justify-center gap-0.5`}>
-                            {!isPremiumUser && <span className="material-symbols-outlined text-[8px]">lock</span>} Win Prob
+                            Win Prob
                         </p>
                     </div>
                 </div>
@@ -256,12 +300,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     <div className="grid grid-cols-3 gap-2">
                         {/* Kelly/ML Bet */}
                         <div
-                            className="odd-box cursor-pointer transition-all border border-primary/20 relative overflow-hidden flex flex-col items-center justify-center p-2 rounded-lg"
-                            style={isSel('ML') ? selStyle : (game.aiData.suggestions.kelly > 0 ? { background: 'rgba(17,248,183,0.05)' } : {})}
+                            className={`odd-box cursor-pointer transition-all border border-primary/20 relative overflow-hidden flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
+                            style={isSel('ML') ? selStyle : (game.aiData.suggestions.kelly > 0 ? { backgroundColor: 'rgba(17,248,183,0.05)' } : undefined)}
                             onClick={(e) => {
-                                e.stopPropagation();
                                 const aiFavoredTeam = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
-                                onAddBet({ gameId: game.id, type: 'ML', team: aiFavoredTeam, odds: game.odds.moneyline, matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: game.aiData?.suggestions.kelly || 10, gameStatus: game.status, gameDate: game.date });
+                                handleBetClick(e, 'ML', aiFavoredTeam, game.odds.moneyline, game.aiData!.suggestions.kelly || 10);
                             }}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">
@@ -277,12 +320,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         </div>
                         {/* Fixed/Spread Bet */}
                         <div
-                            className="odd-box cursor-pointer transition-all border border-blue-500/20 flex flex-col items-center justify-center p-2 rounded-lg"
-                            style={isSel('Spread') ? selStyle : { background: 'rgba(59,130,246,0.05)' }}
+                            className={`odd-box cursor-pointer transition-all border border-blue-500/20 flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
+                            style={isSel('Spread') ? selStyle : { backgroundColor: 'rgba(59,130,246,0.05)' }}
                             onClick={(e) => {
-                                e.stopPropagation();
                                 const aiFavoredTeam = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
-                                onAddBet({ gameId: game.id, type: 'Spread', team: `${aiFavoredTeam} ${game.odds.spread}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: game.aiData?.suggestions.fixed || 10, gameStatus: game.status, gameDate: game.date });
+                                handleBetClick(e, 'Spread', `${aiFavoredTeam} ${game.odds.spread}`, '-110', game.aiData!.suggestions.fixed || 10);
                             }}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">Spread</span>
@@ -294,11 +336,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         </div>
                         {/* Target/OU Bet */}
                         <div
-                            className="odd-box cursor-pointer transition-all border border-purple-500/20 flex flex-col items-center justify-center p-2 rounded-lg"
-                            style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : { background: 'rgba(168,85,247,0.05)' }}
+                            className={`odd-box cursor-pointer transition-all border border-purple-500/20 flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
+                            style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : { backgroundColor: 'rgba(168,85,247,0.05)' }}
                             onClick={(e) => {
-                                e.stopPropagation();
-                                onAddBet({ gameId: game.id, type: game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', team: `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: game.aiData?.suggestions.target || 10, gameStatus: game.status, gameDate: game.date });
+                                handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`, '-110', game.aiData!.suggestions.target || 10);
                             }}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">O/U {game.odds.overUnder.value}</span>
@@ -315,9 +356,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 <div id="rookie-odds-row" className="grid grid-cols-3 gap-2 border-t border-border-muted pt-4">
                     {/* ML */}
                     <div
-                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
-                        style={isSel('ML') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: 'ML', team: game.awayTeam.name, odds: game.odds.moneyline, matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10, gameStatus: game.status, gameDate: game.date }); }}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        style={isSel('ML') ? selStyle : undefined}
+                        onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 10)}
                     >
                         <div className="flex items-center gap-1 mb-1">
                             {isSel('ML') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
@@ -328,9 +369,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                     {/* Spread */}
                     <div
-                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
-                        style={isSel('Spread') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: 'Spread', team: `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10, gameStatus: game.status, gameDate: game.date }); }}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        style={isSel('Spread') ? selStyle : undefined}
+                        onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 10)}
                     >
                         <div className="flex items-center gap-1 mb-1">
                             {isSel('Spread') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
@@ -341,9 +382,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                     {/* O/U */}
                     <div
-                        className="cursor-pointer rounded-xl p-2.5 transition-all border"
-                        style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: ouPick === 'Over' ? 'Over' : 'Under', team: `${ouPick} ${ouVal}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 10, gameStatus: game.status, gameDate: game.date }); }}
+                        className={`cursor-pointer rounded-xl p-2.5 transition-all border ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
+                        style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : undefined}
+                        onClick={(e) => handleBetClick(e, ouPick === 'Over' ? 'Over' : 'Under', `${ouPick} ${ouVal}`, '-110', 10)}
                     >
                         <div className="flex items-center gap-1 mb-1">
                             {isSel(ouPick === 'Over' ? 'Over' : 'Under') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
@@ -358,9 +399,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 <div className="grid grid-cols-3 gap-3 border-t border-border-muted pt-4">
                     {/* ML */}
                     <div
-                        className="odd-box cursor-pointer transition-all"
+                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
                         style={isSel('ML') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: 'ML', team: game.awayTeam.name, odds: game.odds.moneyline, matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50, gameStatus: game.status, gameDate: game.date }); }}
+                        onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 50)}
                     >
                         <span className="text-[8px] uppercase font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>
                             {game.awayTeam.name} ML
@@ -370,9 +411,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                     {/* Spread */}
                     <div
-                        className="odd-box cursor-pointer transition-all"
+                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
                         style={isSel('Spread') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: 'Spread', team: `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50, gameStatus: game.status, gameDate: game.date }); }}
+                        onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 50)}
                     >
                         <span className="text-[8px] uppercase font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>Spread</span>
                         <span className="text-xs font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : {}}>{spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}</span>
@@ -380,9 +421,9 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                     {/* O/U */}
                     <div
-                        className="odd-box cursor-pointer transition-all"
+                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
                         style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : {}}
-                        onClick={(e) => { e.stopPropagation(); onAddBet({ gameId: game.id, type: game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', team: `${game.odds.overUnder.pick} ${ouVal}`, odds: '-110', matchupStr: `${game.awayTeam.name} @ ${game.homeTeam.name}`, stake: 50, gameStatus: game.status, gameDate: game.date }); }}
+                        onClick={(e) => handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${ouVal}`, '-110', 50)}
                     >
                         <span className="text-[8px] uppercase font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>O/U {ouVal}</span>
                         <span className="text-xs font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.overUnder.pick}</span>
@@ -401,7 +442,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                         )}
                     </div>
                 </div>
-                <PublicBetting game={game} onMatchDetailsClick={onSelectGame} isOpen={publicBettingOpen ?? false} onToggle={onPublicBettingToggle ?? (() => { })} />
+                <PublicBetting game={game} onMatchDetailsClick={onSelectGame} isOpen={publicBettingOpen ?? false} onToggle={onPublicBettingToggle ?? (() => { })} isUnlocked={isUnlocked} />
 
             </div>
         </div>

@@ -50,6 +50,9 @@ export interface DBUser {
     dripDay3Sent?: boolean;
     phoneNumber?: string;      // SMS Alerts
     isActive?: boolean;        // Allow admin to deactivate user
+    sessionDurationMs?: number; // Total time spent active on the app
+    dailyBetsCount?: number;   // Number of bets placed today
+    lastLoginAt?: number;      // Epoch ms when last logged in
 }
 
 export interface SessionData {
@@ -231,6 +234,43 @@ export function generateOTP(email: string): string {
     return otp;
 }
 
+export function downgradeUser(userEmail: string, adminEmail: string): boolean {
+    const users = getAllUsers();
+    // Verify Admin First
+    const adminIdx = users.findIndex(u => u.email.toLowerCase() === adminEmail.toLowerCase() && u.isPremium);
+    if (adminIdx === -1) return false;
+    // Assuming simple check for mock logic, in production check password hash
+    // We skip robust admin auth here for brevity, matching simple mock flow.
+
+    const targetIdx = users.findIndex(u => u.email.toLowerCase() === userEmail.toLowerCase());
+    if (targetIdx === -1) return false;
+
+    users[targetIdx].isPremium = false;
+    saveAllUsers(users);
+    return true;
+}
+
+// ─── Analytics Helpers ────────────────────────────────────────────────────────
+
+export function incrementUserDailyBets(userId: string) {
+    const users = getAllUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1) {
+        users[idx].dailyBetsCount = (users[idx].dailyBetsCount || 0) + 1;
+        saveAllUsers(users);
+    }
+}
+
+export function recordUserSessionLogout(userId: string) {
+    const users = getAllUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1 && users[idx].lastLoginAt) {
+        const sessionTime = Date.now() - users[idx].lastLoginAt;
+        users[idx].sessionDurationMs = (users[idx].sessionDurationMs || 0) + sessionTime;
+        saveAllUsers(users);
+    }
+}
+
 export function verifyOTP(email: string, otp: string): boolean {
     const users = getAllUsers();
     const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
@@ -276,8 +316,14 @@ export async function login(email: string, password: string): Promise<{ ok: bool
         };
 
         const currentUsers = getAllUsers();
-        if (!currentUsers.find(u => u.email.toLowerCase() === adminUser.email)) {
+        let existingAdmin = currentUsers.find(u => u.email.toLowerCase() === adminUser.email);
+        if (!existingAdmin) {
             currentUsers.push(adminUser);
+            saveAllUsers(currentUsers);
+            existingAdmin = adminUser;
+        } else {
+            // Update login time
+            existingAdmin.lastLoginAt = Date.now();
             saveAllUsers(currentUsers);
         }
 
@@ -297,10 +343,16 @@ export async function login(email: string, password: string): Promise<{ ok: bool
         'sampleadmin@picklabs.bet': { isPremium: true, id: 'sample-admin' },
         'samplepremium@picklabs.bet': { isPremium: true, id: 'sample-premium' },
         'samplebasic@picklabs.bet': { isPremium: false, id: 'sample-basic' },
-        'samplenew@picklabs.bet': { isPremium: false, id: 'sample-new' }
+        'samplenew@picklabs.bet': { isPremium: false, id: 'sample-new' },
+        // User Requested Test Accounts:
+        'premiumplus@picklabs.com': { isPremium: true, id: 'test-premiumplus' },
+        'pro@picklabs.com': { isPremium: true, id: 'test-pro' },
+        'free@picklabs.com': { isPremium: false, id: 'test-free' },
+        'admin@picklabs.com': { isPremium: true, id: 'test-admin' },
+        'admin@picklabs.app': { isPremium: true, id: 'test-admin-app' }
     };
 
-    if (sampleAccounts[email.toLowerCase()] && password === 'sample123') {
+    if (sampleAccounts[email.toLowerCase()] && (password === 'sample123' || password === 'test123')) {
         const config = sampleAccounts[email.toLowerCase()];
 
         // Find existing sample user to check if deactivated
@@ -371,8 +423,9 @@ export async function login(email: string, password: string): Promise<{ ok: bool
         user.isPremium = false;
     }
 
-    // Update known IP on normal successful login
+    // Update known IP and login time on normal successful login
     users[idx].lastKnownIp = currentIp;
+    users[idx].lastLoginAt = Date.now();
     saveAllUsers(users);
 
     // Create the session cookie equivalent (mirrors: login_user(user, remember=True))
@@ -412,8 +465,13 @@ export function getCurrentUser(): SessionData | null {
 }
 
 export function isAdminEmail(email: string): boolean {
+    if (!email) return false;
     const e = email.toLowerCase();
-    return e === 'admin@picklabs.bet' || e === 'sampleadmin@picklabs.bet';
+    return e === 'admin@picklabs.bet' ||
+        e === 'admin@picklabs.app' ||
+        e === 'admin@picklabs.com' ||
+        e === 'admin@picklabs.ai' ||
+        e === 'sampleadmin@picklabs.bet';
 }
 
 // ─── /upgrade equivalent (VIP code) ─────────────────────────────────────────

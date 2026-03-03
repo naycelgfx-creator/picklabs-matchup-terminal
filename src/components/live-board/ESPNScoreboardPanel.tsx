@@ -214,6 +214,11 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+    const toggleSection = (label: string) => {
+        setCollapsedSections(prev => ({ ...prev, [label]: !prev[label] }));
+    };
 
     // Use overrideSportKey when provided (soccer league sub-selection), otherwise look up from sport name
     const espnSport = overrideSportKey ?? APP_SPORT_TO_ESPN[sport];
@@ -260,10 +265,8 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
             {/* Panel Header */}
             <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${liveCount > 0 ? 'bg-red-400 animate-pulse' : 'bg-primary'}`}></div>
                     <span className="text-slate-400 text-[11px] font-bold uppercase tracking-widest">
-                        PickLabs Live · {games.length} Games
-                        {liveCount > 0 && <span className="text-red-400 ml-2">{liveCount} Live Now</span>}
+                        {games.length} GAMES · <span className={liveCount > 0 ? "text-red-400" : ""}>{liveCount} ON</span> · {games.length - liveCount} OFF
                     </span>
                 </div>
                 <div className="flex-1 h-px bg-neutral-800"></div>
@@ -323,43 +326,54 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
                 </div>
             ) : games.length > 0 ? (
                 <div className="space-y-8">
-                    {statusSections.map(section => (
-                        <div key={section.label} className="space-y-3">
-                            <div className="flex items-center gap-2.5 pb-1.5 border-b border-neutral-800">
-                                {section.dot === 'green' && (
-                                    <span className="relative flex h-2.5 w-2.5">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                                    </span>
-                                )}
-                                {section.dot === 'yellow' && (
-                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
-                                )}
-                                {section.dot === 'grey' && (
-                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
-                                )}
-                                <span className={`text-[11px] font-black uppercase tracking-widest ${section.dot === 'green' ? 'text-green-400' :
+                    {statusSections.map(section => {
+                        const isCollapsed = collapsedSections[section.label];
+                        return (
+                            <div key={section.label} className="space-y-3">
+                                <div
+                                    className="flex items-center gap-2.5 pb-1.5 border-b border-neutral-800 cursor-pointer group"
+                                    onClick={() => toggleSection(section.label)}
+                                >
+                                    {section.dot === 'green' && (
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                        </span>
+                                    )}
+                                    {section.dot === 'yellow' && (
+                                        <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
+                                    )}
+                                    {section.dot === 'grey' && (
+                                        <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
+                                    )}
+                                    <span className={`text-[11px] font-black uppercase tracking-widest ${section.dot === 'green' ? 'text-green-400' :
                                         section.dot === 'yellow' ? 'text-yellow-400' :
                                             'text-neutral-500'
-                                    }`}>{section.label}</span>
-                                <span className="text-[10px] text-neutral-600 font-bold">({section.games.length})</span>
-                                <div className="flex-1 h-px bg-neutral-800"></div>
+                                        }`}>{section.label}</span>
+                                    <span className="text-[10px] text-neutral-600 font-bold">({section.games.length})</span>
+                                    <div className="flex-1 h-px bg-neutral-800 transition-colors group-hover:bg-neutral-600"></div>
+                                    <span className={`material-symbols-outlined text-slate-500 text-[16px] transition-transform duration-300 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
+                                        expand_more
+                                    </span>
+                                </div>
+                                {!isCollapsed && (
+                                    layoutMode === 'grid' ? (
+                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                            {section.games.map(game => (
+                                                <ESPNGameCard key={game.id} game={game} onSelectGame={onSelectGame} />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-2">
+                                            {section.games.map(game => (
+                                                <ESPNGameRow key={game.id} game={game} onSelectGame={onSelectGame} />
+                                            ))}
+                                        </div>
+                                    )
+                                )}
                             </div>
-                            {layoutMode === 'grid' ? (
-                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                    {section.games.map(game => (
-                                        <ESPNGameCard key={game.id} game={game} onSelectGame={onSelectGame} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    {section.games.map(game => (
-                                        <ESPNGameRow key={game.id} game={game} onSelectGame={onSelectGame} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             ) : !error ? (
                 <div className="py-12 flex flex-col items-center text-center border border-dashed border-neutral-800 rounded-xl">

@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { getCurrentUser } from '../data/PickLabsAuthDB';
 
 interface RookieModeContextType {
     isRookieModeActive: boolean;
@@ -9,6 +9,8 @@ interface RookieModeContextType {
 
     // Quota System
     quotaUses: number;
+    quotaRemaining: number;
+    quotaStartDate: string;
     hasExceededQuota: boolean;
     incrementQuota: () => boolean; // Returns true if allowed, false if exceeded
 }
@@ -30,8 +32,14 @@ export const RookieModeProvider: React.FC<{ children: ReactNode }> = ({ children
     );
 
     // --- Quota Management ---
+    const getStorageKey = () => {
+        const user = getCurrentUser();
+        return user ? `picklabs_free_quota_${user.userId}` : 'picklabs_free_quota_anon';
+    };
+
     const [quotaState, setQuotaState] = useState<QuotaState>(() => {
-        const stored = localStorage.getItem('picklabs_free_quota');
+        const key = getStorageKey();
+        const stored = localStorage.getItem(key);
         if (stored) {
             try {
                 const parsed: QuotaState = JSON.parse(stored);
@@ -53,6 +61,23 @@ export const RookieModeProvider: React.FC<{ children: ReactNode }> = ({ children
         return { uses: 0, startDate: new Date().toISOString() };
     });
 
+    // Re-initialize state when user changes (e.g. login/logout)
+    useEffect(() => {
+        const key = getStorageKey();
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                setQuotaState(parsed);
+            } catch {
+                setQuotaState({ uses: 0, startDate: new Date().toISOString() });
+            }
+        } else {
+            setQuotaState({ uses: 0, startDate: new Date().toISOString() });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [getCurrentUser()?.userId]);
+
     const hasExceededQuota = quotaState.uses >= MAX_FREE_USES;
 
     const incrementQuota = (): boolean => {
@@ -60,7 +85,7 @@ export const RookieModeProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const newState = { ...quotaState, uses: quotaState.uses + 1 };
         setQuotaState(newState);
-        localStorage.setItem('picklabs_free_quota', JSON.stringify(newState));
+        localStorage.setItem(getStorageKey(), JSON.stringify(newState));
         return true;
     };
 
@@ -87,6 +112,8 @@ export const RookieModeProvider: React.FC<{ children: ReactNode }> = ({ children
             hasSeenTour,
             markTourSeen,
             quotaUses: quotaState.uses,
+            quotaRemaining: Math.max(0, MAX_FREE_USES - quotaState.uses),
+            quotaStartDate: quotaState.startDate,
             hasExceededQuota,
             incrementQuota
         }}>

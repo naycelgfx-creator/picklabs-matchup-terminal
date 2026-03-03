@@ -13,6 +13,40 @@ import { ESPNScoreboardPanel } from './ESPNScoreboardPanel';
 import { APP_SPORT_TO_ESPN, SOCCER_LEAGUES, fetchESPNScoreboardByDate, ESPNGame, SportKey } from '../../data/espnScoreboard';
 import { generateAIPrediction, fetchTeamLastFive } from '../../data/espnTeams';
 import { RookieGuideBanner } from '../shared/RookieGuideBanner';
+import { useRookieMode } from '../../contexts/RookieModeContext';
+import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
+
+// Removed LockedPremiumCard as it's replaced by LockedGameCard
+
+const LockedGameCard = ({ onUnlock }: { onUnlock: () => void }) => {
+    const [isShaking, setIsShaking] = useState(false);
+    return (
+        <div className="flex justify-center items-center p-8 bg-neutral-900 border border-primary/20 rounded-xl">
+            <div className="text-center">
+                <div className="w-12 h-12 mx-auto rounded-full border border-primary/30 flex items-center justify-center mb-4 bg-primary/5 shadow-[0_0_10px_rgba(163,255,0,0.1)]">
+                    <span className="material-symbols-outlined text-primary text-2xl">lock</span>
+                </div>
+                <h3 className="text-xl font-black text-white italic tracking-tighter uppercase mb-2">Locked Game</h3>
+                <p className="text-[10px] text-slate-400 font-medium mb-4 leading-relaxed max-w-[250px] mx-auto">
+                    Use <span className="text-primary font-bold">1 AI Token</span> to unlock predictions for this specific game.
+                </p>
+                <button
+                    onClick={() => {
+                        const success = onUnlock();
+                        if (!success) {
+                            setIsShaking(true);
+                            setTimeout(() => setIsShaking(false), 500);
+                        }
+                    }}
+                    className={`w-full bg-primary text-black font-black uppercase tracking-widest text-[10px] py-3 rounded hover:bg-white hover:shadow-[0_0_15px_rgba(163,255,0,0.4)] transition-all flex items-center justify-center gap-1.5 group ${isShaking ? 'animate-shake bg-red-500/20 text-red-500 hover:bg-red-500/30' : ''}`}
+                >
+                    <span className="material-symbols-outlined text-black group-hover:-rotate-12 transition-transform text-sm">key</span>
+                    Unlock Game
+                </button>
+            </div>
+        </div>
+    );
+};
 
 interface LiveBoardProps {
     setCurrentView: (view: 'live-board' | 'matchup-terminal') => void;
@@ -119,7 +153,7 @@ export const enrichWithLastFive = async (games: ESPNGame[], sport: string): Prom
     );
 };
 
-export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGame, betSlip, setBetSlip, activeTickets, setActiveTickets, onAddBet, onPlaceTicket, onResolveTicket }) => {
+export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGame, betSlip, setBetSlip, activeTickets, setActiveTickets, onAddBet, onPlaceTicket }) => {
     const [activeSport, setActiveSport] = useState<string>(SPORTS[0]);
     const [activeTab, setActiveTab] = useState<'espn' | 'simulated'>('espn');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
@@ -127,6 +161,29 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
     const [showBetSlip, setShowBetSlip] = useState<boolean>(true);
     const today = (() => { const d = new Date(); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; })();
     const [selectedDate, setSelectedDate] = useState<string>(today);
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+    const toggleSection = (label: string) => {
+        setCollapsedSections(prev => ({ ...prev, [label]: !prev[label] }));
+    };
+
+    // Persist unlocked free mode games
+    const [unlockedGames, setUnlockedGames] = useState<Set<string>>(() => {
+        try {
+            const saved = localStorage.getItem('picklabs_unlocked_games');
+            if (saved) return new Set(JSON.parse(saved));
+        } catch { /* ignore */ }
+        return new Set();
+    });
+
+    useEffect(() => {
+        localStorage.setItem('picklabs_unlocked_games', JSON.stringify(Array.from(unlockedGames)));
+    }, [unlockedGames]);
+
+    // Context / Auth for Premium feature gating
+    const { incrementQuota } = useRookieMode();
+    const user = getCurrentUser();
+    const isPremiumUser = user?.isPremium || isAdminEmail(user?.email || '');
 
     // Soccer league sub-selection (defaults to EPL)
     const [activeSoccerLeague, setActiveSoccerLeague] = useState<SportKey>('Soccer.EPL');
@@ -432,51 +489,77 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
 
                             {espnGames.length > 0 ? (
                                 <div className="space-y-10">
-                                    {statusSections.map(section => (
-                                        <div key={section.label} className="space-y-4">
-                                            {/* Section header with colored indicator dot */}
-                                            <div className="flex items-center gap-3 pb-2 border-b border-border-muted/40">
-                                                {section.dot === 'green' && (
-                                                    <span className="relative flex h-2.5 w-2.5">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                    {statusSections.map(section => {
+                                        const isCollapsed = collapsedSections[section.label];
+                                        return (
+                                            <div key={section.label} className="space-y-4">
+                                                {/* Section header with colored indicator dot */}
+                                                <div
+                                                    className="flex items-center gap-3 pb-2 border-b border-border-muted/40 cursor-pointer group"
+                                                    onClick={() => toggleSection(section.label)}
+                                                >
+                                                    {section.dot === 'green' && (
+                                                        <span className="relative flex h-2.5 w-2.5">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                                        </span>
+                                                    )}
+                                                    {section.dot === 'yellow' && (
+                                                        <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
+                                                    )}
+                                                    {section.dot === 'grey' && (
+                                                        <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
+                                                    )}
+                                                    <h3 className={`font-black uppercase tracking-widest text-xs ${section.dot === 'green' ? 'text-green-400' :
+                                                        section.dot === 'yellow' ? 'text-yellow-400' :
+                                                            'text-neutral-500'
+                                                        }`}>{section.label}</h3>
+                                                    <span className="text-[10px] font-bold text-neutral-600">({section.games.length})</span>
+                                                    <div className="h-px bg-gradient-to-r from-border-muted/40 to-transparent flex-1 transition-colors group-hover:from-border-muted/60"></div>
+                                                    <span className={`material-symbols-outlined text-slate-500 text-[16px] transition-transform duration-300 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
+                                                        expand_more
                                                     </span>
-                                                )}
-                                                {section.dot === 'yellow' && (
-                                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
-                                                )}
-                                                {section.dot === 'grey' && (
-                                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-neutral-500"></span>
-                                                )}
-                                                <h3 className={`font-black uppercase tracking-widest text-xs ${section.dot === 'green' ? 'text-green-400' :
-                                                    section.dot === 'yellow' ? 'text-yellow-400' :
-                                                        'text-neutral-500'
-                                                    }`}>{section.label}</h3>
-                                                <span className="text-[10px] font-bold text-neutral-600">({section.games.length})</span>
-                                                <div className="h-px bg-gradient-to-r from-border-muted/40 to-transparent flex-1"></div>
-                                            </div>
+                                                </div>
 
-                                            <div className={layoutMode === 'grid'
-                                                ? 'grid grid-cols-1 xl:grid-cols-2 gap-6'
-                                                : 'flex flex-col gap-3'
-                                            }>
-                                                {section.games.map(game => (
-                                                    <GameCard
-                                                        key={game.id}
-                                                        game={game}
-                                                        betSlip={betSlip}
-                                                        publicBettingOpen={showPublicBets}
-                                                        onPublicBettingToggle={() => setShowPublicBets(p => !p)}
-                                                        onSelectGame={() => {
-                                                            onSelectGame(game);
-                                                            setCurrentView('matchup-terminal');
-                                                        }}
-                                                        onAddBet={onAddBet}
-                                                    />
-                                                ))}
+                                                {!isCollapsed && (
+                                                    <div className={layoutMode === 'grid'
+                                                        ? 'grid grid-cols-1 xl:grid-cols-2 gap-6'
+                                                        : 'flex flex-col gap-3'
+                                                    }>
+                                                        {section.games.map(game => {
+                                                            // Block AI predictions individually for all non-premium users unless unlocked
+                                                            if (activeTab === 'simulated' && !isPremiumUser && !unlockedGames.has(game.id)) {
+                                                                return <LockedGameCard key={`locked-${game.id}`} onUnlock={() => {
+                                                                    if (incrementQuota()) {
+                                                                        setUnlockedGames(prev => new Set(prev).add(game.id));
+                                                                        return true;
+                                                                    }
+                                                                    return false;
+                                                                }} />;
+                                                            }
+
+                                                            // Otherwise, render the standard game card
+                                                            return (
+                                                                <GameCard
+                                                                    key={game.id}
+                                                                    game={game}
+                                                                    betSlip={betSlip}
+                                                                    isUnlocked={unlockedGames.has(game.id)}
+                                                                    publicBettingOpen={showPublicBets}
+                                                                    onPublicBettingToggle={() => setShowPublicBets(p => !p)}
+                                                                    onSelectGame={() => {
+                                                                        onSelectGame(game);
+                                                                        setCurrentView('matchup-terminal');
+                                                                    }}
+                                                                    onAddBet={onAddBet}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : loadingEspn ? (
                                 <div className="col-span-full py-20 flex flex-col items-center justify-center text-center border border-dashed border-border-muted rounded-xl bg-[#0a0f16]">

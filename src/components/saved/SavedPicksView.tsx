@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ResolvedTicket } from '../../App';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ResolvedTicket, BetPick } from '../../App';
 import { TicketCard } from '../shared/LiveTicketPanel';
 import { IconBrandInstagram, IconBrandFacebook, IconBrandDiscord, IconBrandWhatsapp, IconBrandTelegram, IconShare } from '@tabler/icons-react';
 
@@ -20,10 +20,89 @@ const groupTicketsByDate = (tickets: ResolvedTicket[]) => {
 };
 
 export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory }) => {
+    const [activeTab, setActiveTab] = useState<'All' | 'Pending' | 'Won' | 'Lost'>('All');
+    const [savedTickets, setSavedTickets] = useState<ResolvedTicket[]>([]);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('picklabs_saved_tickets') || '[]';
+            const parsed = JSON.parse(raw);
+            const formatted: ResolvedTicket[] = parsed.map((t: { id: string, dateStr: string, picks: BetPick[], status: 'WON' | 'LOST' | 'VOID', stake?: number, payout?: number }) => ({
+                id: t.id,
+                dateStr: t.dateStr,
+                picks: t.picks,
+                status: t.status,
+                stake: t.stake || 100, // mock fallback
+                payout: t.payout || 0 // mock fallback
+            }));
+            setSavedTickets(formatted);
+        } catch (e) {
+            console.error('Failed to load saved tickets', e);
+        }
+    }, []);
+
+    // Combine history and explicitly saved tickets, avoiding duplicates by ID
+    const combinedTickets = useMemo(() => {
+        const map = new Map<string, ResolvedTicket>();
+        ticketHistory.forEach(t => map.set(t.id, t));
+        savedTickets.forEach(t => map.set(t.id, t));
+        return Array.from(map.values());
+    }, [ticketHistory, savedTickets]);
+
+    // Filter tickets based on active tab by dynamically assessing them
+    const filteredTickets = useMemo(() => {
+        const evaluatedTickets = combinedTickets.map(t => {
+            // Re-evaluate live (or strictly matching the TicketCard logic) 
+            if (t.status === 'WON' || t.status === 'LOST' || t.status === 'VOID') {
+                return { ...t, evaluatedStatus: t.status };
+            }
+
+            // If strictly PENDING, we determine true status
+            const legResults = t.picks.map((bet, i) => {
+                const now = new Date().getTime();
+                const ticketDate = new Date(t.dateStr).getTime();
+                // Assume games take roughly 3.5 hours to complete from the time of placing a ticket for mock aesthetics
+                const isTimeFinished = (now - ticketDate) > (3.5 * 60 * 60 * 1000);
+                const isFinished = isTimeFinished || (bet.gameStatusName === 'STATUS_FINAL' || bet.gameStatus === 'post' || bet.gameStatus === 'FINAL');
+
+                const betSeed = Array.from(bet.id || "").reduce((acc, char) => acc + char.charCodeAt(0), i * 123);
+
+                const isVoid = isFinished && (betSeed % 15 === 0);
+                const isWon = isFinished && !isVoid && (betSeed % 4 !== 0);
+                const isLost = isFinished && !isVoid && !isWon;
+
+                let legStatus = 'PENDING';
+                if (isVoid) legStatus = 'VOID';
+                else if (isWon) legStatus = 'WON';
+                else if (isLost) legStatus = 'LOST';
+
+                return { isFinished, status: legStatus };
+            });
+
+            const hasLostLeg = legResults.some(l => l.status === 'LOST');
+            const allFinished = legResults.every(l => l.isFinished);
+            const allVoid = legResults.every(l => l.status === 'VOID');
+
+            let derivedStatus = 'PENDING';
+            if (hasLostLeg) {
+                derivedStatus = 'LOST';
+            } else if (allVoid && legResults.length > 0) {
+                derivedStatus = 'VOID';
+            } else if (allFinished && legResults.length > 0) {
+                derivedStatus = 'WON';
+            }
+
+            return { ...t, evaluatedStatus: derivedStatus };
+        });
+
+        if (activeTab === 'All') return evaluatedTickets;
+        return evaluatedTickets.filter(t => (t as any).evaluatedStatus.toUpperCase() === activeTab.toUpperCase());
+    }, [combinedTickets, activeTab]);
+
     // Sort tickets descending by date (newest first)
     const sortedTickets = useMemo(() => {
-        return [...ticketHistory].sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
-    }, [ticketHistory]);
+        return [...filteredTickets].sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
+    }, [filteredTickets]);
 
     const groupedTickets = useMemo(() => groupTicketsByDate(sortedTickets), [sortedTickets]);
 
@@ -32,10 +111,25 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
             <div className="max-w-[1536px] w-full flex flex-col gap-8 animate-fade-in pb-12">
                 {/* Header */}
                 <div className="flex flex-col gap-2 mt-4 mb-4">
-                    <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mix-blend-plus-lighter">Ticket History</h1>
+                    <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mix-blend-plus-lighter">Saved Picks</h1>
                     <p className="text-sm text-white/60 font-medium max-w-xl">
-                        A chronological record of your settled tickets. Analyze your wins and losses to refine your edge.
+                        A chronological record of your explicitly saved tickets. Analyze your wins and losses to refine your edge.
                     </p>
+                </div>
+
+                {/* Status Tabs */}
+                <div className="flex items-center gap-2 pb-6 border-b border-white/10 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+                    {['All', 'Pending', 'Won', 'Lost'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab as any)}
+                            className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 ${activeTab === tab
+                                ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                                : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Ticket List */}
@@ -56,7 +150,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
                                 </h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-                                    {ticketsForDate.map((ticket, idx) => {
+                                    {ticketsForDate.map((ticket: any, idx) => {
                                         const timeString = new Date(ticket.dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
                                         return (
@@ -64,7 +158,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
                                                 <div className="w-full relative z-10">
                                                     <TicketCard
                                                         ticket={ticket.picks}
-                                                        forceStatus={ticket.status}
+                                                        forceStatus={ticket.evaluatedStatus || ticket.status}
                                                         dateOverride={`${dateLabel} • ${timeString}`}
                                                     />
                                                 </div>

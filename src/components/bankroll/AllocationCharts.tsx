@@ -85,8 +85,8 @@ export const AllocationCharts: React.FC<AllocationChartsProps> = ({ ticketHistor
                     <span className="material-symbols-outlined text-accent-purple">pie_chart</span>
                     <h3 className="text-xs font-black text-text-main uppercase tracking-[0.2em]">Allocation by Sport</h3>
                 </div>
-                <div className="flex flex-col xl:flex-row items-center justify-between gap-6">
-                    <div className="relative w-36 h-36 xl:w-40 xl:h-40 shrink-0 group">
+                <div className="flex flex-col lg:flex-row items-center justify-start gap-6 w-full overflow-hidden">
+                    <div className="relative w-36 h-36 lg:w-40 lg:h-40 shrink-0 group">
                         <svg className="w-full h-full transform -rotate-90 group-hover:scale-105 transition-transform" viewBox="0 0 36 36">
                             <circle cx="18" cy="18" fill="none" r="16" stroke="#1e2e1e" strokeWidth="3"></circle>
                             {totalVolume > 0 && (
@@ -102,26 +102,26 @@ export const AllocationCharts: React.FC<AllocationChartsProps> = ({ ticketHistor
                             <span className="text-xl font-black text-text-main group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">{totalVolume > 0 ? '100%' : '0%'}</span>
                         </div>
                     </div>
-                    <div className="space-y-4 w-full">
+                    <div className="space-y-4 w-full lg:flex-1 min-w-0">
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-primary shadow-[0_0_5px_#0df20d] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">NBA Basketball</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{sportAllocations.nba.toFixed(1)}% Allocation</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-primary group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">NBA Basketball</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{sportAllocations.nba.toFixed(1)}% Allocation</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-accent-purple shadow-[0_0_5px_#a855f7] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">NFL Football</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{sportAllocations.nfl.toFixed(1)}% Allocation</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-accent-purple group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">NFL Football</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{sportAllocations.nfl.toFixed(1)}% Allocation</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-blue-500 shadow-[0_0_5px_#3b82f6] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">NHL Hockey</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{sportAllocations.nhl.toFixed(1)}% Allocation</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-blue-500 group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">NHL Hockey</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{sportAllocations.nhl.toFixed(1)}% Allocation</p>
                             </div>
                         </div>
                     </div>
@@ -133,8 +133,8 @@ export const AllocationCharts: React.FC<AllocationChartsProps> = ({ ticketHistor
                     <span className="material-symbols-outlined text-primary">donut_large</span>
                     <h3 className="text-xs font-black text-text-main uppercase tracking-[0.2em]">Allocation by Bet Type</h3>
                 </div>
-                <div className="flex flex-col xl:flex-row items-center justify-between gap-6">
-                    <div className="relative w-36 h-36 xl:w-40 xl:h-40 shrink-0 group">
+                <div className="flex flex-col lg:flex-row items-center justify-start gap-6 w-full overflow-hidden">
+                    <div className="relative w-36 h-36 lg:w-40 lg:h-40 shrink-0 group">
                         <svg className="w-full h-full transform -rotate-90 group-hover:scale-105 transition-transform" viewBox="0 0 36 36">
                             <circle cx="18" cy="18" fill="none" r="16" stroke="#1e2e1e" strokeWidth="3"></circle>
                             {totalVolume > 0 && (
@@ -150,26 +150,26 @@ export const AllocationCharts: React.FC<AllocationChartsProps> = ({ ticketHistor
                             <span className="text-xl font-black text-text-main group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">{totalVolume}</span>
                         </div>
                     </div>
-                    <div className="space-y-4 w-full">
+                    <div className="space-y-4 w-full lg:flex-1 min-w-0">
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-primary shadow-[0_0_5px_#0df20d] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">Player Props</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{betTypeAllocations.prop.toFixed(1)}% of bets</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-primary group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">Player Props</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{betTypeAllocations.prop.toFixed(1)}% of bets</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-amber-400 shadow-[0_0_5px_#fbbf24] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">Spreads/ML</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{betTypeAllocations.spreadMl.toFixed(1)}% of bets</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-amber-400 group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">Spreads/ML</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{betTypeAllocations.spreadMl.toFixed(1)}% of bets</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 group cursor-pointer hover:bg-neutral-800/50 p-2 rounded -ml-2 transition-colors">
-                            <div className="w-3 h-3 shrink-0 rounded-full bg-slate-600 shadow-[0_0_5px_#475569] group-hover:scale-125 transition-transform"></div>
-                            <div>
-                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider">Others/Alt</p>
-                                <p className="text-[9px] text-slate-500 font-bold">{betTypeAllocations.other.toFixed(1)}% of bets</p>
+                            <div className="w-3 h-3 shrink-0 rounded-full bg-slate-600 group-hover:scale-125 transition-transform"></div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-black text-text-main uppercase tracking-wider truncate">Others/Alt</p>
+                                <p className="text-[9px] text-slate-500 font-bold truncate">{betTypeAllocations.other.toFixed(1)}% of bets</p>
                             </div>
                         </div>
                     </div>

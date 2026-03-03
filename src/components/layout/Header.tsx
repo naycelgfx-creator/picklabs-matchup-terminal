@@ -3,6 +3,7 @@ import { useRookieMode } from '../../contexts/RookieModeContext';
 import { useLiveBets } from '../../contexts/LiveBetsContext';
 import { useSportsbooks, SPORTSBOOKS } from '../../contexts/SportsbookContext';
 import { PulsingBeacon } from '../ui/PulsingBeacon';
+import { FreeModeQuotaMeter } from '../ui/FreeModeQuotaMeter';
 import { ViewType } from '../shared/PremiumLockView';
 import { getCurrentUser, isAdminEmail, logout } from '../../data/PickLabsAuthDB';
 import { clearAuth } from '../../utils/auth';
@@ -27,8 +28,9 @@ const GLOSSARY_TERMS = [
 ];
 
 export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onAIPick, isAIPickLoading = false }) => {
-    const { isRookieModeActive, toggleRookieMode } = useRookieMode();
+    const { isRookieModeActive, toggleRookieMode, hasExceededQuota } = useRookieMode();
     const { isLiveBetsActive, toggleLiveBets } = useLiveBets();
+    const [shakeRookieMode, setShakeRookieMode] = useState(false);
     const { enabledBooks, toggleBook, enableAll, disableAll } = useSportsbooks();
     const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
 
@@ -46,6 +48,17 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
     const settingsRef = useRef<HTMLDivElement>(null);
 
     const user = getCurrentUser();
+    const isPremiumUser = user?.isPremium || (user?.email && isAdminEmail(user.email));
+    const [shakeAIPick, setShakeAIPick] = useState(false);
+
+    const handleAIPickClick = () => {
+        if (!isPremiumUser && hasExceededQuota) {
+            setShakeAIPick(true);
+            setTimeout(() => setShakeAIPick(false), 500);
+            return;
+        }
+        onAIPick?.();
+    };
 
     useEffect(() => {
         if (isDark) {
@@ -163,17 +176,20 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                 {/* ── Right Controls ── */}
                 <div className="flex items-center gap-2 shrink-0">
 
-
+                    {!isPremiumUser && <FreeModeQuotaMeter />}
 
                     {/* AI Pick My Bets — icon only on < xl, full pill on xl+ */}
                     <button
-                        onClick={onAIPick}
+                        onClick={handleAIPickClick}
                         disabled={isAIPickLoading}
                         title={isAIPickLoading ? 'Analyzing...' : 'AI Pick My Bets'}
                         className={`
-                            hidden md:flex items-center justify-center bg-accent-purple/20 border border-accent-purple/40 text-accent-purple hover:bg-accent-purple hover:text-white transition-all transform hover:scale-105 active:scale-95
-                            ${isAIPickLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                            hidden md:flex items-center justify-center border transition-all transform hover:scale-105 active:scale-95
                             h-8 w-8 rounded xl:w-auto xl:px-4 xl:py-2 xl:rounded-full xl:gap-2
+                            ${shakeAIPick
+                                ? 'animate-shake border-red-500 text-red-500 bg-red-500/10'
+                                : 'bg-accent-purple/20 border-accent-purple/40 text-accent-purple hover:bg-accent-purple hover:text-white'}
+                            ${isAIPickLoading && !shakeAIPick ? 'opacity-70 cursor-not-allowed' : ''}
                         `}
                     >
                         <span className={`material-symbols-outlined text-sm ${isAIPickLoading ? 'animate-spin' : ''}`}>smart_toy</span>
@@ -200,13 +216,19 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                 {/* Header / User Info */}
                                 <div className="px-4 py-4 border-b border-border-muted bg-neutral-50 dark:bg-neutral-900/80 flex flex-col gap-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent-blue to-purple-600 flex items-center justify-center shadow-inner">
-                                            <span className="material-symbols-outlined text-white text-xl">person</span>
+                                        <div className="h-10 w-10 rounded-full flex items-center justify-center shadow-inner overflow-hidden">
+                                            {user?.email && isAdminEmail(user.email) ? (
+                                                <img src="/src/assets/avatars/admin_avatar.png" alt="Admin Avatar" className="w-full h-full object-cover" />
+                                            ) : user?.isPremium ? (
+                                                <img src="/src/assets/avatars/premium_plus_avatar.png" alt="Premium Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <img src="/src/assets/avatars/free_avatar.png" alt="Free Avatar" className="w-full h-full object-cover" />
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-black text-text-main truncate">{user?.email || 'Free Account'}</p>
                                             <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">
-                                                {user?.isPremium ? 'Premium Plan' : 'Free Account'}
+                                                {user?.email && isAdminEmail(user.email) ? 'Admin' : user?.isPremium ? 'Premium Plan' : 'Free Account'}
                                             </p>
                                         </div>
                                     </div>
@@ -235,10 +257,15 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                         <button
                                             aria-label="Toggle Rookie Mode"
                                             onClick={() => {
+                                                if (!user?.isPremium && hasExceededQuota && !isRookieModeActive) {
+                                                    setShakeRookieMode(true);
+                                                    setTimeout(() => setShakeRookieMode(false), 500);
+                                                    return;
+                                                }
                                                 toggleRookieMode();
                                                 if (isRookieModeActive) setIsGlossaryOpen(false);
                                             }}
-                                            className={`relative h-5 w-9 rounded-full border transition-all duration-300 ${isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}
+                                            className={`relative h-5 w-9 rounded-full border transition-all duration-300 ${shakeRookieMode ? 'animate-shake border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}
                                         >
                                             <div className={`absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 ${isRookieModeActive ? 'translate-x-4 bg-yellow-400' : 'translate-x-0.5 bg-slate-600'}`} />
                                             {!isRookieModeActive && (
@@ -302,6 +329,20 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                                             <div className={`absolute top-0.5 h-4 w-4 rounded-full transition-all duration-300 ${isLiveBetsActive ? 'translate-x-4 bg-primary' : 'translate-x-0.5 bg-slate-600'}`} />
                                         </button>
                                     </div>
+
+                                    {/* Admin Only: Analytics */}
+                                    {user?.email && isAdminEmail(user.email) && (
+                                        <button
+                                            onClick={() => {
+                                                setCurrentView('admin-analytics');
+                                                setIsSettingsOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 border-b border-border-muted hover:bg-primary/10 transition-colors text-left text-primary"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">monitoring</span>
+                                            <span className="text-xs font-bold uppercase tracking-widest">Admin Analytics</span>
+                                        </button>
+                                    )}
 
                                     {/* Actions */}
                                     <button
@@ -503,20 +544,34 @@ export const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView, onA
                         {/* Mobile Settings Section */}
                         <div className="bg-neutral-900 border border-border-muted rounded-xl overflow-hidden mt-2">
                             <div className="px-4 py-3 border-b border-border-muted flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-accent-blue to-purple-600 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-white text-[16px]">person</span>
+                                <div className="h-8 w-8 rounded-full flex items-center justify-center overflow-hidden">
+                                    {user?.email && isAdminEmail(user.email) ? (
+                                        <img src="/src/assets/avatars/admin_avatar.png" alt="Admin Avatar" className="w-full h-full object-cover" />
+                                    ) : user?.isPremium ? (
+                                        <img src="/src/assets/avatars/premium_plus_avatar.png" alt="Premium Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <img src="/src/assets/avatars/free_avatar.png" alt="Free Avatar" className="w-full h-full object-cover" />
+                                    )}
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-xs font-black text-text-main">{user?.email}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{user?.isPremium ? 'Premium · Yearly' : 'Free Account'}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{user?.email && isAdminEmail(user.email) ? 'Admin' : user?.isPremium ? 'Premium · Yearly' : 'Free Account'}</span>
                                 </div>
                             </div>
-                            <button onClick={() => { toggleRookieMode(); if (isRookieModeActive) setIsGlossaryOpen(false); }} className="w-full flex items-center justify-between px-4 py-3 border-b border-border-muted active:bg-white/5">
+                            <button onClick={() => {
+                                if (!user?.isPremium && hasExceededQuota && !isRookieModeActive) {
+                                    setShakeRookieMode(true);
+                                    setTimeout(() => setShakeRookieMode(false), 500);
+                                    return;
+                                }
+                                toggleRookieMode();
+                                if (isRookieModeActive) setIsGlossaryOpen(false);
+                            }} className="w-full flex items-center justify-between px-4 py-3 border-b border-border-muted active:bg-white/5">
                                 <div className="flex items-center gap-2 relative">
                                     <span className={`material-symbols-outlined text-sm ${isRookieModeActive ? 'text-yellow-400' : 'text-slate-400'}`}>school</span>
                                     <span className="text-[11px] font-bold text-text-main">Rookie Mode</span>
                                 </div>
-                                <div className={`relative h-4 w-8 rounded-full border transition-all duration-300 ${isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}>
+                                <div className={`relative h-4 w-8 rounded-full border transition-all duration-300 ${shakeRookieMode ? 'animate-shake border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isRookieModeActive ? 'bg-yellow-400/20 border-yellow-400/60' : 'bg-neutral-800 border-border-muted'}`}>
                                     <div className={`absolute top-px h-3 w-3 rounded-full transition-all duration-300 ${isRookieModeActive ? 'translate-x-4 bg-yellow-400' : 'translate-x-px bg-slate-600'}`} />
                                     {!isRookieModeActive && (
                                         <span className="absolute -top-1 -right-1 z-10 scale-75">

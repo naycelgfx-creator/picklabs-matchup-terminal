@@ -233,9 +233,8 @@ const buildPropsFromRoster = (players: ESPNRosterAthlete[], sport: string, teamA
 // ─────────────────────────────────────────────────────────────────────────────
 interface HoverInfo {
     log: GameLog;
-    x: number;
-    y: number;
-    barWidth: number;
+    xPct: number;
+    yPct: number;
 }
 
 interface PropBarChartProps {
@@ -248,7 +247,6 @@ interface PropBarChartProps {
 const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playerName: _playerName }) => {
     void _playerName; // acknowledged — reserved for future tooltip
     const [hover, setHover] = useState<HoverInfo | null>(null);
-    const svgRef = useRef<SVGSVGElement>(null);
 
     if (!logs.length) return null;
 
@@ -292,11 +290,10 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
     return (
         <div className="relative w-full select-none">
             <svg
-                ref={svgRef}
                 viewBox={`0 0 ${CHART_VB_W} ${CHART_VB_H}`}
-                className="w-full"
-                style={{ width: '100%' }}
+                className="w-full block"
                 onMouseLeave={() => setHover(null)}
+                onClick={() => setHover(null)}
             >
                 {/* ── Grid lines ── */}
                 {gridVals.map(v => (
@@ -345,17 +342,20 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                                 rx="3" ry="3"
                                 fill={fill}
                                 opacity={isActiveHover ? 1 : 0.85}
-                                style={{ cursor: 'pointer', transition: 'opacity 0.1s' }}
+                                style={{ cursor: 'pointer', transition: 'opacity 0.1s', WebkitTapHighlightColor: 'transparent' }}
                                 onMouseEnter={() => {
-                                    const svgRect = svgRef.current?.getBoundingClientRect();
-                                    if (!svgRect) return;
-                                    const scaleX = svgRect.width / CHART_VB_W;
-                                    const scaleY = svgRect.height / CHART_VB_H;
                                     setHover({
                                         log,
-                                        x: svgRect.left + (x + barWidth / 2) * scaleX,
-                                        y: svgRect.top + y * scaleY,
-                                        barWidth: barWidth * scaleX,
+                                        xPct: ((x + barWidth / 2) / CHART_VB_W) * 100,
+                                        yPct: (y / CHART_VB_H) * 100,
+                                    });
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setHover({
+                                        log,
+                                        xPct: ((x + barWidth / 2) / CHART_VB_W) * 100,
+                                        yPct: (y / CHART_VB_H) * 100,
                                     });
                                 }}
                                 onMouseLeave={() => setHover(null)}
@@ -411,17 +411,17 @@ const PropBarChart: React.FC<PropBarChartProps> = ({ logs, line, propType, playe
                 />
             </svg>
 
-            {/* ── Hover Tooltip (fixed positioned) ── */}
+            {/* ── Hover Tooltip (absolute positioned relative to chart) ── */}
             {hover && (
                 <div
-                    className="fixed z-[9999] pointer-events-none"
+                    className="absolute z-50 pointer-events-none"
                     style={{
-                        left: hover.x,
-                        top: hover.y - 10,
-                        transform: 'translate(-50%, -100%)',
+                        left: `${hover.xPct}%`,
+                        top: `calc(${hover.yPct}% - 10px)`,
+                        transform: `translate(${hover.xPct > 80 ? '-85%' : hover.xPct < 20 ? '-15%' : '-50%'}, -100%)`,
                     }}
                 >
-                    <div className="bg-[#0f172a] border border-[#1e3a5f] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] overflow-hidden min-w-[180px]">
+                    <div className="bg-[#0f172a] border border-[#1e3a5f] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] overflow-hidden min-w-[180px] origin-bottom animate-in zoom-in-95 duration-100">
                         {/* Header: matchup */}
                         <div className="px-3 py-2 border-b border-[#1e3a5f] bg-[#111827]">
                             <div className="flex items-center justify-between gap-4">

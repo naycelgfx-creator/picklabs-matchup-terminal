@@ -19,4 +19,5 @@ export function saveAuth(): void {
 
 export function clearAuth(): void {
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('picklabs_unlocked_games'); // clear free mode unlocked games
 }

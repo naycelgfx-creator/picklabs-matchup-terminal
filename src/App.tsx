@@ -16,6 +16,7 @@ import { LandingPageView } from './components/landing/LandingPageView';
 import { LoginPageView } from './components/auth/LoginPageView';
 import { SportsbookView } from './components/sportsbook/SportsbookView';
 import { HolographicBoardView } from './components/holographic-board/HolographicBoardView';
+import { AdminAnalyticsView } from './components/admin/AdminAnalyticsView';
 import { RookieTour } from './components/ui/RookieTour';
 import { APP_SPORT_TO_ESPN, fetchESPNScoreboardByDate, ESPNGame, SportKey } from './data/espnScoreboard';
 import { generateAIPrediction } from './data/espnTeams';
@@ -38,13 +39,14 @@ export interface BetPick {
 export interface ResolvedTicket {
   id: string;
   picks: BetPick[];
-  status: 'WON' | 'LOST';
+  status: 'WON' | 'LOST' | 'VOID';
   stake: number;
   payout: number;
   dateStr: string;
 }
 
 import { PremiumLockView, ViewType } from './components/shared/PremiumLockView';
+import { PremiumUpgradeModal } from './components/shared/PremiumUpgradeModal';
 
 // ─── Premium Lock Helper View ─────────────────────────────────────────────────
 // Extracted to src/components/shared/PremiumLockView.tsx
@@ -52,7 +54,7 @@ import { PremiumLockView, ViewType } from './components/shared/PremiumLockView';
 // ──────────────────────────────────────────────────────────────────────────────
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewType>(() => {
+  const [currentView, setCurrentViewRaw] = useState<ViewType>(() => {
     if (!getCurrentUser()) return 'landing-page';
     try {
       const saved = localStorage.getItem('picklabs_last_view') as ViewType;
@@ -63,6 +65,21 @@ function App() {
     } catch { /* ignore */ }
     return 'live-board';
   });
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { incrementQuota } = useRookieMode();
+
+  const setCurrentView = useCallback((view: ViewType) => {
+    if (view === 'matchup-terminal') {
+      const user = getCurrentUser();
+      const isPremiumUser = user?.isPremium || isAdminEmail(user?.email || '');
+      if (!isPremiumUser && !incrementQuota()) {
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+    setCurrentViewRaw(view);
+  }, [incrementQuota]);
 
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
@@ -78,16 +95,13 @@ function App() {
   const [hasSimulated, setHasSimulated] = useState(false);
   const [isAIPickLoading, setIsAIPickLoading] = useState(false);
 
-  // Free Tier Quota
-  const { incrementQuota } = useRookieMode();
-
   // Bankroll Handlers
   const handlePlaceTicket = (ticket: BetPick[], totalStake: number) => {
     setBankroll(prev => prev - totalStake);
     setActiveTickets(prev => [ticket, ...prev]);
   };
 
-  const handleResolveTicket = (ticketIndex: number, status: 'WON' | 'LOST', stake: number, payout: number) => {
+  const handleResolveTicket = (ticketIndex: number, status: 'WON' | 'LOST' | 'VOID', stake: number, payout: number) => {
     const ticket = activeTickets[ticketIndex];
     if (!ticket) return;
 
@@ -128,20 +142,39 @@ function App() {
     }
 
     setBetSlip(prev => {
-      const existingIdx = prev.findIndex(
+      // If clicking the exact same pick again, remove it (toggle off)
+      const exactMatchIdx = prev.findIndex(
         b => b.gameId === bet.gameId && b.type === bet.type && b.team === bet.team
       );
-      // Toggle: if already in slip → remove
-      if (existingIdx !== -1) {
-        return prev.filter((_, i) => i !== existingIdx);
+      if (exactMatchIdx !== -1) {
+        return prev.filter((_, i) => i !== exactMatchIdx);
       }
+
+      // Enforce SGP constraints: Max 1 ML, 1 Spread, 1 O/U per game.
+      // E.g., if adding a ML, remove any existing ML for this game first.
+      const filtered = prev.filter(b => {
+        if (b.gameId !== bet.gameId) return true; // Keep picks from other games
+
+        // If same game, keep it ONLY IF it's a different category 
+        // ML category
+        if (b.type === 'ML' && bet.type === 'ML') return false;
+
+        // Spread category
+        if (b.type === 'Spread' && bet.type === 'Spread') return false;
+
+        // Total category (Over/Under)
+        const isTotal = (type: string) => type === 'Over' || type === 'Under';
+        if (isTotal(b.type) && isTotal(bet.type)) return false;
+
+        return true;
+      });
+
       // If adding a new bet, enforce the 20 pick limit
-      if (prev.length >= 20) {
+      if (filtered.length >= 20) {
         alert("You cannot add more than 20 picks to your bet slip.");
-        return prev;
+        return filtered;
       }
-      // otherwise → add
-      return [...prev, { ...bet, id: crypto.randomUUID() }];
+      return [...filtered, { ...bet, id: crypto.randomUUID() }];
     });
   };
 
@@ -155,7 +188,7 @@ function App() {
 
     if (!isPremiumUser) {
       if (!incrementQuota()) {
-        alert("Free Trial Quota Exceeded. AI Pick My Bets is limited to 20 uses per week for Free Accounts. Please upgrade your account to unlock unlimited access.");
+        setShowUpgradeModal(true);
         return;
       }
     }
@@ -294,7 +327,36 @@ function App() {
           }
         }
       } catch (err) {
-        console.error('AI API failed, falling back...', err);
+        console.error('AI API failed, falling back to local deterministic generation...', err);
+        // Generate fallback picks using the deterministic prediction engine
+        for (const { game, sportLabel } of allGames) {
+          const pred = generateAIPrediction(
+            game.homeTeam.record,
+            game.awayTeam.record,
+            sportLabel,
+            [],
+            []
+          );
+
+          const matchupStr = `${game.awayTeam.displayName} vs ${game.homeTeam.displayName}`;
+          const gameId = `espn-${game.id}`;
+          const aiFavoredHome = pred.homeWinProb >= 50;
+
+          // Push the safest ML pick as a fallback
+          candidates.push({
+            id: `ai-ml-${game.id}-fallback`,
+            gameId,
+            type: 'ML',
+            team: `${aiFavoredHome ? game.homeTeam.displayName : game.awayTeam.displayName} ML`,
+            odds: aiFavoredHome ? pred.moneylineHome : pred.moneylineAway,
+            matchupStr,
+            stake: 10, // Recommended default flat stake
+            score: Math.max(pred.homeWinProb, pred.awayWinProb), // Score by win probability
+            gameStatus: game.status,
+            gameStatusName: game.statusName,
+            gameDate: game.date,
+          });
+        }
       }
     }
 
@@ -433,6 +495,10 @@ function App() {
             <HolographicBoardView betSlip={betSlip} activeTickets={activeTickets} />
           )}
 
+          {currentView === 'admin-analytics' && (
+            <AdminAnalyticsView />
+          )}
+
           {currentView === 'sportsbook' && (
             <SportsbookView
               betSlip={betSlip}
@@ -454,6 +520,15 @@ function App() {
           isOpen={isSimulating}
           onCancel={handleSimulationCancel}
           onComplete={handleSimulationComplete}
+        />
+
+        <PremiumUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          onNavigate={(v) => {
+            setShowUpgradeModal(false);
+            setCurrentView(v);
+          }}
         />
       </div>
     </>

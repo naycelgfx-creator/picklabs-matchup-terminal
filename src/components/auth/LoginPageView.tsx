@@ -78,8 +78,20 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        saveAuth();
-        onNavigate('live-board');
+
+        try {
+            const res = await login(email, password);
+            if (!res.ok) {
+                setError(res.message);
+                setShaking(true);
+                setTimeout(() => setShaking(false), 500);
+                return;
+            }
+            saveAuth();
+            onNavigate('live-board');
+        } catch (err) {
+            setError('Login failed. Please try again.');
+        }
     };
 
     return (
@@ -103,7 +115,12 @@ export const LoginPageView: React.FC<LoginPageViewProps> = ({ onNavigate }) => {
                         <h1 className="text-3xl font-black italic uppercase text-text-main mb-2">LOGIN</h1>
                         <p className="text-sm font-bold text-text-muted">Enter your credentials to access the terminal.</p>
                     </div>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-center animate-in fade-in zoom-in duration-200">
+                            <span className="text-red-400 font-bold text-xs uppercase tracking-widest">{error}</span>
+                        </div>
+                    )}
+                    <form onSubmit={handleSubmit} className={`space-y-4 ${shaking ? 'animate-shake' : ''}`}>
                         <div className="space-y-4 pt-1">
                             <div className="space-y-1">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</label>

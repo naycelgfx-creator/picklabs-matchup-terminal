@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { BetPick } from '../../App';
 import { searchPlayers } from '../../data/playerDB';
 import { useLiveBets } from '../../contexts/LiveBetsContext';
+import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
+import { IconBrandInstagram, IconBrandFacebook, IconBrandDiscord, IconBrandWhatsapp, IconBrandTelegram } from '@tabler/icons-react';
 
 interface LiveTicketPanelProps {
     activeTickets?: BetPick[][];
     onRemoveTicket?: (index: number) => void;
-    onResolveTicket?: (ticketIndex: number, status: 'WON' | 'LOST', stake: number, payout: number) => void;
 }
 
 const americanToDecimal = (oddsStr: string): number => {
@@ -47,7 +48,6 @@ const getLogoForPick = (bet: BetPick) => {
     }
     const cleanTeamName = bet.team.replace(/ (ML|Spread|PK|\+|-).*$/i, '').trim();
     // Attempt ESPN NBA by stripping words, or provide fallback
-    // The logo will gracefully fallback via the onError handler in the img tag
     const abbr = cleanTeamName.split(' ')[0].substring(0, 3).toLowerCase();
     return `https://a.espncdn.com/i/teamlogos/nba/500/${abbr}.png`;
 };
@@ -55,16 +55,18 @@ const getLogoForPick = (bet: BetPick) => {
 export const TicketCard: React.FC<{
     ticket: BetPick[];
     onRemove?: () => void;
-    onResolve?: (status: 'WON' | 'LOST', stake: number, payout: number) => void;
-    forceStatus?: 'WON' | 'LOST';
+    forceStatus?: 'WON' | 'LOST' | 'VOID';
     dateOverride?: string;
-}> = ({ ticket, onRemove, onResolve, forceStatus, dateOverride }) => {
+}> = ({ ticket, onRemove, forceStatus, dateOverride }) => {
+    const { activeGames } = useLiveBets();
     const ticketId = React.useMemo(() => Math.floor(1000000000 + Math.random() * 9000000000).toString(), []);
+
     const ticketDate = React.useMemo(() => {
         if (dateOverride) return dateOverride;
         const d = new Date();
         return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
     }, [dateOverride]);
+
     const hasSGP = React.useMemo(() => {
         if (!ticket || ticket.length < 2) return false;
         const gameIds = ticket.filter(b => b.gameId).map(b => b.gameId);
@@ -72,9 +74,22 @@ export const TicketCard: React.FC<{
         return uniqueGameIds.size < gameIds.length;
     }, [ticket]);
 
-    if (!ticket || ticket.length === 0) return null;
+    const user = getCurrentUser();
+    const isPremiumUser = user?.isPremium || isAdminEmail(user?.email || '');
+    const totalLegs = ticket?.length || 0;
 
-    const totalLegs = ticket.length;
+    // Calculate a mock "AI Win Probability" based on number of legs and odds. 
+    const winProbability = React.useMemo(() => {
+        let prob = 90 - (totalLegs * 5);
+        if (prob < 15) prob = 15;
+        // Seed randomness based on combined ticket ID
+        const hash = Array.from(ticketId).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return Math.min(99, Math.max(1, prob + (hash % 15)));
+    }, [totalLegs, ticketId]);
+
+    const [isShareVisible, setIsShareVisible] = useState(false);
+
+    if (!ticket || ticket.length === 0) return null;
 
     const legResults = ticket ? ticket.map((bet, i) => {
         const isFinished = forceStatus ? true : (bet.gameStatusName === 'STATUS_FINAL' || bet.gameStatus === 'post' || bet.gameStatus === 'FINAL');
@@ -83,30 +98,73 @@ export const TicketCard: React.FC<{
 
         const betSeed = Array.from(bet.id || "").reduce((acc, char) => acc + char.charCodeAt(0), i * 123);
 
+        // Extract the numerical target from either bet.type or bet.team
+        const targetStringMatch = (bet.team + " " + bet.type).match(/[0-9.]+/);
+        const targetNum = targetStringMatch ? parseFloat(targetStringMatch[0]) : null;
+
+        const isMoneyline = bet.type === 'ML' || bet.type.toLowerCase().includes('moneyline');
+        const isUnder = bet.type.toLowerCase().includes('under');
+        const isOver = bet.type.toLowerCase().includes('over');
+
         let isWon = false;
         let isLost = false;
+        let isVoid = false;
 
         if (forceStatus === 'WON') {
             isWon = true;
         } else if (forceStatus === 'LOST') {
-            // If ticket is lost, make the first leg lost, and others random win/lost to simulate
-            if (i === 0) isLost = true;
-            else isWon = betSeed % 2 === 0;
+            // If the whole ticket is declared LOST externally, we don't arbitrarily mark the first leg lost anymore, 
+            // we'll just let the natural mock evaluation do its thing or randomly pick one to be lost.
+            isVoid = isFinished && (betSeed % 15 === 0);
+            isWon = isFinished && !isVoid && (betSeed % 4 !== 0);
+            isLost = isFinished && !isVoid && !isWon;
+
+            // Guarantee at least one lost leg if finished to justify the forceStatus LOST
+            if (isFinished && !ticket.some((_, idx) => {
+                const seed = Array.from(ticket[idx].id || "").reduce((acc, char) => acc + char.charCodeAt(0), idx * 123);
+                return !(seed % 15 === 0) && (seed % 4 === 0);
+            })) {
+                if (i === 0) isLost = true;
+            }
         } else {
-            // If finished, 75% chance it won (mock evaluation since we lack settlement server)
-            isWon = isFinished && (betSeed % 4 !== 0);
-            isLost = isFinished && !isWon;
+            // Mock evaluation logic 
+            isVoid = isFinished && (betSeed % 15 === 0);
+            isWon = isFinished && !isVoid && (betSeed % 4 !== 0);
+            isLost = isFinished && !isVoid && !isWon;
+        }
+
+        // Apply strict rules
+        if (isMoneyline) {
+            // Moneyline can NEVER be lost while the game is live or upcoming
+            if (!isFinished) {
+                isLost = false;
+                isWon = false;
+            }
+        }
+
+        let progress = 0;
+        if (isWon) progress = 100;
+        else if (isVoid) progress = 100;
+        else if (isLost && isFinished) progress = 20 + (betSeed % 30);
+        else if (isLive) progress = 10 + (betSeed % 80);
+        else progress = 0; // Upcoming game
+
+        // Under strict live logic:
+        if (isUnder && isLive && targetNum !== null) {
+            let mockedCurrentNum = parseFloat(((targetNum * progress) / 100).toFixed(1));
+            // Randomly spike it over the under to simulate losing live
+            if (betSeed % 5 === 0) {
+                mockedCurrentNum = targetNum + (betSeed % 5) + 1;
+            }
+            if (mockedCurrentNum > targetNum) {
+                isLost = true; // Busted the under!
+            }
         }
 
         let status = 'PENDING';
-        if (isWon) status = 'WON';
+        if (isVoid) status = 'VOID';
+        else if (isWon) status = 'WON';
         else if (isLost) status = 'LOST';
-
-        let progress = 0;
-        if (status === 'WON') progress = 100;
-        else if (status === 'LOST') progress = 20 + (betSeed % 30);
-        else if (isLive) progress = 10 + (betSeed % 80);
-        else progress = 0; // Upcoming game
 
         return {
             bet,
@@ -116,83 +174,111 @@ export const TicketCard: React.FC<{
             isUpcoming,
             status,
             progress,
-            betSeed
+            betSeed,
+            targetNum
         };
     }) : [];
 
     const hasLostLeg = legResults.some(l => l.status === 'LOST');
     const allFinished = legResults.every(l => l.isFinished);
+    const allVoid = legResults.every(l => l.status === 'VOID');
 
     let ticketStatus = 'PENDING';
     if (forceStatus) {
         ticketStatus = forceStatus;
     } else if (hasLostLeg) {
         ticketStatus = 'LOST';
+    } else if (allVoid && legResults.length > 0) {
+        ticketStatus = 'VOID';
     } else if (allFinished && legResults.length > 0) {
         ticketStatus = 'WON';
     }
 
     const winningOrPendingGood = legResults.filter(l => l.status === 'WON' || (l.status === 'PENDING' && l.progress >= 50)).length;
     const hitPercent = totalLegs > 0 ? Math.round((winningOrPendingGood / totalLegs) * 100) : 0;
-    const isParlay = totalLegs > 1;
-    const combinedOddsStr = isParlay ? calculateParlayOdds(ticket) : (ticket[0]?.odds || 'N/A');
+
+    // Filter out voided legs for odds calculation
+    const activeTicketLegs = ticket.filter((_, i) => legResults[i].status !== 'VOID');
+    const isParlay = activeTicketLegs.length > 1;
+
+    // If all legs voided, odds are effectively 1.0 (push)
+    const combinedOddsStr = activeTicketLegs.length > 0 ? (isParlay ? calculateParlayOdds(activeTicketLegs) : (activeTicketLegs[0]?.odds || 'N/A')) : '+100';
+
     const sumStakes = ticket.reduce((acc, b) => acc + (b.stake || 0), 0);
     const riskAmount = isParlay ? (sumStakes > 0 ? sumStakes : 50) : (sumStakes || 10);
-    const payoutAmount = riskAmount + toWin(riskAmount, combinedOddsStr);
+
+    // If ticket is entirely VOID, payout is exact risk amount (refund). Otherwise do math.
+    const payoutAmount = ticketStatus === 'VOID' || activeTicketLegs.length === 0 ? riskAmount : riskAmount + toWin(riskAmount, combinedOddsStr);
 
     return (
-        <div className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-700 rounded-none shadow-2xl font-sans mb-2 flex flex-col transition-all duration-300 relative group overflow-hidden mt-3">
+        <div
+            className="w-full shrink-0 bg-[#0c0c0e] border border-neutral-700 rounded-none shadow-2xl font-sans mb-2 flex flex-col transition-all duration-300 relative overflow-hidden mt-3 group"
+        >
 
-            {/* Share Overlay (Appears on Hover) */}
-            <div className="absolute inset-0 bg-black/80 z-30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-                <h4 className="text-white font-black uppercase tracking-widest text-sm mb-4">Share Ticket</h4>
+            {/* Share Overlay */}
+            <div className={`absolute inset-0 bg-black/95 z-30 flex flex-col items-center justify-center transition-opacity duration-300 backdrop-blur-md ${isShareVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                {/* Close Button Highly Visible */}
+                <button
+                    onClick={() => setIsShareVisible(false)}
+                    className="absolute top-3 right-3 w-8 h-8 bg-neutral-800 border border-neutral-600 rounded-full flex items-center justify-center text-white hover:bg-red-500 hover:border-red-500 hover:text-white transition-all shadow-lg hover:scale-110 z-40"
+                    title="Close Share"
+                >
+                    <span className="material-symbols-outlined text-lg font-black">close</span>
+                </button>
+                <h4 className="text-white font-black uppercase tracking-widest text-sm mb-6">Share Ticket</h4>
                 <div className="flex gap-4">
-                    {/* Mock Social Buttons */}
-                    <button title="Share on Instagram" className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-[0_0_15px_rgba(236,72,153,0.5)]">
-                        <i className="fa-brands fa-instagram text-xl"></i>
+                    {/* Official Social Buttons Theme */}
+                    <button title="Share on Instagram" className="w-10 h-10 rounded-full bg-[#E1306C]/10 border border-[#E1306C]/50 flex items-center justify-center text-[#E1306C] hover:bg-[#E1306C] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(225,48,108,0.3)]">
+                        <IconBrandInstagram size={20} stroke={2} />
                     </button>
-                    <button title="Share on Facebook" className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white hover:scale-110 transition-transform shadow-[0_0_15px_rgba(24,119,242,0.5)]">
-                        <i className="fa-brands fa-facebook-f text-xl"></i>
+                    <button title="Share on Facebook" className="w-10 h-10 rounded-full bg-[#1877F2]/10 border border-[#1877F2]/50 flex items-center justify-center text-[#1877F2] hover:bg-[#1877F2] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)]">
+                        <IconBrandFacebook size={20} stroke={2} />
                     </button>
-                    <button title="Share on Discord" className="w-10 h-10 rounded-full bg-[#5865F2] flex items-center justify-center text-white hover:scale-110 transition-transform shadow-[0_0_15px_rgba(88,101,242,0.5)]">
-                        <i className="fa-brands fa-discord text-xl"></i>
+                    <button title="Share on Discord" className="w-10 h-10 rounded-full bg-[#5865F2]/10 border border-[#5865F2]/50 flex items-center justify-center text-[#5865F2] hover:bg-[#5865F2] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(88,101,242,0.3)]">
+                        <IconBrandDiscord size={20} stroke={2} />
                     </button>
-                    <button title="Share on Telegram" className="w-10 h-10 rounded-full bg-[#229ED9] flex items-center justify-center text-white hover:scale-110 transition-transform shadow-[0_0_15px_rgba(34,158,217,0.5)]">
-                        <i className="fa-brands fa-telegram text-xl"></i>
+                    <button title="Share on Telegram" className="w-10 h-10 rounded-full bg-[#229ED9]/10 border border-[#229ED9]/50 flex items-center justify-center text-[#229ED9] hover:bg-[#229ED9] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(34,158,217,0.3)]">
+                        <IconBrandTelegram size={20} stroke={2} />
                     </button>
-                    <button title="Share on WhatsApp" className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center text-white hover:scale-110 transition-transform shadow-[0_0_15px_rgba(37,211,102,0.5)]">
-                        <i className="fa-brands fa-whatsapp text-xl"></i>
+                    <button title="Share on WhatsApp" className="w-10 h-10 rounded-full bg-[#25D366]/10 border border-[#25D366]/50 flex items-center justify-center text-[#25D366] hover:bg-[#25D366] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)]">
+                        <IconBrandWhatsapp size={20} stroke={2} />
                     </button>
                 </div>
             </div>
 
-            {/* Floating Status Badge — Only display if the ticket is strictly WON or strictly LOST */}
+            {/* Corner Status Badge — Only display if the ticket is strictly WON or strictly LOST */}
             {ticketStatus !== 'PENDING' && (
-                <div className="absolute top-0 right-4 -translate-y-1/2 z-20 flex bg-[#0a0a0c] p-1 rounded-full items-center justify-center pointer-events-none">
+                <div className="absolute top-0 right-0 z-20 flex pointer-events-none shadow-xl">
                     <div
-                        className={`px-3 py-1 text-[9px] font-black uppercase tracking-[0.15em] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] ${ticketStatus === 'WON' ? 'bg-[#A3FF00] text-black' : 'bg-red-500 text-white'}`}
+                        className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center ${ticketStatus === 'WON' ? 'bg-[#A3FF00] text-black' : 'bg-red-500 text-white'}`}
                     >
                         {ticketStatus}
                     </div>
                 </div>
             )}
-            {/* Resolve Buttons */}
-            {ticketStatus === 'PENDING' && onResolve && (
-                <div className="absolute top-2 right-12 flex gap-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => onResolve('WON', riskAmount, payoutAmount)} className="px-2 py-1 text-[9px] font-black uppercase tracking-widest bg-[#A3FF00] text-black rounded shadow-[0_0_10px_rgba(163,255,0,0.4)] hover:scale-105 transition-transform">Win</button>
-                    <button onClick={() => onResolve('LOST', riskAmount, payoutAmount)} className="px-2 py-1 text-[9px] font-black uppercase tracking-widest bg-red-500 text-white rounded shadow-[0_0_10px_rgba(239,68,68,0.4)] hover:scale-105 transition-transform">Lose</button>
-                </div>
-            )}
-            {/* Remove Button */}
-            {onRemove && (
+            {/* Top Right Actions (Hover visible) */}
+            <div className="absolute top-8 right-2 flex items-center gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Share Trigger Button */}
                 <button
-                    onClick={onRemove}
-                    className="absolute top-2 right-2 p-1.5 bg-black/40 hover:bg-neutral-800 text-slate-400 hover:text-white rounded-full transition-colors z-10 opacity-0 group-hover:opacity-100"
-                    title="Hide Ticket"
+                    onClick={() => setIsShareVisible(true)}
+                    className="p-1.5 bg-black/60 hover:bg-neutral-800 text-slate-300 hover:text-white rounded-full transition-colors border border-transparent hover:border-neutral-600 shadow-md backdrop-blur"
+                    title="Share Ticket"
                 >
-                    <span className="material-symbols-outlined text-[14px]">visibility_off</span>
+                    <span className="material-symbols-outlined text-[16px]">share</span>
                 </button>
-            )}
+                {/* Remove Button */}
+                {onRemove && (
+                    <button
+                        onClick={onRemove}
+                        className="p-1.5 bg-black/60 hover:bg-red-500/20 text-slate-300 hover:text-red-400 rounded-full transition-colors border border-transparent hover:border-red-500/50 shadow-md backdrop-blur"
+                        title="Remove Ticket"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                )}
+            </div>
+
+
             {/* PickLabs Logo Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-black border-b border-neutral-800 relative z-0">
                 <div className="flex items-center gap-1">
@@ -210,31 +296,33 @@ export const TicketCard: React.FC<{
                 </div>
             </div>
 
-            {/* Header (Pick Hitting / Bullish-Bearish) */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800 bg-[#111111]">
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className={`w-2 h-2 rounded-full ${hitPercent >= 50 ? 'bg-[#A3FF00] shadow-[0_0_8px_rgba(163,255,0,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'} animate-pulse`} />
-                        <span className="text-sm font-black text-white tracking-widest uppercase">
-                            PICKS HITTING
-                        </span>
-                        <span className={`text-sm font-black ${hitPercent >= 50 ? 'text-[#A3FF00]' : 'text-red-500'}`}>{hitPercent}%</span>
+            {/* Header (Pick Hitting / Bullish-Bearish) - restricted to premium/admin */}
+            {isPremiumUser && (
+                <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800 bg-[#111111]">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`w-2 h-2 rounded-full ${hitPercent >= 50 ? 'bg-[#A3FF00] shadow-[0_0_8px_rgba(163,255,0,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'} animate-pulse`} />
+                            <span className="text-sm font-black text-white tracking-widest uppercase">
+                                PICKS HITTING
+                            </span>
+                            <span className={`text-sm font-black ${hitPercent >= 50 ? 'text-[#A3FF00]' : 'text-red-500'}`}>{hitPercent}%</span>
+                        </div>
+                        {/* Full Width Gradient Bar */}
+                        <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden mt-2">
+                            <div
+                                className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-yellow-500 via-orange-500 to-[#A3FF00]"
+                                style={{ width: `${hitPercent}%` }}
+                            />
+                        </div>
                     </div>
-                    {/* Full Width Gradient Bar */}
-                    <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden mt-2">
-                        <div
-                            className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-yellow-500 via-orange-500 to-[#A3FF00]"
-                            style={{ width: `${hitPercent}%` }}
-                        />
+                    <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                        {totalLegs} PICKS
                     </div>
                 </div>
-                <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-                    {totalLegs} PICKS
-                </div>
-            </div>
+            )}
 
             {/* Pick List */}
-            <div className="flex-1 overflow-y-auto max-h-[200px] custom-[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-neutral-800 bg-[#0a0a0c]">
+            <div className="flex-1 overflow-y-auto max-h-[250px] custom-scrollbar flex flex-col pb-2">
                 {ticket.map((bet, i) => {
                     const leg = legResults[i];
                     const pickProgress = leg.progress;
@@ -253,6 +341,24 @@ export const TicketCard: React.FC<{
                             if (currentNum > targetNum) currentNum = targetNum;
                         }
                     }
+
+                    // Helper to abbreviate team names (e.g. Houston Rockets -> HOU)
+                    const abbreviateTeamName = (fullName: string) => {
+                        const words = fullName.trim().split(' ');
+                        if (words.length === 1) return words[0].substring(0, 3).toUpperCase();
+
+                        // Treat the first part of the name (up to the last word) as the location
+                        const location = words.slice(0, -1).join(' ');
+                        const locWords = location.split(' ');
+
+                        if (locWords.length > 1) {
+                            // Elements like New York -> NYK
+                            return (locWords[0][0] + locWords[1][0] + words[words.length - 1][0]).toUpperCase();
+                        } else {
+                            // Elements like Houston -> HOU
+                            return locWords[0].substring(0, 3).toUpperCase();
+                        }
+                    };
 
                     const getColor = (prog: number) => {
                         if (prog < 33) return '#ef4444'; // red
@@ -273,19 +379,26 @@ export const TicketCard: React.FC<{
                         topText = bet.team;
                         bottomText = "MONEYLINE";
                     } else if (bet.type.toLowerCase().includes('over') || bet.type.toLowerCase().includes('under') || bet.type.toLowerCase().includes('spread')) {
-                        const isUnder = bet.type.toLowerCase().includes('under');
-                        const isOver = bet.type.toLowerCase().includes('over');
-                        const valMatch = bet.type.match(/[0-9.]+/);
-                        const val = valMatch ? valMatch[0] : '';
+                        topText = bet.team;
 
-                        topText = `${bet.team} ${isUnder ? 'Under' : isOver ? 'Over' : ''} ${val}`.trim();
-                        bottomText = `${bet.team.toUpperCase()} - ${(bet.type.split(' ')[0] || 'PROP').toUpperCase()}`;
+                        let displayMatchup = bet.matchupStr || '';
+                        if (displayMatchup.includes(' vs ')) {
+                            const [away, home] = displayMatchup.split(' vs ');
+                            displayMatchup = `${abbreviateTeamName(away)} VS ${abbreviateTeamName(home)}`;
+                        } else if (displayMatchup.includes(' @ ')) {
+                            const [away, home] = displayMatchup.split(' @ ');
+                            displayMatchup = `${abbreviateTeamName(away)} @ ${abbreviateTeamName(home)}`;
+                        }
+
+                        bottomText = displayMatchup
+                            ? `${displayMatchup.toUpperCase()} - ${(bet.type.split(' ')[0] || 'PROP').toUpperCase()}`
+                            : `${bet.team.toUpperCase()} - ${(bet.type.split(' ')[0] || 'PROP').toUpperCase()}`;
                     } else if (bet.type.toLowerCase().includes('+')) {
                         topText = bet.team;
                         bottomText = bet.type.toUpperCase();
                     }
 
-                    // Status Logic Mock
+                    // Status Logic & Bet Type Icons
                     let statusNode = null;
                     if (leg.status === 'WON') {
                         statusNode = (
@@ -299,6 +412,12 @@ export const TicketCard: React.FC<{
                                 <span className="material-symbols-outlined text-red-500 text-[10px] font-bold">close</span>
                             </div>
                         );
+                    } else if (leg.status === 'VOID') {
+                        statusNode = (
+                            <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-neutral-500 relative z-20">
+                                <span className="material-symbols-outlined text-neutral-500 text-[10px] font-bold">priority_high</span>
+                            </div>
+                        );
                     } else if (leg.isLive) {
                         statusNode = (
                             <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-[#f97316] relative z-20">
@@ -306,15 +425,20 @@ export const TicketCard: React.FC<{
                             </div>
                         );
                     } else {
+                        // Pending/Upcoming State: Show Bet Type Icon
+                        const pendingIcon = <span className="text-white text-[10px] font-black">{i + 1}</span>;
+                        const bgColor = "bg-slate-700";
+                        const borderColor = "border-slate-500";
+
                         statusNode = (
-                            <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-[#111111] border border-neutral-600 relative z-20">
-                                {/* Empty Pending Circle */}
+                            <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center border relative z-20 ${bgColor} ${borderColor} shadow-inner`}>
+                                {pendingIcon}
                             </div>
                         );
                     }
 
                     return (
-                        <div key={bet.id} className="relative flex px-4 pt-4 hover:bg-white/[0.02] transition-colors group">
+                        <div key={bet.id} className={`relative flex px-4 pt-4 transition-colors group ${leg.status === 'VOID' ? 'opacity-50 grayscale hover:bg-neutral-900/50' : 'hover:bg-white/[0.02]'}`}>
                             {/* Timeline Track & Node */}
                             <div className="flex flex-col items-center mr-3 relative z-10 w-4 pb-2">
                                 {/* Top connecting line (hide on first item) */}
@@ -333,23 +457,29 @@ export const TicketCard: React.FC<{
                             {/* Main Content */}
                             <div className="flex-1 min-w-0 pb-4 border-b border-neutral-800/60 group-last:border-b-0">
                                 {/* Logo & Core Info Row */}
-                                <div className="flex items-start justify-between mb-1">
-                                    <div className="flex items-start gap-2 min-w-0 pr-2 pt-0.5">
+                                <div className="flex items-start justify-between mb-1 gap-2">
+                                    <div className="flex items-start gap-2 min-w-0 flex-1 pt-0.5">
                                         {/* Avatar */}
                                         {logoUrl.includes('ui-avatars') ? (
-                                            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
+                                            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 mt-0.5">
                                                 <span className="text-white text-[8px] font-bold">{cleanTeamName.substring(0, 2).toUpperCase()}</span>
                                             </div>
                                         ) : (
-                                            <img src={logoUrl} alt={cleanTeamName} className="w-6 h-6 rounded-full bg-neutral-900 border border-neutral-800 object-cover shrink-0" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanTeamName)}&background=1d1d1d&color=fff&rounded=true&bold=true`; }} />
+                                            <img src={logoUrl} alt={cleanTeamName} className="w-6 h-6 rounded-full bg-neutral-900 border border-neutral-800 object-cover shrink-0 mt-0.5" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanTeamName)}&background=1d1d1d&color=fff&rounded=true&bold=true`; }} />
                                         )}
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-bold text-white truncate leading-tight">{topText}</span>
-                                            <span className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-widest mt-0.5">{bottomText}</span>
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                            <span className="text-sm font-bold text-white leading-tight break-words">{topText}</span>
+                                            <span className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-widest mt-1">{bottomText}</span>
                                         </div>
                                     </div>
-                                    {/* Odds */}
-                                    <span className="text-sm text-white font-black shrink-0">{bet.odds}</span>
+                                    {/* Odds / Status */}
+                                    <div className="flex flex-col items-end shrink-0 pl-1">
+                                        {leg.status === 'VOID' ? (
+                                            <span className="text-sm text-neutral-500 font-black tracking-widest uppercase">VOID</span>
+                                        ) : (
+                                            <span className="text-sm text-white font-black">{bet.odds}</span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Progress Bar (Only if NOT Moneyline AND has targetNum) */}
@@ -426,12 +556,12 @@ export const TicketCard: React.FC<{
                                 })()}
                             </div>
                         </div>
-                    )
+                    );
                 })}
             </div>
 
             {/* Odds / Risk / To Win Box (Moved below picks) */}
-            <div className="px-4 py-3 border-t border-neutral-800 bg-[#111111] flex justify-between items-center text-center shadow-[0_-4px_10px_rgba(0,0,0,0.3)] z-10 shrink-0">
+            <div className={`px-4 py-3 border-t border-neutral-800 bg-[#111111] flex justify-between items-center text-center shadow-[0_-4px_10px_rgba(0,0,0,0.3)] z-10 shrink-0 ${isPremiumUser ? 'pb-2 border-b border-[#2b2b2b]' : ''}`}>
                 <div className="flex flex-col items-start min-w-[30%]">
                     <span className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 uppercase">ODDS</span>
                     <span className="text-sm font-black text-white">{combinedOddsStr}</span>
@@ -446,16 +576,36 @@ export const TicketCard: React.FC<{
                 </div>
             </div>
 
+            {/* AI Win Probability Meter (Premium/Admin Only) */}
+            {isPremiumUser && (
+                <div className="px-4 py-2 bg-gradient-to-r from-[#111111] via-[#1a1a1a] to-[#111111] border-b border-neutral-900 border-x border-x-transparent flex flex-col justify-center gap-1.5 shrink-0 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-2xl rounded-full" />
+                    <div className="flex items-center justify-between z-10">
+                        <span className="flex items-center gap-1 text-[9px] font-black tracking-widest text-[#A3FF00] uppercase shadow-sm">
+                            <span className="material-symbols-outlined text-[11px]">psychology</span>
+                            AI HITTING METER
+                        </span>
+                        <span className="text-xs font-black text-white bg-black/50 px-1.5 rounded border border-green-500/20">{winProbability}%</span>
+                    </div>
+                    <div className="w-full h-[3px] bg-neutral-800 rounded-full overflow-hidden relative z-10">
+                        <div
+                            className="h-full bg-gradient-to-r from-emerald-500 to-[#A3FF00] rounded-full shadow-[0_0_8px_rgba(163,255,0,0.4)] transition-all duration-1000 ease-out"
+                            style={{ width: `${winProbability}%` }}
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* Footer */}
             <div className="px-4 py-2.5 bg-[#0a0a0c] border-t border-neutral-900 flex justify-between items-center text-[9px] text-neutral-500 font-mono tracking-widest uppercase shrink-0">
                 <span>BET ID: {ticketId}</span>
                 <span>{ticketDate.toUpperCase()}</span>
             </div>
-        </div>
+        </div >
     );
 };
 
-export const LiveTicketPanel: React.FC<LiveTicketPanelProps> = ({ activeTickets, onRemoveTicket, onResolveTicket }) => {
+export const LiveTicketPanel: React.FC<LiveTicketPanelProps> = ({ activeTickets, onRemoveTicket }) => {
     const { isLiveBetsActive } = useLiveBets();
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -484,9 +634,6 @@ export const LiveTicketPanel: React.FC<LiveTicketPanelProps> = ({ activeTickets,
                     <TicketCard ticket={ticket} onRemove={() => {
                         if (onRemoveTicket) onRemoveTicket(activeIdx);
                         setCurrentIndex(0);
-                    }} onResolve={(status, stake, payout) => {
-                        if (onResolveTicket) onResolveTicket(activeIdx, status, stake, payout);
-                        setCurrentIndex(0);
                     }} />
                 </div>
             </div>
@@ -498,7 +645,7 @@ export const LiveTicketPanel: React.FC<LiveTicketPanelProps> = ({ activeTickets,
         <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:bg-neutral-800/80 [&::-webkit-scrollbar-track]:bg-transparent snap-x snap-mandatory flex gap-4 pb-4 px-1">
             {activeTickets.map((ticket, idx) => (
                 <div key={idx} className="snap-center shrink-0 w-[90%] sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] min-w-[280px]">
-                    <TicketCard ticket={ticket} onRemove={onRemoveTicket ? () => onRemoveTicket(idx) : undefined} onResolve={onResolveTicket ? (status, stake, payout) => onResolveTicket(idx, status, stake, payout) : undefined} />
+                    <TicketCard ticket={ticket} onRemove={onRemoveTicket ? () => onRemoveTicket(idx) : undefined} />
                 </div>
             ))}
         </div>
