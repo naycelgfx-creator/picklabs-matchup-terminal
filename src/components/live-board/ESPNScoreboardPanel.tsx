@@ -95,14 +95,12 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
             <div className="px-4 py-4">
                 {/* Away Team */}
                 <div className={`flex items-center gap-3 mb-3 ${!isFinal ? '' : awayTeam.winner ? '' : 'opacity-60'}`}>
-                    <div className="w-9 h-9 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
-                        <img
-                            src={awayTeam.logo}
-                            alt={awayTeam.abbreviation}
-                            className="w-full h-full object-contain p-1"
-                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
-                        />
-                    </div>
+                    <img
+                        src={awayTeam.logo}
+                        alt={awayTeam.abbreviation}
+                        className="w-11 h-11 object-contain shrink-0 drop-shadow-md"
+                        onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${awayTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
+                    />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2">
                             <span className="text-sm font-black text-text-main truncate">{awayTeam.displayName}</span>
@@ -126,14 +124,12 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
 
                 {/* Home Team */}
                 <div className={`flex items-center gap-3 ${!isFinal ? '' : homeTeam.winner ? '' : 'opacity-60'}`}>
-                    <div className="w-9 h-9 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700 shrink-0">
-                        <img
-                            src={homeTeam.logo}
-                            alt={homeTeam.abbreviation}
-                            className="w-full h-full object-contain p-1"
-                            onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
-                        />
-                    </div>
+                    <img
+                        src={homeTeam.logo}
+                        alt={homeTeam.abbreviation}
+                        className="w-11 h-11 object-contain shrink-0 drop-shadow-md"
+                        onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${homeTeam.abbreviation}&background=1a1a2e&color=fff&rounded=true`; }}
+                    />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2">
                             <span className="text-sm font-black text-text-main truncate">{homeTeam.displayName}</span>
@@ -162,7 +158,7 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
                         {(leaders as { headshot?: string; shortName?: string; category?: string; displayValue?: string }[]).map((leader, i: number) => (
                             <div key={i} className="flex items-center gap-3 bg-[#1e1e1e] p-2 rounded border border-white/5">
                                 {leader.headshot && (
-                                    <div className="w-7 h-7 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700">
+                                    <div className="w-8 h-8 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700/30 shrink-0">
                                         <img
                                             src={leader.headshot}
                                             alt={leader.shortName}

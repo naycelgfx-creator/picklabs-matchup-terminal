@@ -165,7 +165,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, viewMode = 'TEAMS', on
                     {game.awayTeam.logo ? (
                         <img
                             alt={game.awayTeam.name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 mx-auto object-contain mb-1.5"
+                            className="w-14 h-14 sm:w-16 sm:h-16 mx-auto object-contain mb-1.5 drop-shadow-md"
                             src={game.awayTeam.logo}
                             onError={(e) => {
                                 e.currentTarget.onerror = null;
@@ -173,8 +173,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, viewMode = 'TEAMS', on
                             }}
                         />
                     ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-1.5">
-                            <span className="material-symbols-outlined text-slate-500 text-base">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto flex items-center justify-center mb-1.5">
+                            <span className="material-symbols-outlined text-slate-500 text-3xl">
                                 {game.sport.startsWith('Soccer') ? 'sports_soccer' :
                                     game.sport.startsWith('Tennis') ? 'sports_tennis' :
                                         game.sport.startsWith('Golf') ? 'golf_course' :
@@ -221,7 +221,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, viewMode = 'TEAMS', on
                     {game.homeTeam.logo ? (
                         <img
                             alt={game.homeTeam.name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 mx-auto object-contain mb-1.5"
+                            className="w-14 h-14 sm:w-16 sm:h-16 mx-auto object-contain mb-1.5 drop-shadow-md"
                             src={game.homeTeam.logo}
                             onError={(e) => {
                                 e.currentTarget.onerror = null;
@@ -229,8 +229,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, viewMode = 'TEAMS', on
                             }}
                         />
                     ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-neutral-800 rounded-full flex items-center justify-center mb-1.5">
-                            <span className="material-symbols-outlined text-slate-500 text-base">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto flex items-center justify-center mb-1.5">
+                            <span className="material-symbols-outlined text-slate-500 text-3xl">
                                 {game.sport === 'Soccer' ? 'sports_soccer' :
                                     game.sport === 'NFL' ? 'sports_football' :
                                         game.sport === 'MLB' ? 'sports_baseball' : 'sports_basketball'}
