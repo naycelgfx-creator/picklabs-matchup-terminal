@@ -151,7 +151,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onNavigate }) 
                     <img
                         src="/picklabs-full-logo.svg"
                         alt="PickLabs Logo"
-                        className="h-16 w-auto transition-transform duration-300 drop-shadow-[0_0_15px_rgba(13,242,13,0.3)] hover:scale-105"
+                        className="h-16 w-auto transition-transform duration-300 hover:scale-105"
                     />
                 </a>
                 <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-text-muted">
