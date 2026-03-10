@@ -10,6 +10,7 @@ export function generateAIPrediction(
     _homeForm: unknown[],
     _awayForm: unknown[]
 ) {
+    console.log(_homeRecord, _awayRecord, _sport, _homeForm, _awayForm);
     // Basic deterministic mock to simulate AI
     return {
         awayWinProb: 45,
@@ -18,13 +19,14 @@ export function generateAIPrediction(
         moneylineAway: "+100",
         spread: "-2.5",
         total: 215.5,
-        overUnderPick: "OVER" as const,
+        overUnderPick: "OVER" as "OVER" | "UNDER",
         confidence: 88,
         insight: "Home court advantage trends strong.",
     };
 }
 
 export async function fetchTeamLastFive(_teamName: string, _sport: string): Promise<('W' | 'L' | 'D')[]> {
+    console.log(_teamName, _sport);
     return ['W', 'L', 'W', 'W', 'L'];
 }
 
@@ -45,5 +47,6 @@ export interface ESPNScheduleGame {
 }
 
 export async function fetchESPNTeamSchedule(_teamId: string, _sportKey: string): Promise<ESPNScheduleGame[]> {
+    console.log(_teamId, _sportKey);
     return []; // Mock return for now as the master router doesn't strictly define this endpoint yet
 }

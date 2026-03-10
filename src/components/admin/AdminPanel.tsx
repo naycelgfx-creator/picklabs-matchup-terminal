@@ -280,8 +280,9 @@ export const VIPUpgradeModal: React.FC<VIPUpgradeModalProps> = ({ currentEmail, 
         setLoading(true);
 
         // Fire Google Analytics Event for Paywall Conversion Attempt
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('event', 'clicked_upgrade_paywall', {
+        const win = window as unknown as { gtag?: (command: string, action: string, params: Record<string, unknown>) => void };
+        if (typeof window !== 'undefined' && win.gtag) {
+            win.gtag('event', 'clicked_upgrade_paywall', {
                 'event_category': 'monetization',
                 'event_label': 'Dashboard Paywall Button',
                 'value': 15.00

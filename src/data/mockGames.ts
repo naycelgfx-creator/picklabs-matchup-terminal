@@ -42,7 +42,35 @@ export interface Game {
             fixed: number;
             target: number;
         };
+        expectedScore?: {
+            away: number;
+            home: number;
+        };
     };
+    teamStats?: {
+        away: {
+            offRtg?: number;
+            defRtg?: number;
+            pace?: number;
+            fgPct?: number;
+            b2b?: boolean;
+            homeAwaySplit?: string;
+        };
+        home: {
+            offRtg?: number;
+            defRtg?: number;
+            pace?: number;
+            fgPct?: number;
+            b2b?: boolean;
+            homeAwaySplit?: string;
+        };
+    };
+    leaders?: {
+        category: string;
+        shortName: string;
+        displayValue: string;
+        headshot: string;
+    }[];
 }
 
 export const SPORT_LOGOS: Record<string, string> = {
@@ -378,6 +406,37 @@ const generateDummyGames = (sport: string, count: number): Game[] => {
             venue: {
                 name: `${homeTeamInfo.name || 'Local'} Stadium`,
                 location: `${sport === 'NFL' || sport === 'NBA' || sport === 'MLB' || sport === 'NHL' ? 'USA' : 'Global'}`
+            },
+            aiData: {
+                ai_probability: homeProb,
+                edge: isLive ? 0 : parseFloat((Math.random() * 8).toFixed(1)),
+                suggestions: {
+                    kelly: Math.floor(Math.random() * 50) + 10,
+                    fixed: Math.floor(Math.random() * 100) + 10,
+                    target: Math.floor(Math.random() * 50) + 10
+                },
+                expectedScore: {
+                    away: Math.floor(Math.random() * 30) + 90,
+                    home: Math.floor(Math.random() * 30) + 90
+                }
+            },
+            teamStats: {
+                away: {
+                    offRtg: parseFloat((Math.random() * 10 + 105).toFixed(1)),
+                    defRtg: parseFloat((Math.random() * 10 + 105).toFixed(1)),
+                    pace: sport === 'NBA' || sport === 'NCAAB' ? parseFloat((Math.random() * 5 + 95).toFixed(1)) : undefined,
+                    fgPct: parseFloat((Math.random() * 10 + 40).toFixed(1)),
+                    b2b: sport === 'NBA' ? Math.random() > 0.8 : false,
+                    homeAwaySplit: sport === 'NCAAB' ? `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 5)}` : undefined
+                },
+                home: {
+                    offRtg: parseFloat((Math.random() * 10 + 105).toFixed(1)),
+                    defRtg: parseFloat((Math.random() * 10 + 105).toFixed(1)),
+                    pace: sport === 'NBA' || sport === 'NCAAB' ? parseFloat((Math.random() * 5 + 95).toFixed(1)) : undefined,
+                    fgPct: parseFloat((Math.random() * 10 + 40).toFixed(1)),
+                    b2b: sport === 'NBA' ? Math.random() > 0.8 : false,
+                    homeAwaySplit: sport === 'NCAAB' ? `${Math.floor(Math.random() * 10)}-${Math.floor(Math.random() * 5)}` : undefined
+                }
             },
             broadcast: randomBroadcast
         };

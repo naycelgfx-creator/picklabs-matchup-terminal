@@ -19,9 +19,9 @@ export const espnGameToGame = (eg: ESPNGame, homeForm: ('W' | 'L' | 'D')[] = [],
     const gameSport = eg.sport || eg.season?.slug || "Sport";
 
     // Build records strings
-    const extractRecord = (comp: any) => comp?.records?.[0]?.summary || "0-0";
-    const homeRecord = extractRecord(homeCompetitor);
-    const awayRecord = extractRecord(awayCompetitor);
+    const extractRecord = (comp: { records?: { summary?: string }[] } | undefined) => comp?.records?.[0]?.summary || "0-0";
+    const homeRecord = extractRecord(homeCompetitor as { records?: { summary?: string }[] } | undefined);
+    const awayRecord = extractRecord(awayCompetitor as { records?: { summary?: string }[] } | undefined);
 
     // AI prediction
     const prediction = generateAIPrediction(
@@ -103,7 +103,7 @@ export const espnGameToGame = (eg: ESPNGame, homeForm: ('W' | 'L' | 'D')[] = [],
         odds: {
             moneyline: moneylineHome,
             spread: spread,
-            overUnder: { value: overUnderVal, pick: prediction.overUnderPick },
+            overUnder: { value: String(overUnderVal), pick: prediction.overUnderPick === 'OVER' ? 'Over' : 'Under' },
         },
         streakLabel: `PickLabs AI · ${prediction.confidence}% confidence · ${prediction.insight}`,
     };

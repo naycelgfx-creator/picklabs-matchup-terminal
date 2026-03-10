@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { SportsNav } from './SportsNav';
+import { EdgeHeader } from './EdgeHeader';
 import { SoccerLeagueNav } from './SoccerLeagueNav';
 import { TennisSubNav } from './TennisSubNav';
 import { TennisTournamentPanel } from './TennisTournamentPanel';
@@ -63,7 +63,7 @@ interface LiveBoardProps {
 
 // Local mock for prediction engine since legacy espnTeams was deleted
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function generateAIPrediction(_homeRecord: string, _awayRecord: string, _sport: string, _homeForm: any[], _awayForm: any[]) {
+function generateAIPrediction(_homeRecord: string, _awayRecord: string, _sport: string, _homeForm: ('W' | 'L' | 'D')[], _awayForm: ('W' | 'L' | 'D')[]) {
     // Basic deterministic mock based on length of team names to simulate AI
     return {
         awayWinProb: 45,
@@ -100,9 +100,9 @@ export const espnGameToGame = (eg: ESPNGame, homeForm: ('W' | 'L' | 'D')[] = [],
     const gameSport = eg.season?.slug || "Sport";
 
     // Build records strings - ESPN provides these deeply nested sometimes
-    const extractRecord = (comp: any) => comp?.records?.[0]?.summary || "0-0";
-    const homeRecord = extractRecord(homeCompetitor);
-    const awayRecord = extractRecord(awayCompetitor);
+    const extractRecord = (comp: { records?: { summary?: string }[] } | undefined) => comp?.records?.[0]?.summary || "0-0";
+    const homeRecord = extractRecord(homeCompetitor as { records?: { summary?: string }[] } | undefined);
+    const awayRecord = extractRecord(awayCompetitor as { records?: { summary?: string }[] } | undefined);
 
     // Use real AI prediction engine from espnTeams
     const prediction = generateAIPrediction(
@@ -115,10 +115,10 @@ export const espnGameToGame = (eg: ESPNGame, homeForm: ('W' | 'L' | 'D')[] = [],
 
     const gameDate = eg.date ? eg.date.split('T')[0] : new Date().toISOString().split('T')[0];
     const statusLabel = isLive
-        ? (eg.status?.type as any)?.shortDetail || 'LIVE'
+        ? (eg.status?.type as { shortDetail?: string })?.shortDetail || 'LIVE'
         : isFinal
             ? `Final • ${awayCompetitor?.score || 0}–${homeCompetitor?.score || 0} `
-            : (eg.status?.type as any)?.shortDetail || 'Upcoming';
+            : (eg.status?.type as { shortDetail?: string })?.shortDetail || 'Upcoming';
 
     // Fallback form from record pct when ESPN schedule data unavailable
     const recordForm = (record: string): ('W' | 'L')[] => {
@@ -214,6 +214,8 @@ export const enrichWithLastFive = async (games: ESPNGame[], sport: string): Prom
 export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGame, betSlip, setBetSlip, activeTickets, setActiveTickets, onAddBet, onPlaceTicket }) => {
     const [activeSport, setActiveSport] = useState<string>(SPORTS[0]);
     const [activeTab, setActiveTab] = useState<'espn' | 'simulated'>('espn');
+    const [viewMode, setViewMode] = useState<'TEAMS' | 'PLAYERS'>('TEAMS');
+    const [analyticsMode, setAnalyticsMode] = useState<'STANDARD' | 'ADVANCED'>('STANDARD');
     const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
     const [showPublicBets, setShowPublicBets] = useState<boolean>(true);
     const [showBetSlip, setShowBetSlip] = useState<boolean>(true);
@@ -354,14 +356,21 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ setCurrentView, onSelectGa
 
     return (
         <>
-            <SportsNav activeSport={activeSport} onSelectSport={(sport) => {
-                setActiveSport(sport);
-                let espnKey: SportKey | null = null;
-                if (sport === 'Soccer') espnKey = activeSoccerLeague;
-                else if (sport === 'Tennis') espnKey = activeTennisTour;
-                else if (APP_SPORT_TO_ESPN[sport.toLowerCase() as SportKey]) espnKey = sport.toLowerCase() as SportKey;
-                setActiveTab(espnKey ? 'espn' : 'simulated');
-            }} />
+            <EdgeHeader
+                activeSport={activeSport}
+                onSelectSport={(sport) => {
+                    setActiveSport(sport);
+                    let espnKey: SportKey | null = null;
+                    if (sport === 'Soccer') espnKey = activeSoccerLeague;
+                    else if (sport === 'Tennis') espnKey = activeTennisTour;
+                    else if (APP_SPORT_TO_ESPN[sport.toLowerCase() as SportKey]) espnKey = sport.toLowerCase() as SportKey;
+                    setActiveTab(espnKey ? 'espn' : 'simulated');
+                }}
+                viewMode={viewMode}
+                onSelectViewMode={setViewMode}
+                analyticsMode={analyticsMode}
+                onToggleAnalyticsMode={() => setAnalyticsMode(m => m === 'STANDARD' ? 'ADVANCED' : 'STANDARD')}
+            />
 
             {/* Soccer league sub-nav */}
             {isSoccer && (

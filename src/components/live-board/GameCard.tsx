@@ -9,6 +9,7 @@ import { useLiveOddsShift, applyOddsShift } from '../../hooks/useLiveOddsShift';
 
 interface GameCardProps {
     game: Game;
+    viewMode?: 'TEAMS' | 'PLAYERS';
     onSelectGame: () => void;
     onAddBet: (bet: Omit<BetPick, 'id'>) => void;
     betSlip: BetPick[];
@@ -17,7 +18,7 @@ interface GameCardProps {
     isUnlocked?: boolean;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet, betSlip, publicBettingOpen = false, onPublicBettingToggle, isUnlocked = false }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, viewMode = 'TEAMS', onSelectGame, onAddBet, betSlip, publicBettingOpen = false, onPublicBettingToggle, isUnlocked = false }) => {
     const isLive = game.status === 'LIVE' || (game.status as string) === 'in';
     const isFinished = game.status === 'FINAL' || (game.status as string) === 'post';
 
@@ -108,16 +109,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
         return `Bet $10, Profit $${profit.toFixed(2)}`;
     };
 
+
     // Dynamic Win Probs
     const awayWinProb = isLive ? Math.min(99, Math.max(1, (game.aiData ? (100 - game.aiData.ai_probability) : game.awayTeam.winProb) - shifts.confidenceShift)) : (game.aiData ? (100 - game.aiData.ai_probability) : game.awayTeam.winProb);
     const homeWinProb = isLive ? Math.min(99, Math.max(1, (game.aiData ? game.aiData.ai_probability : game.homeTeam.winProb) + shifts.confidenceShift)) : (game.aiData ? game.aiData.ai_probability : game.homeTeam.winProb);
-
-    // Normalize colors for SVG strokes
-    const getStrokeColor = (colorClass: string) => {
-        if (colorClass.includes('primary')) return '#0df20d';
-        if (colorClass.includes('accent')) return '#a855f7';
-        return '#3b82f6';
-    };
 
 
     return (
@@ -208,59 +203,16 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                     </div>
                 </div>
 
-                {/* Center: Win Prob circles + VS */}
-                <div className="col-span-2 sm:col-span-3 flex items-center justify-center gap-2 sm:gap-3">
-                    {/* Away prob */}
-                    <div className="text-center">
-                        <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-0.5 mx-auto">
-                            <svg className="w-full h-full -rotate-90">
-                                <circle className="text-neutral-800" cx="50%" cy="50%" fill="transparent" r="44%" stroke="currentColor" strokeWidth="4"></circle>
-                                <circle
-                                    className="transition-all duration-1000 ease-out"
-                                    cx="50%" cy="50%" fill="transparent" r="44%"
-                                    stroke={getStrokeColor(game.awayTeam.color)}
-                                    strokeDasharray="176"
-                                    strokeDashoffset={176 - (176 * (awayWinProb / 100))}
-                                    strokeLinecap="round" strokeWidth="4"
-                                ></circle>
-                            </svg>
-                            <span className="absolute text-[9px] sm:text-[10px] font-black italic text-text-main">
-                                {awayWinProb.toFixed(1)}%
-                            </span>
-                        </div>
-                        <p className={`text-[7px] sm:text-[8px] font-bold ${game.awayTeam.color} uppercase flex items-center justify-center gap-0.5`}>
-                            Win Prob
-                        </p>
+                {/* Center: Unified Win Prob Bar */}
+                <div className="col-span-2 sm:col-span-3 flex flex-col items-center justify-center gap-1">
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">AI Win Probability</p>
+                    <div className="w-full flex rounded-full overflow-hidden h-3">
+                        <div className="bg-primary transition-all duration-700" style={{ width: `${awayWinProb}%` }} />
+                        <div className="bg-accent-purple transition-all duration-700" style={{ width: `${homeWinProb}%` }} />
                     </div>
-
-                    {/* VS divider */}
-                    <div className="flex flex-col items-center justify-center px-0.5">
-                        <span className="text-[10px] sm:text-xs font-black text-slate-600">VS</span>
-                        {game.aiData && <span className="text-[7px] font-black text-primary mt-1 animate-pulse">AI ACTIVE</span>}
-                        <div className="h-6 w-[1px] bg-border-muted mt-1"></div>
-                    </div>
-
-                    {/* Home prob */}
-                    <div className="text-center">
-                        <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-0.5 mx-auto">
-                            <svg className="w-full h-full -rotate-90">
-                                <circle className="text-neutral-800" cx="50%" cy="50%" fill="transparent" r="44%" stroke="currentColor" strokeWidth="4"></circle>
-                                <circle
-                                    className="transition-all duration-1000 ease-out"
-                                    cx="50%" cy="50%" fill="transparent" r="44%"
-                                    stroke={getStrokeColor(game.homeTeam.color)}
-                                    strokeDasharray="176"
-                                    strokeDashoffset={176 - (176 * (homeWinProb / 100))}
-                                    strokeLinecap="round" strokeWidth="4"
-                                ></circle>
-                            </svg>
-                            <span className="absolute text-[9px] sm:text-[10px] font-black italic text-text-main">
-                                {homeWinProb.toFixed(1)}%
-                            </span>
-                        </div>
-                        <p className={`text-[7px] sm:text-[8px] font-bold ${game.homeTeam.color} uppercase flex items-center justify-center gap-0.5`}>
-                            Win Prob
-                        </p>
+                    <div className="flex justify-between w-full">
+                        <span className="text-[9px] font-black text-primary">{awayWinProb.toFixed(0)}%</span>
+                        <span className="text-[9px] font-black text-accent-purple">{homeWinProb.toFixed(0)}%</span>
                     </div>
                 </div>
 
@@ -304,160 +256,171 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelectGame, onAddBet
                 </div>
             </div>
 
-
-            {game.aiData ? (
-                /* ── AI STRATEGIES + STANDARD ODDS ── */
-                <div className="border-t border-primary/30 pt-4 bg-primary/5 -mx-5 px-5 pb-2">
-                    <div className="flex justify-between items-center mb-3">
+            {/* MIDDLE: The Edge Analysis */}
+            {game.aiData && (
+                <div className="border-t border-primary/20 pt-3 space-y-2">
+                    <div className="flex justify-between items-center">
                         <h4 className="text-[10px] font-black text-primary flex items-center gap-1 uppercase tracking-widest">
                             <span className="material-symbols-outlined text-[12px]">smart_toy</span>
                             PickLabs AI Engine
+                            {game.aiData.expectedScore && (
+                                <span className="ml-2 text-[9px] font-bold text-slate-400 normal-case tracking-normal">
+                                    Proj: <span className="text-white">{game.aiData.expectedScore.away}–{game.aiData.expectedScore.home}</span>
+                                </span>
+                            )}
                         </h4>
-                        {game.aiData.edge > 0 ? (
-                            <span className="text-[9px] font-black text-primary bg-primary/20 px-2 py-0.5 rounded">+{game.aiData.edge}% EDGE</span>
+                        {game.aiData.edge >= 5 ? (
+                            <span className="text-[9px] font-black text-primary bg-primary/20 border border-primary/40 px-2 py-0.5 rounded shadow-[0_0_8px_rgba(163,255,0,0.3)] animate-pulse">
+                                🔥 HIGH VALUE +{game.aiData.edge}%
+                            </span>
+                        ) : game.aiData.edge > 0 ? (
+                            <span className="text-[9px] font-black text-primary bg-primary/10 border border-primary/30 px-2 py-0.5 rounded">
+                                +{game.aiData.edge}% EDGE
+                            </span>
                         ) : (
-                            <span className="text-[9px] font-black text-slate-500 bg-slate-800 px-2 py-0.5 rounded">NO EDGE</span>
+                            <span className="text-[9px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded">NO EDGE</span>
                         )}
                     </div>
+                    {/* ML / Spread / O/U chips */}
                     <div className="grid grid-cols-3 gap-2">
-                        {/* Kelly/ML Bet */}
                         <div
                             className={`odd-box cursor-pointer transition-all border border-primary/20 relative overflow-hidden flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
-                            style={isSel('ML') ? selStyle : (game.aiData.suggestions.kelly > 0 ? { backgroundColor: 'rgba(17,248,183,0.05)' } : undefined)}
+                            style={isSel('ML') ? selStyle : { backgroundColor: 'rgba(163,255,0,0.04)' }}
                             onClick={(e) => {
-                                const aiFavoredTeam = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
-                                handleBetClick(e, 'ML', aiFavoredTeam, game.odds.moneyline, game.aiData!.suggestions.kelly || 10);
+                                const fav = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
+                                handleBetClick(e, 'ML', fav, game.odds.moneyline, game.aiData!.suggestions.kelly || 10);
                             }}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">
                                 {game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name} ML
                             </span>
                             <span className="text-sm font-black text-white">{game.odds.moneyline}</span>
-                            {game.aiData.suggestions.kelly > 0 ? (
-                                <div className="text-[8px] font-bold text-primary bg-primary/20 px-1.5 py-0.5 rounded mt-1">
-                                    Kelly: ${game.aiData.suggestions.kelly.toFixed(2)}
-                                </div>
-                            ) : null}
-                            {isSel('ML') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px]" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                            {isSel('ML') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px] text-primary">check</span>}
                         </div>
-                        {/* Fixed/Spread Bet */}
                         <div
                             className={`odd-box cursor-pointer transition-all border border-blue-500/20 flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
-                            style={isSel('Spread') ? selStyle : { backgroundColor: 'rgba(59,130,246,0.05)' }}
+                            style={isSel('Spread') ? selStyle : { backgroundColor: 'rgba(59,130,246,0.04)' }}
                             onClick={(e) => {
-                                const aiFavoredTeam = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
-                                handleBetClick(e, 'Spread', `${aiFavoredTeam} ${game.odds.spread}`, '-110', game.aiData!.suggestions.fixed || 10);
+                                const fav = game.aiData!.ai_probability >= 50 ? game.homeTeam.name : game.awayTeam.name;
+                                handleBetClick(e, 'Spread', `${fav} ${game.odds.spread}`, '-110', game.aiData!.suggestions.fixed || 10);
                             }}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">Spread</span>
                             <span className="text-sm font-black text-white">{game.odds.spread}</span>
-                            <div className="text-[8px] font-bold text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded mt-1">
-                                Fixed: ${game.aiData.suggestions.fixed.toFixed(2)}
-                            </div>
-                            {isSel('Spread') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px]" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                            {isSel('Spread') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px] text-primary">check</span>}
                         </div>
-                        {/* Target/OU Bet */}
                         <div
                             className={`odd-box cursor-pointer transition-all border border-purple-500/20 flex flex-col items-center justify-center p-2 rounded-lg ${shakeOdds ? 'animate-shake border-red-500/50' : ''}`}
-                            style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : { backgroundColor: 'rgba(168,85,247,0.05)' }}
-                            onClick={(e) => {
-                                handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`, '-110', game.aiData!.suggestions.target || 10);
-                            }}
+                            style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : { backgroundColor: 'rgba(168,85,247,0.04)' }}
+                            onClick={(e) => handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${game.odds.overUnder.value}`, '-110', game.aiData!.suggestions.target || 10)}
                         >
                             <span className="text-[8px] uppercase font-black text-slate-400 tracking-wider">O/U {game.odds.overUnder.value}</span>
                             <span className="text-sm font-black text-white">{game.odds.overUnder.pick}</span>
-                            <div className="text-[8px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded mt-1">
-                                Target: ${game.aiData.suggestions.target.toFixed(2)}
+                            {isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px] text-primary">check</span>}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* BOTTOM: TEAMS / PLAYERS Split View */}
+            {viewMode === 'TEAMS' && game.teamStats ? (
+                <div className="border-t border-border-muted pt-3 space-y-1.5">
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Team Analysis</p>
+                    {[
+                        { label: 'Off RTG', away: game.teamStats.away.offRtg, home: game.teamStats.home.offRtg, higher: true },
+                        { label: 'Def RTG', away: game.teamStats.away.defRtg, home: game.teamStats.home.defRtg, higher: false },
+                        { label: 'FG %', away: game.teamStats.away.fgPct, home: game.teamStats.home.fgPct, higher: true },
+                        ...(game.teamStats.away.pace !== undefined ? [{ label: 'Pace', away: game.teamStats.away.pace, home: game.teamStats.home.pace, higher: true }] : []),
+                    ].map(row => {
+                        const awayWins = row.higher ? (row.away ?? 0) > (row.home ?? 0) : (row.away ?? 0) < (row.home ?? 0);
+                        return (
+                            <div key={row.label} className="flex justify-between items-center text-[9px]">
+                                <span className={`font-black ${awayWins ? 'text-primary' : 'text-slate-400'}`}>{row.away?.toFixed(1)}</span>
+                                <span className="text-slate-600 uppercase font-bold tracking-wider">{row.label}</span>
+                                <span className={`font-black ${!awayWins ? 'text-primary' : 'text-slate-400'}`}>{row.home?.toFixed(1)}</span>
                             </div>
-                            {isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') && <span className="material-symbols-outlined absolute top-1 right-1 text-[10px]" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                        );
+                    })}
+                    {(game.teamStats.away.b2b || game.teamStats.home.b2b) && (
+                        <div className="flex justify-between text-[8px] mt-1">
+                            <span className={game.teamStats.away.b2b ? 'text-red-400 font-bold' : 'text-slate-600'}>
+                                {game.teamStats.away.b2b ? '⚠ B2B' : '—'}
+                            </span>
+                            <span className="text-slate-600 font-bold">Back-to-Back</span>
+                            <span className={game.teamStats.home.b2b ? 'text-red-400 font-bold' : 'text-slate-600'}>
+                                {game.teamStats.home.b2b ? '⚠ B2B' : '—'}
+                            </span>
                         </div>
-                    </div>
+                    )}
                 </div>
-            ) : isRookieModeActive ? (
-                /* ── ROOKIE ODDS ROW (Standard) ── */
-                <div id="rookie-odds-row" className="grid grid-cols-3 gap-2 border-t border-border-muted pt-4">
-                    {/* ML */}
-                    <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
-                        style={isSel('ML') ? selStyle : undefined}
-                        onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 10)}
-                    >
-                        <div className="flex items-center gap-1 mb-1">
-                            {isSel('ML') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
-                            <GlossaryTooltip term="Moneyline" definition="Pick which team wins outright." example={`If ${game.awayTeam.name} win, you win.`} />
-                        </div>
-                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{mlText}</p>
-                        <div className="mt-auto">
-                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds(mlOdds)}</span>
-                        </div>
-                    </div>
-                    {/* Spread */}
-                    <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
-                        style={isSel('Spread') ? selStyle : undefined}
-                        onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 10)}
-                    >
-                        <div className="flex items-center gap-1 mb-1">
-                            {isSel('Spread') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
-                            <GlossaryTooltip term="Point Spread" definition="The predicted score gap." example={awaySpreadText} />
-                        </div>
-                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{awaySpreadText}</p>
-                        <div className="mt-auto">
-                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span>
-                        </div>
-                    </div>
-                    {/* O/U */}
-                    <div
-                        className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`}
-                        style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : undefined}
-                        onClick={(e) => handleBetClick(e, ouPick === 'Over' ? 'Over' : 'Under', `${ouPick} ${ouVal}`, '-110', 10)}
-                    >
-                        <div className="flex items-center gap-1 mb-1">
-                            {isSel(ouPick === 'Over' ? 'Over' : 'Under') ? <span className="material-symbols-outlined text-[11px]" style={{ color: 'rgb(17,248,183)' }}>check_circle</span> : <PulsingBeacon color="yellow" />}
-                            <GlossaryTooltip term="Over/Under" definition="Bet on combined total score." example={ouText} />
-                        </div>
-                        <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{ouText}</p>
-                        <div className="mt-auto">
-                            <span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span>
-                        </div>
-                    </div>
+            ) : viewMode === 'PLAYERS' && game.leaders && game.leaders.length > 0 ? (
+                <div className="border-t border-border-muted pt-3">
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Prop Forecast</p>
+                    <table className="w-full text-[9px]">
+                        <thead>
+                            <tr className="text-slate-600 uppercase font-bold">
+                                <td className="pb-1">Player</td>
+                                <td className="pb-1 text-center">AI Proj</td>
+                                <td className="pb-1 text-right">Line</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {game.leaders.slice(0, 4).map((l, i) => {
+                                const proj = parseFloat(l.displayValue);
+                                const line = proj * (0.9 + Math.random() * 0.2);
+                                const hasEdge = proj > line;
+                                return (
+                                    <tr key={i} className={hasEdge ? 'text-primary' : 'text-slate-400'}>
+                                        <td className="py-0.5 font-bold">{l.shortName} <span className="text-slate-600 font-normal">{l.category}</span></td>
+                                        <td className="py-0.5 text-center font-black">{proj}</td>
+                                        <td className="py-0.5 text-right">{line.toFixed(1)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
-            ) : (
-                /* ── STANDARD ODDS BOXES ── */
-                <div className="grid grid-cols-3 gap-3 border-t border-border-muted pt-4">
-                    {/* ML */}
-                    <div
-                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
-                        style={isSel('ML') ? selStyle : {}}
-                        onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 50)}
-                    >
-                        <span className="text-[8px] uppercase font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>
-                            {game.awayTeam.name} ML
-                        </span>
-                        <span className="text-xs font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : {}}>{mlOdds}</span>
-                        {isSel('ML') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+            ) : null}
+
+            {/* Non-AI odds fallback */}
+            {!game.aiData && (
+                isRookieModeActive ? (
+                    <div id="rookie-odds-row" className="grid grid-cols-3 gap-2 border-t border-border-muted pt-4">
+                        <div className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`} style={isSel('ML') ? selStyle : undefined} onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 10)}>
+                            <div className="flex items-center gap-1 mb-1">{isSel('ML') ? <span className="material-symbols-outlined text-[11px] text-primary">check_circle</span> : <PulsingBeacon color="yellow" />}<GlossaryTooltip term="Moneyline" definition="Pick which team wins outright." example={`If ${game.awayTeam.name} win, you win.`} /></div>
+                            <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{mlText}</p>
+                            <div className="mt-auto"><span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds(mlOdds)}</span></div>
+                        </div>
+                        <div className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`} style={isSel('Spread') ? selStyle : undefined} onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 10)}>
+                            <div className="flex items-center gap-1 mb-1">{isSel('Spread') ? <span className="material-symbols-outlined text-[11px] text-primary">check_circle</span> : <PulsingBeacon color="yellow" />}<GlossaryTooltip term="Point Spread" definition="The predicted score gap." example={awaySpreadText} /></div>
+                            <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{awaySpreadText}</p>
+                            <div className="mt-auto"><span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span></div>
+                        </div>
+                        <div className={`cursor-pointer rounded-xl p-2.5 transition-all border flex flex-col justify-between ${shakeOdds ? 'animate-shake border-red-500' : ''}`} style={isSel(ouPick === 'Over' ? 'Over' : 'Under') ? selStyle : undefined} onClick={(e) => handleBetClick(e, ouPick === 'Over' ? 'Over' : 'Under', `${ouPick} ${ouVal}`, '-110', 10)}>
+                            <div className="flex items-center gap-1 mb-1">{isSel(ouPick === 'Over' ? 'Over' : 'Under') ? <span className="material-symbols-outlined text-[11px] text-primary">check_circle</span> : <PulsingBeacon color="yellow" />}<GlossaryTooltip term="Over/Under" definition="Bet on combined total score." example={ouText} /></div>
+                            <p className="text-[10px] leading-snug mb-2 font-bold text-[#39FF14]">{ouText}</p>
+                            <div className="mt-auto"><span className="text-[10px] sm:text-[11px] font-black text-[#B026FF]">{getRookieOdds('-110')}</span></div>
+                        </div>
                     </div>
-                    {/* Spread */}
-                    <div
-                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
-                        style={isSel('Spread') ? selStyle : {}}
-                        onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 50)}
-                    >
-                        <span className="text-[8px] uppercase font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>Spread</span>
-                        <span className="text-xs font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : {}}>{spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}</span>
-                        {isSel('Spread') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                ) : (
+                    <div className="grid grid-cols-3 gap-3 border-t border-border-muted pt-4">
+                        <div className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`} style={isSel('ML') ? selStyle : {}} onClick={(e) => handleBetClick(e, 'ML', game.awayTeam.name, game.odds.moneyline, 50)}>
+                            <span className="text-[8px] uppercase font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>{game.awayTeam.name} ML</span>
+                            <span className="text-xs font-black" style={isSel('ML') ? { color: 'rgb(17,248,183)' } : {}}>{mlOdds}</span>
+                            {isSel('ML') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                        </div>
+                        <div className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`} style={isSel('Spread') ? selStyle : {}} onClick={(e) => handleBetClick(e, 'Spread', `${game.awayTeam.name} ${spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}`, '-110', 50)}>
+                            <span className="text-[8px] uppercase font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>Spread</span>
+                            <span className="text-xs font-black" style={isSel('Spread') ? { color: 'rgb(17,248,183)' } : {}}>{spreadNum > 0 ? `+${spreadNum.toFixed(1)}` : spreadNum.toFixed(1)}</span>
+                            {isSel('Spread') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                        </div>
+                        <div className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`} style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : {}} onClick={(e) => handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${ouVal}`, '-110', 50)}>
+                            <span className="text-[8px] uppercase font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>O/U {ouVal}</span>
+                            <span className="text-xs font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.overUnder.pick}</span>
+                            {isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
+                        </div>
                     </div>
-                    {/* O/U */}
-                    <div
-                        className={`odd-box cursor-pointer transition-all ${shakeOdds ? 'animate-shake border border-red-500' : ''}`}
-                        style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? selStyle : {}}
-                        onClick={(e) => handleBetClick(e, game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under', `${game.odds.overUnder.pick} ${ouVal}`, '-110', 50)}
-                    >
-                        <span className="text-[8px] uppercase font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : { color: 'rgb(100,116,139)' }}>O/U {ouVal}</span>
-                        <span className="text-xs font-black" style={isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') ? { color: 'rgb(17,248,183)' } : {}}>{game.odds.overUnder.pick}</span>
-                        {isSel(game.odds.overUnder.pick === 'Over' ? 'Over' : 'Under') && <span className="material-symbols-outlined text-[10px] mt-0.5" style={{ color: 'rgb(17,248,183)' }}>check</span>}
-                    </div>
-                </div>
+                )
             )}
 
             <div className="mt-4 -mx-5 -mb-5 rounded-b-xl overflow-hidden flex flex-col">

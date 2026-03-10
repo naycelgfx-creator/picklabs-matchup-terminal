@@ -236,7 +236,7 @@ export const F1RacePanel: React.FC<F1RacePanelProps> = ({ onSelectGame }) => {
                         {/* Driver */}
                         <div className="flex items-center gap-2 min-w-0">
                             {driver.headshot ? (
-                                <img src={driver.headshot} alt={driver.shortName} className="w-8 h-8 rounded-full object-cover border border-neutral-700 shrink-0 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={driver.headshot} alt={driver.shortName} className="w-8 h-8 rounded-full object-cover object-top scale-110 border border-neutral-700 shrink-0 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             ) : (
                                 <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
                                     <span className="text-[9px] font-black text-slate-400">{driver.number}</span>

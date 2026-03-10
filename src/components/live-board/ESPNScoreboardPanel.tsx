@@ -11,7 +11,7 @@ interface ESPNScoreboardPanelProps {
 
 const StatusBadge: React.FC<{ game: ESPNGame }> = ({ game }) => {
     const state = game.status?.type?.state;
-    const detail = (game.status?.type as any)?.shortDetail || game.status?.type?.detail || game.status?.type?.description;
+    const detail = (game.status?.type as { shortDetail?: string })?.shortDetail || game.status?.type?.detail || game.status?.type?.description;
     if (state === 'in') {
         return (
             <span className="flex items-center gap-1 bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
@@ -66,8 +66,8 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
         linescores: homeObj?.linescores || [],
     };
 
-    const leaders = (comp as any)?.leaders || [];
-    const headline = (game as any)?.headline || (comp as any)?.notes?.[0]?.headline || '';
+    const leaders = (comp as { leaders?: unknown[] })?.leaders || [];
+    const headline = (game as { headline?: string })?.headline || (comp as { notes?: { headline: string }[] })?.notes?.[0]?.headline || '';
 
     return (
         <div
@@ -113,7 +113,7 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
                         {/* Quarter scores */}
                         {awayTeam.linescores.length > 0 && (
                             <div className="flex gap-1 mt-0.5">
-                                {awayTeam.linescores.map((ls: any, i: number) => (
+                                {awayTeam.linescores.map((ls: { displayValue?: string; value?: number }, i: number) => (
                                     <span key={i} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue || ls.value}</span>
                                 ))}
                             </div>
@@ -143,7 +143,7 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
                         </div>
                         {homeTeam.linescores.length > 0 && (
                             <div className="flex gap-1 mt-0.5">
-                                {homeTeam.linescores.map((ls: any, i: number) => (
+                                {homeTeam.linescores.map((ls: { displayValue?: string; value?: number }, i: number) => (
                                     <span key={i} className="text-[10px] text-slate-600 bg-neutral-800 px-1 rounded min-w-[20px] text-center">{ls.displayValue || ls.value}</span>
                                 ))}
                             </div>
@@ -158,15 +158,15 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
             {/* Leaders */}
             {leaders.length > 0 && (
                 <div className="px-4 pb-3 border-t border-neutral-800/60 pt-3">
-                    <div className="flex gap-3 overflow-x-auto">
-                        {leaders.slice(0, 3).map((leader: any, i: number) => (
-                            <div key={i} className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-col gap-2 mt-4 space-y-2">
+                        {(leaders as { headshot?: string; shortName?: string; category?: string; displayValue?: string }[]).map((leader, i: number) => (
+                            <div key={i} className="flex items-center gap-3 bg-[#1e1e1e] p-2 rounded border border-white/5">
                                 {leader.headshot && (
                                     <div className="w-7 h-7 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700">
                                         <img
                                             src={leader.headshot}
                                             alt={leader.shortName}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover object-top scale-110"
                                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                         />
                                     </div>
@@ -176,9 +176,6 @@ const ESPNGameCard: React.FC<{ game: ESPNGame; onSelectGame?: (game: ESPNGame) =
                                     <div className="text-xs font-bold text-text-muted leading-tight">{leader.shortName}</div>
                                     <div className="text-[11px] font-black text-primary leading-none">{leader.displayValue}</div>
                                 </div>
-                                {i < leaders.length - 1 && i < 2 && (
-                                    <div className="w-px h-8 bg-neutral-800 ml-1"></div>
-                                )}
                             </div>
                         ))}
                     </div>
@@ -201,7 +198,7 @@ const ESPNGameRow: React.FC<{ game: ESPNGame; onSelectGame?: (g: ESPNGame) => vo
     const isLive = state === 'in';
     const isFinal = state === 'post';
     const comp = game.competitions?.[0];
-    const detail = (game.status?.type as any)?.shortDetail || game.status?.type?.detail || '';
+    const detail = (game.status?.type as { shortDetail?: string })?.shortDetail || game.status?.type?.detail || '';
 
     const awayObj = comp?.competitors?.find(c => c.homeAway === 'away');
     const homeObj = comp?.competitors?.find(c => c.homeAway === 'home');
@@ -275,17 +272,20 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
         setCollapsedSections(prev => ({ ...prev, [label]: !prev[label] }));
     };
 
-    // Use overrideSportKey when provided (soccer league sub-selection), otherwise look up from sport name
-    const espnSport = overrideSportKey ?? APP_SPORT_TO_ESPN[sport.toLowerCase() as SportKey];
+    // Use overrideSportKey when provided (soccer league sub-selection), otherwise
+    // look up from sport name. For MLB, use a specific key.
+    const espnSportKey = overrideSportKey ?? APP_SPORT_TO_ESPN[sport.toLowerCase() as keyof typeof APP_SPORT_TO_ESPN];
+    const fetchSport = sport === 'MLB' ? 'baseball/mlb' : (espnSportKey && typeof espnSportKey === 'object' && 'sport' in espnSportKey && 'league' in espnSportKey ? `${espnSportKey.sport}/${espnSportKey.league}` : (typeof espnSportKey === 'string' ? espnSportKey : sport.toLowerCase()));
+
     const todayStr = new Date().toISOString().split('T')[0];
     const dateToFetch = selectedDate || todayStr;
 
     const doFetch = useCallback(async () => {
-        if (!espnSport) return;
+        if (!fetchSport) return;
         setLoading(true);
         setError(null);
         try {
-            const data = await fetchScoreboard(espnSport, dateToFetch);
+            const data = await fetchScoreboard(fetchSport as SportKey, dateToFetch);
             setGames(data);
             setLastUpdated(new Date().toLocaleTimeString());
         } catch {
@@ -293,7 +293,7 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
         } finally {
             setLoading(false);
         }
-    }, [espnSport, sport, dateToFetch]);
+    }, [fetchSport, dateToFetch, sport]);
 
     useEffect(() => {
         doFetch();
@@ -304,7 +304,7 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
         }
     }, [doFetch, dateToFetch, todayStr]);
 
-    if (!espnSport) return null; // No ESPN endpoint for this sport
+    if (!fetchSport) return null; // No ESPN endpoint for this sport
 
     const liveCount = games.filter(g => g.status?.type?.state === 'in').length;
 

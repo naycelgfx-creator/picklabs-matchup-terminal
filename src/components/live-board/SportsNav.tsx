@@ -5,7 +5,7 @@ import { SPORTS } from '../../data/mockGames';
 // Tier 1 (primary): ESPN CDN — best quality, real league logos for major US sports
 // Tier 2 (fallback): CBS Sports SVG CDN — sport category icons (confirmed working)
 // Tier 3: Material Symbols icon (always available)
-const SPORT_LOGOS: Record<string, { primary: string; fallback: string }> = {
+export const SPORT_LOGOS: Record<string, { primary: string; fallback: string }> = {
     NBA: {
         primary: 'https://a.espncdn.com/i/teamlogos/leagues/500/nba.png',
         fallback: 'https://sports.cbsimg.net/fly/images/icon-logos/basketball.svg',
@@ -66,7 +66,7 @@ const SPORT_LOGOS: Record<string, { primary: string; fallback: string }> = {
 };
 
 // Material Symbols icon — last-resort fallback
-const SPORT_ICON_MATERIAL: Record<string, string> = {
+export const SPORT_ICON_MATERIAL: Record<string, string> = {
     NBA: 'sports_basketball',
     NFL: 'sports_football',
     MLB: 'sports_baseball',

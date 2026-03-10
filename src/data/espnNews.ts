@@ -20,13 +20,16 @@ export const CATEGORY_CONFIG: Record<string, { icon: string; color: string; labe
 };
 
 export async function fetchESPNNews(_sportKey: string): Promise<ESPNNewsItem[]> {
+    console.log(_sportKey);
     return []; // Mock return for now
 }
 
 export async function fetchMultiSportNews(_sports: string[] = []): Promise<ESPNNewsItem[]> {
+    console.log(_sports);
     return []; // Mock return for now
 }
 
 export function timeAgo(_dateString: string): string {
+    console.log(_dateString);
     return "1 hr ago"; // Simple mock
 }

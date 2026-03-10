@@ -119,13 +119,13 @@ export const GolfLeaderboardPanel: React.FC<GolfLeaderboardPanelProps> = ({ spor
             // Golf PGA endpoint returns the active/next event (dates= param passed but usually ignored by API)
             const dateParam = selectedDate ? `?dates=${selectedDate.replace(/-/g, '')}` : '';
             const url = `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard${dateParam}`;
-            let res = await fetch(url);
+            const res = await fetch(url);
             if (!res.ok) {
                 setError(`ESPN returned ${res.status}.`);
                 setTournament(null);
                 return;
             }
-            let data = await res.json() as RawObj;
+            const data = await res.json() as RawObj;
             let events: RawObj[] = (data.events as RawObj[]) ?? [];
 
             // Fallback: If no events found for today's date, try without date filter to get the most recent tournament

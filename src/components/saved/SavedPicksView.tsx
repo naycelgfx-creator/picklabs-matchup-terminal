@@ -96,7 +96,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
         });
 
         if (activeTab === 'All') return evaluatedTickets;
-        return evaluatedTickets.filter(t => (t as any).evaluatedStatus.toUpperCase() === activeTab.toUpperCase());
+        return evaluatedTickets.filter(t => (t as { evaluatedStatus?: string }).evaluatedStatus?.toUpperCase() === activeTab.toUpperCase());
     }, [combinedTickets, activeTab]);
 
     // Sort tickets descending by date (newest first)
@@ -122,7 +122,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
                     {['All', 'Pending', 'Won', 'Lost'].map(tab => (
                         <button
                             key={tab}
-                            onClick={() => setActiveTab(tab as any)}
+                            onClick={() => setActiveTab(tab as 'All' | 'Pending' | 'Won' | 'Lost')}
                             className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 ${activeTab === tab
                                 ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]'
                                 : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'}`}
@@ -150,7 +150,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
                                 </h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-                                    {ticketsForDate.map((ticket: any, idx) => {
+                                    {ticketsForDate.map((ticket: ResolvedTicket & { evaluatedStatus?: string }, idx: number) => {
                                         const timeString = new Date(ticket.dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
                                         return (
@@ -158,7 +158,7 @@ export const SavedPicksView: React.FC<SavedPicksViewProps> = ({ ticketHistory })
                                                 <div className="w-full relative z-10">
                                                     <TicketCard
                                                         ticket={ticket.picks}
-                                                        forceStatus={ticket.evaluatedStatus || ticket.status}
+                                                        forceStatus={(ticket.evaluatedStatus || ticket.status) as 'WON' | 'LOST' | 'VOID' | undefined}
                                                         dateOverride={`${dateLabel} • ${timeString}`}
                                                     />
                                                 </div>

@@ -122,8 +122,8 @@ function getFranchise(abbr: string, teamName: string, sport: string): FranchiseD
 }
 
 // ── NBA Trophy SVG ─────────────────────────────────────────────────────────────
-const TrophySVG: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ size = 64, style }) => (
-    <svg width={size} height={size} viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
+const TrophySVG: React.FC<{ size?: number; className?: string }> = ({ size = 64, className }) => (
+    <svg width={size} height={size} viewBox="0 0 64 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
         {/* Cup body */}
         <ellipse cx="32" cy="28" rx="18" ry="22" fill="url(#trophyGold)" />
         <ellipse cx="32" cy="14" rx="18" ry="6" fill="url(#trophyTop)" />
@@ -397,7 +397,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                             <div className="text-xs text-slate-500 italic p-2 bg-neutral-800/50 rounded-md border border-neutral-800">No major injuries reported.</div>
                         ) : (
                             <div className="space-y-2">
-                                {(info?.injuries ?? []).slice(0, 4).map((inj: any, i: number) => (
+                                {(info?.injuries ?? []).slice(0, 4).map((inj: { player: string; injury: string; status: string }, i: number) => (
                                     <div key={i} className="flex justify-between items-center p-2 bg-neutral-800/50 rounded-md border border-neutral-800">
                                         <div className="flex flex-col">
                                             <span className="text-sm text-slate-300 font-medium truncate pr-2">{inj.player}</span>
@@ -483,7 +483,7 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({ teamName, abbr, spor
                                             <div key={i} className="w-6 h-6 rounded bg-neutral-800 animate-pulse" />
                                         ))
                                     ) : info?.recentForm && info.recentForm.length > 0 ? (
-                                        info.recentForm.map((res: any, i: number) => (
+                                        info.recentForm.map((res: 'W' | 'L' | 'D', i: number) => (
                                             <div key={i} className={`w-7 h-7 rounded flex items-center justify-center font-black text-xs shadow ${getFormColor(res)}`}>{res}</div>
                                         ))
                                     ) : (

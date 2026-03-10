@@ -25,7 +25,8 @@ export const HolographicBoardView: React.FC<HolographicBoardViewProps> = ({ acti
 
     useEffect(() => {
         // Check if we need to show the unlock button
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        const DOEvent = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DOEvent.requestPermission === 'function') {
             setNeedsPermission(true);
         } else {
             setNeedsPermission(false);
@@ -33,41 +34,41 @@ export const HolographicBoardView: React.FC<HolographicBoardViewProps> = ({ acti
         }
     }, []);
 
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-        let xTilt = event.gamma || 0;
-        let yTilt = event.beta || 0;
-
-        xTilt = Math.max(-45, Math.min(45, xTilt));
-        yTilt = Math.max(-45, Math.min(45, yTilt));
-
-        const xPosition = ((xTilt + 45) / 90) * 100;
-        const yPosition = ((yTilt + 45) / 90) * 100;
-
-        cardsRef.current.forEach(card => {
-            if (card) {
-                card.classList.add('is-active');
-                card.style.setProperty('--x', `${xPosition}%`);
-                card.style.setProperty('--y', `${yPosition}%`);
-            }
-        });
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-        if (!permissionGranted) return; // Only process mouse if active
-
-        const xPosition = (e.clientX / window.innerWidth) * 100;
-        const yPosition = (e.clientY / window.innerHeight) * 100;
-
-        cardsRef.current.forEach(card => {
-            if (card) {
-                card.classList.add('is-active');
-                card.style.setProperty('--x', `${xPosition}%`);
-                card.style.setProperty('--y', `${yPosition}%`);
-            }
-        });
-    };
-
     useEffect(() => {
+        const handleOrientation = (event: DeviceOrientationEvent) => {
+            let xTilt = event.gamma || 0;
+            let yTilt = event.beta || 0;
+
+            xTilt = Math.max(-45, Math.min(45, xTilt));
+            yTilt = Math.max(-45, Math.min(45, yTilt));
+
+            const xPosition = ((xTilt + 45) / 90) * 100;
+            const yPosition = ((yTilt + 45) / 90) * 100;
+
+            cardsRef.current.forEach(card => {
+                if (card) {
+                    card.classList.add('is-active');
+                    card.style.setProperty('--x', `${xPosition}%`);
+                    card.style.setProperty('--y', `${yPosition}%`);
+                }
+            });
+        };
+
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!permissionGranted) return; // Only process mouse if active
+
+            const xPosition = (e.clientX / window.innerWidth) * 100;
+            const yPosition = (e.clientY / window.innerHeight) * 100;
+
+            cardsRef.current.forEach(card => {
+                if (card) {
+                    card.classList.add('is-active');
+                    card.style.setProperty('--x', `${xPosition}%`);
+                    card.style.setProperty('--y', `${yPosition}%`);
+                }
+            });
+        };
+
         if (permissionGranted) {
             window.addEventListener('deviceorientation', handleOrientation);
             window.addEventListener('mousemove', handleMouseMove);
@@ -79,8 +80,9 @@ export const HolographicBoardView: React.FC<HolographicBoardViewProps> = ({ acti
     }, [permissionGranted]);
 
     const requestGyroscope = () => {
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-            (DeviceOrientationEvent as any).requestPermission()
+        const DOEvent = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DOEvent.requestPermission === 'function') {
+            DOEvent.requestPermission()
                 .then((permissionState: string) => {
                     if (permissionState === 'granted') {
                         setPermissionGranted(true);

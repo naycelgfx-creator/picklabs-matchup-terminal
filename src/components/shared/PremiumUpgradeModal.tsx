@@ -7,7 +7,7 @@ interface PremiumUpgradeModalProps {
     onNavigate: (v: ViewType) => void;
 }
 
-export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({ isOpen, onClose, onNavigate }) => {
+export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({ isOpen, onClose }) => {
     const [selectedTier, setSelectedTier] = useState<{ name: string, price: string } | null>(null);
 
     if (!isOpen) {

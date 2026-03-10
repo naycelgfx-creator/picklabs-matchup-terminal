@@ -3,7 +3,12 @@ import { BetPick } from '../../App';
 import { searchPlayers } from '../../data/playerDB';
 import { useLiveBets } from '../../contexts/LiveBetsContext';
 import { getCurrentUser, isAdminEmail } from '../../data/PickLabsAuthDB';
-import { IconBrandInstagram, IconBrandFacebook, IconBrandDiscord, IconBrandWhatsapp, IconBrandTelegram } from '@tabler/icons-react';
+interface IconProps extends React.SVGProps<SVGSVGElement> { size?: number | string; }
+const Instagram = ({ size = 24, ...props }: IconProps) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+const Facebook = ({ size = 24, ...props }: IconProps) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3.81l.19-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>;
+const MessageCircle = ({ size = 24, ...props }: IconProps) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M8 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/><path d="M14 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/><path d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833 -1.667 3.5 -3c.667 -1.667 .5 -5.833 -1.5 -11.5c-1.457 -1.015 -3 -1.34 -4.5 -1.5l-1 2.5c-7 0 -8 -2.5 -8 -2.5l-1 -2.5c-1.5 .16 -3.043 .485 -4.5 1.5c-2 5.667 -2.167 9.833 -1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2 -2 2 -3"/><path d="M7 16.5c3.5 2 6.5 2 10 0"/></svg>;
+const Send = ({ size = 24, ...props }: IconProps) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4"/></svg>;
+const Phone = ({ size = 24, ...props }: IconProps) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9"/><path d="M9 10a.5 .5 0 0 0 1 0V9a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1"/></svg>;
 
 interface LiveTicketPanelProps {
     activeTickets?: BetPick[][];
@@ -34,7 +39,7 @@ export const TicketCard: React.FC<{
     forceStatus?: 'WON' | 'LOST' | 'VOID';
     dateOverride?: string;
 }> = ({ ticket, onRemove, forceStatus, dateOverride }) => {
-    const { activeGames } = useLiveBets();
+    useLiveBets();
     const ticketId = React.useMemo(() => Math.floor(1000000000 + Math.random() * 9000000000).toString(), []);
 
     const ticketDate = React.useMemo(() => {
@@ -80,7 +85,6 @@ export const TicketCard: React.FC<{
 
         const isMoneyline = bet.type === 'ML' || bet.type.toLowerCase().includes('moneyline');
         const isUnder = bet.type.toLowerCase().includes('under');
-        const isOver = bet.type.toLowerCase().includes('over');
 
         let isWon = false;
         let isLost = false;
@@ -215,19 +219,19 @@ export const TicketCard: React.FC<{
                 <div className="flex gap-4">
                     {/* Official Social Buttons Theme */}
                     <button title="Share on Instagram" className="w-10 h-10 rounded-full bg-[#E1306C]/10 border border-[#E1306C]/50 flex items-center justify-center text-[#E1306C] hover:bg-[#E1306C] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(225,48,108,0.3)]">
-                        <IconBrandInstagram size={20} stroke={2} />
+                        <Instagram size={20} strokeWidth={2} />
                     </button>
                     <button title="Share on Facebook" className="w-10 h-10 rounded-full bg-[#1877F2]/10 border border-[#1877F2]/50 flex items-center justify-center text-[#1877F2] hover:bg-[#1877F2] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)]">
-                        <IconBrandFacebook size={20} stroke={2} />
+                        <Facebook size={20} strokeWidth={2} />
                     </button>
                     <button title="Share on Discord" className="w-10 h-10 rounded-full bg-[#5865F2]/10 border border-[#5865F2]/50 flex items-center justify-center text-[#5865F2] hover:bg-[#5865F2] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(88,101,242,0.3)]">
-                        <IconBrandDiscord size={20} stroke={2} />
+                        <MessageCircle size={20} strokeWidth={2} />
                     </button>
                     <button title="Share on Telegram" className="w-10 h-10 rounded-full bg-[#229ED9]/10 border border-[#229ED9]/50 flex items-center justify-center text-[#229ED9] hover:bg-[#229ED9] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(34,158,217,0.3)]">
-                        <IconBrandTelegram size={20} stroke={2} />
+                        <Send size={20} strokeWidth={2} />
                     </button>
                     <button title="Share on WhatsApp" className="w-10 h-10 rounded-full bg-[#25D366]/10 border border-[#25D366]/50 flex items-center justify-center text-[#25D366] hover:bg-[#25D366] hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)]">
-                        <IconBrandWhatsapp size={20} stroke={2} />
+                        <Phone size={20} strokeWidth={2} />
                     </button>
                 </div>
             </div>

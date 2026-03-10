@@ -111,8 +111,9 @@ export function logBet(email: string, betPick: BetPick): BetTracker {
     try {
         const parsed = parseInt(betPick.odds.replace('+', ''), 10);
         if (!isNaN(parsed)) numOdds = parsed;
-    } catch (e) {
+    } catch (_e) {
         // use default -110
+        console.log("Error parsing odds", _e);
     }
 
     const payout = calculatePayout(betPick.stake, numOdds);
@@ -120,7 +121,7 @@ export function logBet(email: string, betPick: BetPick): BetTracker {
     const newBet: BetTracker = {
         id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
         userEmail: email,
-        gameType: betPick.type === 'Prop' ? 'Player Prop' : (betPick.type as any) === 'Value' ? 'Value Pick' : betPick.type,
+        gameType: betPick.type === 'Prop' ? 'Player Prop' : (betPick.type as unknown) === 'Value' ? 'Value Pick' : betPick.type,
         propType: betPick.team,
         matchup: betPick.matchupStr,
         wager: betPick.stake,

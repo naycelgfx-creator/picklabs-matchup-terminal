@@ -254,13 +254,13 @@ export const TennisTournamentPanel: React.FC<TennisTournamentPanelProps> = ({ sp
         try {
             const espnDate = dateToFetch.replace(/-/g, '');
             const url = `${baseUrl}?dates=${espnDate}`;
-            let res = await fetch(url);
+            const res = await fetch(url);
             if (!res.ok) {
                 setError('Unable to reach ESPN.');
                 setMatches([]);
                 return;
             }
-            let data = await res.json() as RawObj;
+            const data = await res.json() as RawObj;
             let events: RawObj[] = (data.events as RawObj[]) ?? [];
 
             // Fallback for Tennis: if no events for today, fetch without date to get recent past events

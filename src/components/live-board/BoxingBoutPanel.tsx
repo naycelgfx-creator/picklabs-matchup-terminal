@@ -67,7 +67,7 @@ export interface BoxingEvent {
 }
 
 async function fetchMostRecentBoxingEvent(daysBack = 180): Promise<BoxingEvent | null> {
-    const base = (ESPN_SCOREBOARD_URLS as any)['Boxing'] || 'https://site.api.espn.com/apis/site/v2/sports/boxing/match/scoreboard';
+    const base = (ESPN_SCOREBOARD_URLS as Record<string, string>)['Boxing'] || 'https://site.api.espn.com/apis/site/v2/sports/boxing/match/scoreboard';
     for (let d = 0; d <= daysBack; d++) {
         const dt = new Date();
         dt.setDate(dt.getDate() - d);
@@ -175,7 +175,7 @@ async function fetchBoxingNews(): Promise<BoxingNewsArticle[]> {
 async function fetchBoxingOdds(): Promise<BoxingFightOdds[]> {
     // Note: VITE_ODDS_API_KEY should be set in environment variables.
     // Without it, the API will fail gracefully and simply render nothing.
-    const apiKey = import.meta.env.VITE_ODDS_API_KEY || 'YOUR_FREE_API_KEY';
+    const apiKey = ((import.meta as unknown) as { env: Record<string, string> }).env.VITE_ODDS_API_KEY || 'YOUR_FREE_API_KEY';
     try {
         const res = await fetch(`https://api.the-odds-api.com/v4/sports/boxing_boxing/odds/?apiKey=${apiKey}&regions=us&markets=h2h&bookmakers=fanduel,draftkings,betmgm&oddsFormat=american`, { cache: 'no-store' });
         if (!res.ok) return [];
@@ -276,7 +276,7 @@ export const BoxingBoutPanel: React.FC<BoxingBoutPanelProps> = ({ onSelectGame }
                     <div className="flex items-center gap-2 mb-2">
                         <span className="material-symbols-outlined text-amber-500 text-xl">scale</span>
                         <h2 className="text-sm font-black uppercase tracking-widest text-text-main">Tale of the Tape (Upcoming)</h2>
-                        {!import.meta.env.VITE_ODDS_API_KEY && (
+                        {!(((import.meta as unknown) as { env: Record<string, string> }).env.VITE_ODDS_API_KEY) && (
                             <span className="ml-auto text-[9px] text-amber-500 border border-amber-500/30 px-1.5 py-0.5 rounded">Setup API Key in env</span>
                         )}
                     </div>
@@ -402,7 +402,7 @@ export const BoxingBoutPanel: React.FC<BoxingBoutPanelProps> = ({ onSelectGame }
                         <div className="flex-1 flex flex-col items-start gap-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 {bout.fighter2.headshot && (
-                                    <img src={bout.fighter2.headshot} alt={bout.fighter2.shortName} className="w-10 h-10 rounded-full object-cover border border-neutral-700 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    <img src={bout.fighter2.headshot} alt={bout.fighter2.shortName} className="w-10 h-10 rounded-full object-cover object-top scale-110 border border-neutral-700 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                 )}
                                 {!bout.fighter2.headshot && bout.fighter2.flagUrl && (
                                     <img src={bout.fighter2.flagUrl} alt="" className="h-5 w-7 object-cover rounded-sm border border-neutral-700/40" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -434,7 +434,7 @@ export const BoxingBoutPanel: React.FC<BoxingBoutPanelProps> = ({ onSelectGame }
                         <div className="flex-1 flex flex-col items-end gap-1 min-w-0">
                             <div className="flex items-center gap-2 flex-row-reverse">
                                 {bout.fighter1.headshot && (
-                                    <img src={bout.fighter1.headshot} alt={bout.fighter1.shortName} className="w-10 h-10 rounded-full object-cover border border-neutral-700 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    <img src={bout.fighter1.headshot} alt={bout.fighter1.shortName} className="w-10 h-10 rounded-full object-cover object-top scale-110 border border-neutral-700 bg-neutral-800" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                 )}
                                 {!bout.fighter1.headshot && bout.fighter1.flagUrl && (
                                     <img src={bout.fighter1.flagUrl} alt="" className="h-5 w-7 object-cover rounded-sm border border-neutral-700/40" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />

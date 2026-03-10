@@ -88,11 +88,11 @@ export interface ESPNGame {
             team: ESPNTeam;
             score: string;
             linescores?: { value: number }[];
-            statistics: any[];
-            leaders?: any[];
+            statistics: unknown[];
+            leaders?: unknown[];
             records: { name: string; abbreviation?: string; type: string; summary: string }[];
         }[];
-        notes: any[];
+        notes: unknown[];
         status: {
             clock: number;
             displayClock: string;
@@ -161,6 +161,7 @@ export interface ESPNGame {
             completed: boolean;
             description: string;
             detail: string;
+            shortDetail?: string;
         };
     };
     sport?: string; // Appended by our router/client
@@ -382,7 +383,7 @@ export async function fetchSchedule(sportKey: SportKey) {
 /**
  * MOCK: Fetch game counts by date for DateFilter UI compilation
  */
-export async function fetchGameCountsByDate(sport: SportKey, dates: string[]): Promise<Record<string, number>> {
+export async function fetchGameCountsByDate(_sport: SportKey, dates: string[]): Promise<Record<string, number>> {
     const counts: Record<string, number> = {};
     for (const d of dates) {
         counts[d] = 0;
@@ -549,19 +550,19 @@ export async function fetchESPNRosterBySport(teamName: string, sportKey: string)
         const rosterData = await fetchFromBackend(`/${routing.sport}/${routing.league}/teams/${teamId}/roster`);
         const athletes = rosterData?.athletes || [];
 
-        return athletes.map((a: any) => ({
+        return athletes.map((a: Record<string, unknown>) => ({
             id: a.id,
             fullName: a.fullName || a.displayName,
             shortName: a.shortName || a.displayName,
-            photoUrl: a.headshot?.href || '',
+            photoUrl: (a.headshot as Record<string, string>)?.href || '',
             jersey: a.jersey,
             position: a.position,
             age: a.age,
             displayHeight: a.displayHeight,
             displayWeight: a.displayWeight,
             experience: a.experience,
-            salary: a.contract?.salary,
-            salaryFormatted: a.contract?.salary ? `\$${a.contract.salary.toLocaleString()}` : undefined
+            salary: (a.contract as Record<string, number>)?.salary,
+            salaryFormatted: (a.contract as Record<string, number>)?.salary ? `$${(a.contract as Record<string, number>).salary.toLocaleString()}` : undefined
         }));
     } catch (e) {
         console.error('Error fetching ESPN Roster:', e);

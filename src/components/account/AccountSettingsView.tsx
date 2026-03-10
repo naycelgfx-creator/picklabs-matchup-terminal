@@ -28,7 +28,7 @@ export const AccountSettingsView: React.FC<AccountSettingsViewProps> = ({ onLogo
         const usersRaw = localStorage.getItem('picklabs_users_db');
         if (usersRaw && session.isPremium) {
             const dbUsers = JSON.parse(usersRaw);
-            const dbUser = dbUsers.find((u: any) => u.id === session.userId);
+            const dbUser = dbUsers.find((u: { id: string; premiumExpiresAt?: number }) => u.id === session.userId);
             if (dbUser && dbUser.premiumExpiresAt) {
                 const diffMs = dbUser.premiumExpiresAt - Date.now();
                 setDaysLeft(Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24))));

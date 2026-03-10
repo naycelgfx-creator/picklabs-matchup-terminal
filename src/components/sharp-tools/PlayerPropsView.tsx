@@ -8,7 +8,7 @@ export interface ESPNPlayer {
     status?: string;
 }
 
-export async function fetchESPNTeamRoster(teamId: string, sport: string): Promise<ESPNPlayer[]> {
+async function fetchESPNTeamRoster(teamId: string, sport: string): Promise<ESPNPlayer[]> {
     const ESPN_LEAGUE: Record<string, string> = {
         NBA: 'basketball/nba',
         NFL: 'football/nfl',
@@ -102,7 +102,8 @@ export const PlayerPropsView = () => {
                 const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
 
                 // Need to use the correct ESPN mapping
-                let espnSport = (APP_SPORT_TO_ESPN as any)[activeSport.toLowerCase()] as SportKey;
+                const mappedSport = APP_SPORT_TO_ESPN[activeSport.toLowerCase() as SportKey];
+                let espnSport = (mappedSport ? `${mappedSport.sport}/${mappedSport.league}` : 'basketball/nba') as SportKey;
                 if (!espnSport) espnSport = 'nba'; // Fallback
 
                 const gamesResponse = await fetchScoreboard(espnSport, todayStr);
@@ -172,20 +173,26 @@ export const PlayerPropsView = () => {
                             line = Math.floor(line) + 0.5;
 
                             const isOver = (hash + seed) % 2 === 0;
-                            const edgeSeed = ((hash * (seed + 1)) % 400) / 10; // 0 to 40%
-
-                            // Set projection to reflect the edge
+                            // Realistic edge between 1.0% and 12.0%
+                            const edgeSeed = 1 + ((hash * (seed + 1)) % 110) / 10; 
+                            
+                            // Set projection to realistically reflect the edge (deviate by half the edge percentage max)
                             const edgeDec = edgeSeed / 100;
                             let proj = 0;
+                            // The line deviates proportionally. e.g. 10% edge means projection is ~5% higher/lower than line.
+                            // Small lines (e.g., 0.5 or 1.5) get a slight bump so it's not 0.51
+                            const deviation = Math.max(0.2, line * (edgeDec * 0.8)); 
+                            
                             if (isOver) {
-                                proj = line * (1 + edgeDec + 0.05); // slightly above
+                                proj = line + deviation; 
                             } else {
-                                proj = line * (1 - edgeDec - 0.05); // slightly below
+                                proj = Math.max(0, line - deviation); 
                             }
 
                             proj = Number(proj.toFixed(1));
 
-                            const conf = 50 + Math.floor(edgeSeed);
+                            // Realistic confidence derived from edge -> 51% to 65%
+                            const conf = 51 + Math.floor(edgeSeed * 1.1);
 
                             generated.push({
                                 id: `${p.id}-${cat}-${game.id}-${seed}`, // Added seed to make ID unique for 2 props per player

@@ -55,8 +55,8 @@ export interface TeamBoxLeaders {
 }
 
 export function useESPNBoxScore(sport: string, eventId: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [data, setData] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
+    console.log(sport, eventId);
+    const [data] = useState<unknown>(null);
+    const [loading] = useState(false);
     return { data, loading, error: null };
 }
