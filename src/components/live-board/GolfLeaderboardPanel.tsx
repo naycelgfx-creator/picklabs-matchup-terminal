@@ -158,7 +158,7 @@ export const GolfLeaderboardPanel: React.FC<GolfLeaderboardPanelProps> = ({ spor
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 90_000);
+        const interval = setInterval(fetchData, 600_000); // refresh every 10 minutes
         return () => clearInterval(interval);
     }, [fetchData]);
 

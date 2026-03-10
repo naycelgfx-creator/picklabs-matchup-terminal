@@ -293,9 +293,9 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
 
     useEffect(() => {
         doFetch();
-        // Only auto-refresh if viewing today
+        // Auto-refresh every 10 minutes
         if (dateToFetch === todayStr) {
-            const interval = setInterval(doFetch, 60_000);
+            const interval = setInterval(doFetch, 600_000);
             return () => clearInterval(interval);
         }
     }, [doFetch, dateToFetch, todayStr]);
@@ -323,15 +323,16 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
                 <div className="flex-1 h-px bg-neutral-800"></div>
                 <div className="flex items-center gap-2">
                     {lastUpdated && (
-                        <span className="text-[10px] text-slate-600">Updated {lastUpdated}</span>
+                        <span className="text-[10px] text-slate-600">Updated {lastUpdated} · refreshes every 10 min</span>
                     )}
                     <button
                         onClick={doFetch}
                         disabled={loading}
-                        className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white transition-colors disabled:opacity-40"
-                        title="Refresh data"
+                        className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-primary border border-neutral-700 hover:border-primary/40 rounded-lg px-2 py-1 transition-all disabled:opacity-40"
+                        title="Refresh scores now"
                     >
-                        <span className={`material-symbols-outlined text-[14px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
+                        <span className={`material-symbols-outlined text-[13px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
+                        {!loading ? 'Refresh Scores' : 'Refreshing…'}
                     </button>
                 </div>
             </div>
