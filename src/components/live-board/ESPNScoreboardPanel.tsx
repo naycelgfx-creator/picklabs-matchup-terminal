@@ -328,7 +328,7 @@ export const ESPNScoreboardPanel: React.FC<ESPNScoreboardPanelProps> = ({ sport,
                     <button
                         onClick={doFetch}
                         disabled={loading}
-                        className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-primary border border-neutral-700 hover:border-primary/40 rounded-lg px-2 py-1 transition-all disabled:opacity-40"
+                        className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-slate-200 border border-neutral-700 rounded-lg px-2 py-1 transition-all disabled:opacity-40"
                         title="Refresh scores now"
                     >
                         <span className={`material-symbols-outlined text-[13px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
